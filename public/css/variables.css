@@ -1,0 +1,25 @@
+:root {
+  /* Paleta Principal Meow Plans */
+  --color-pink-light: #F4C1F2;
+  --color-purple-past: #C2BEF6;  /* Cor destaque / Marca */
+  --color-cyan-pastel: #BEF7F3;
+  --color-purple-light: #EEC6FF;
+  --color-green-pastel: #CCF6CC;
+
+  /* Paleta de Apoio & Neutros */
+  --color-text-main: #2D3748;    /* Texto escuro */
+  --color-bg-light: #F8F9FA;     /* Fundo geral */
+  --color-border: #B5B3AD;       /* Bordas */
+  --color-white: #FFFFFF;
+  --color-danger: #FF8A8A;       /* Atrasadas e alertas */
+
+  /* Status e Alertas */
+  --color-success: #78FF92;      /* Concluída */
+  --color-warning: #FFC878;      /* Atenção / Média urgência */
+
+  /* Fontes e Raios */
+  --font-family: 'Quicksand', 'Nunito', system-ui, sans-serif;
+  --radius-card: 16px;
+  --radius-btn: 8px;
+  --shadow-soft: 0 4px 12px rgba(45, 55, 72, 0.08);
+}
