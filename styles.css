@@ -1,0 +1,98 @@
+:root {
+  --pastel-pink: #F4C1F2;
+  --pastel-purple: #C2BEF6;
+  --pastel-cyan: #BEF7F3;
+  --pastel-lilac: #EEC6FF;
+  --pastel-green: #CCF6CC;
+  --pastel-yellow: #FFC878;
+  --pastel-red: #FF8A8A;
+  --text-dark: #2D3748;
+}
+
+body {
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  color: var(--text-dark);
+  background-color: #fcfaff;
+}
+
+.brand-text {
+  color: #7a5099;
+}
+
+/* Botões Customizados */
+.btn-pastel-pink { background-color: var(--pastel-pink); color: var(--text-dark); border: none; }
+.btn-pastel-pink:hover { background-color: #e5a3e3; }
+
+.btn-pastel-purple { background-color: var(--pastel-purple); color: var(--text-dark); border: none; }
+.btn-pastel-purple:hover { background-color: #abb2eb; }
+
+.btn-pastel-cyan { background-color: var(--pastel-cyan); color: var(--text-dark); border: none; }
+.btn-pastel-cyan:hover { background-color: #a4ebd8; }
+
+.btn-pastel-green { background-color: var(--pastel-green); color: var(--text-dark); border: none; }
+.btn-pastel-green:hover { background-color: #b1e9b1; }
+
+.bg-pastel-pink { background-color: var(--pastel-pink) !important; }
+.bg-pastel-purple { background-color: var(--pastel-purple) !important; }
+.bg-pastel-cyan { background-color: var(--pastel-cyan) !important; }
+
+/* Auth Card */
+.auth-card {
+  max-width: 420px;
+  width: 100%;
+}
+
+/* Drawer / Gaveta Lateral */
+.drawer-card {
+  min-height: 450px;
+  background-color: #fdfbfd;
+  border: 2px dashed var(--pastel-purple) !important;
+}
+
+.drawer-item {
+  cursor: grab;
+  border-left: 5px solid var(--pastel-purple);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.drawer-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+}
+
+/* Customização do Calendário */
+.fc-button-primary {
+  background-color: var(--pastel-purple) !important;
+  border-color: var(--pastel-purple) !important;
+  color: var(--text-dark) !important;
+  font-weight: 600;
+}
+
+.fc-event {
+  border-radius: 8px !important;
+  padding: 3px 6px !important;
+  font-size: 0.85rem !important;
+  border: none !important;
+  cursor: pointer;
+}
+
+.event-concluida {
+  opacity: 0.55;
+  text-decoration: line-through;
+}
+
+.event-urgente {
+  animation: pulse-urgente 1.8s infinite;
+  border: 2px solid var(--pastel-red) !important;
+}
+
+@keyframes pulse-urgente {
+  0% { box-shadow: 0 0 0 0 rgba(255, 138, 138, 0.6); }
+  70% { box-shadow: 0 0 0 8px rgba(255, 138, 138, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(255, 138, 138, 0); }
+}
+
+.event-deadline {
+  border-left: 4px solid #333 !important;
+  font-style: italic;
+}
