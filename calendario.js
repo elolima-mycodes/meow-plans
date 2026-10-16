@@ -3,9 +3,8 @@
    ========================================================================== */
 
 // 1. INICIALIZAÇÃO DO POCKETBASE SDK
-const pb = new PocketBase(window.location.origin.includes('localhost') || window.location.origin.includes('127.0.0.1') 
-  ? 'http://127.0.0.1:8090' 
-  : window.location.origin);
+const POCKETBASE_URL = 'http://127.0.0.1:8090';
+const pb = new PocketBase(POCKETBASE_URL);
 
 // Estado Global da Aplicação
 let currentUser = null;
@@ -15,7 +14,6 @@ let tasksList = [];
 let categoriesList = [];
 let draggingTaskId = null;
 
-// Nomes dos Meses e Dias em Português
 const MONTH_NAMES = [
   'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
   'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
@@ -25,21 +23,18 @@ const WEEKDAY_NAMES = [
   'Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'
 ];
 
-// 2. VERIFICAÇÃO DE AUTENTICAÇÃO E INICIALIZAÇÃO
+// 2. INICIALIZAÇÃO
 document.addEventListener('DOMContentLoaded', async () => {
   if (!pb.authStore.isValid) {
-    // Redireciona para tela de login caso não esteja autenticado
     window.location.href = 'login.html';
     return;
   }
 
   currentUser = pb.authStore.model;
   renderUserAvatar();
-
-  // Registrar Event Listeners
   setupEventListeners();
 
-  // Carregar Dados e Renderizar Tela
+  // Carregar Categorias e Tarefas na ordem correta
   await loadCategories();
   await loadAndProcessTasks();
   renderCurrentView();
@@ -55,9 +50,8 @@ function renderUserAvatar() {
   }
 }
 
-// 3. REGISTRO DE EVENTOS E NAVEGAÇÃO DE INTERFACE
+// 3. EVENTOS
 function setupEventListeners() {
-  // Troca de Visão (Abas)
   document.querySelectorAll('.tab-btn[data-view]').forEach(btn => {
     btn.addEventListener('click', (e) => {
       document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -67,43 +61,41 @@ function setupEventListeners() {
     });
   });
 
-  // Botões de Navegação Anterior / Próximo
-  document.getElementById('prevPeriodBtn').addEventListener('click', () => {
-    navigatePeriod(-1);
-  });
+  document.getElementById('prevPeriodBtn').addEventListener('click', () => navigatePeriod(-1));
+  document.getElementById('nextPeriodBtn').addEventListener('click', () => navigatePeriod(1));
 
-  document.getElementById('nextPeriodBtn').addEventListener('click', () => {
-    navigatePeriod(1);
-  });
-
-  // Logout
   document.getElementById('btnSair').addEventListener('click', () => {
     pb.authStore.clear();
     window.location.href = 'login.html';
   });
 
-  // Modal de Nova / Editar Tarefa
   document.getElementById('btnNovaTarefa').addEventListener('click', () => openTaskModal());
   document.getElementById('closeTaskModalBtn').addEventListener('click', closeTaskModal);
 
-  // Toggle da frequência de recorrência
+  // Toggle do formulário ao marcar Recorrente/Rotina
   document.getElementById('taskRecurringCheck').addEventListener('change', (e) => {
-    const freqGroup = document.getElementById('recurrenceFreqGroup');
-    if (e.target.checked) {
-      freqGroup.classList.remove('hidden');
-    } else {
-      freqGroup.classList.add('hidden');
-    }
+    toggleRecurringFields(e.target.checked);
   });
 
-  // Submeter formulário de tarefa
   document.getElementById('taskForm').addEventListener('submit', handleSaveTask);
-
-  // Botão de Excluir Tarefa (Soft Delete)
   document.getElementById('btnDeleteTask').addEventListener('click', handleDeleteTask);
-
-  // Botão de Adicionar Subtarefa
   document.getElementById('btnAddSubtaskBtn').addEventListener('click', () => addSubtaskRow());
+}
+
+function toggleRecurringFields(isRecurring) {
+  const freqGroup = document.getElementById('recurrenceFreqGroup');
+  const execGroup = document.getElementById('taskExecDateGroup');
+  const deliveryLabel = document.getElementById('taskDeliveryDateLabel');
+  
+  if (isRecurring) {
+    freqGroup.classList.remove('hidden');
+    if (execGroup) execGroup.classList.add('hidden');
+    if (deliveryLabel) deliveryLabel.textContent = '🔁 Repetir até (Data Limite):';
+  } else {
+    freqGroup.classList.add('hidden');
+    if (execGroup) execGroup.classList.remove('hidden');
+    if (deliveryLabel) deliveryLabel.textContent = '📅 Data de Entrega (Prazo Final):';
+  }
 }
 
 function navigatePeriod(direction) {
@@ -117,61 +109,109 @@ function navigatePeriod(direction) {
   renderCurrentView();
 }
 
-// 4. OPERAÇÕES DE DADOS COM POCKETBASE (CRUD, SOFT DELETE & AUTO OVERDUE)
+// 4. OPERAÇÕES DE DADOS (POCKETBASE)
 async function loadCategories() {
   try {
-    categoriesList = await pb.collection('categorias').getFullList({
-      filter: `user = "${currentUser.id}" && deleted = false`,
+    // Filtro simplificado e seguro para categorias do usuário ativo
+    categoriesList = await pb.collection('Categorias').getFullList({
+      filter: `user = "${currentUser.id}" && (deleted = false || deleted = null)`,
       sort: 'nome'
     });
 
-    const categorySelect = document.getElementById('taskCategorySelect');
-    categorySelect.innerHTML = '<option value="">Sem Categoria</option>';
-    categoriesList.forEach(cat => {
-      const option = document.createElement('option');
-      option.value = cat.id;
-      option.textContent = cat.nome;
-      categorySelect.appendChild(option);
-    });
+    populateCategoryOptions();
   } catch (err) {
-    console.error('Erro ao carregar categorias:', err);
+    // Tenta fallback com a coleção em minúsculo caso o PocketBase aceite 'categorias'
+    try {
+      categoriesList = await pb.collection('categorias').getFullList({
+        filter: `user = "${currentUser.id}" && (deleted = false || deleted = null)`,
+        sort: 'nome'
+      });
+      populateCategoryOptions();
+    } catch (fallbackErr) {
+      console.error('Erro ao carregar categorias do PocketBase:', err, fallbackErr);
+    }
   }
+}
+
+function populateCategoryOptions(selectedCategoryId = '') {
+  const categorySelect = document.getElementById('taskCategorySelect');
+  if (!categorySelect) return;
+
+  categorySelect.innerHTML = '<option value="">Sem Categoria</option>';
+  categoriesList.forEach(cat => {
+    const option = document.createElement('option');
+    option.value = cat.id;
+    option.textContent = cat.nome;
+    if (selectedCategoryId && cat.id === selectedCategoryId) {
+      option.selected = true;
+    }
+    categorySelect.appendChild(option);
+  });
 }
 
 async function loadAndProcessTasks() {
   try {
-    // Buscar tarefas ativas (deleted = false) do usuário logado
     const rawTasks = await pb.collection('tarefas').getFullList({
-      filter: `user = "${currentUser.id}" && deleted = false`,
+      filter: `user = "${currentUser.id}" && (deleted = false || deleted = null)`,
       expand: 'categoria'
     });
 
     const todayStr = new Date().toISOString().split('T')[0];
 
-    // Verificar tarefas atrasadas automaticamente e atualizar no PocketBase
     tasksList = await Promise.all(rawTasks.map(async (task) => {
       let taskDeliveryStr = task.data_entrega ? task.data_entrega.split(' ')[0] : null;
 
-      // Regra de Negócio: Se a data de entrega passou e não foi concluída/cancelada -> Marcar Atrasada
-      if (taskDeliveryStr && taskDeliveryStr < todayStr && task.status !== 'concluida' && task.status !== 'cancelada' && task.status !== 'atrasada') {
+      // Auto-marcar como Atrasada se a data de entrega passou
+      if (!task.is_recurring && taskDeliveryStr && taskDeliveryStr < todayStr && task.status !== 'concluida' && task.status !== 'cancelada' && task.status !== 'atrasada') {
         try {
-          const updated = await pb.collection('tarefas').update(task.id, { status: 'atrasada' });
+          await pb.collection('tarefas').update(task.id, { status: 'atrasada' });
           return { ...task, status: 'atrasada' };
         } catch (e) {
-          console.error(`Erro ao atualizar status de atraso para a tarefa ${task.id}:`, e);
+          console.error(`Erro ao atualizar atraso da tarefa ${task.id}:`, e);
         }
       }
       return task;
     }));
 
   } catch (err) {
-    console.error('Erro ao carregar tarefas do PocketBase:', err);
+    console.error('Erro ao carregar tarefas:', err);
   }
 }
 
-// 5. REGRAS DE NEGÓCIO E VALIDAÇÃO DE PRAZOS
-function validateTaskDates(dataExec, dataEntrega) {
-  if (dataExec && dataEntrega) {
+// 5. REGRA DE REPETIÇÃO E RECORRÊNCIA
+function isRoutineForDate(task, targetDateObj) {
+  if (!task.is_recurring) return false;
+
+  const targetDate = new Date(targetDateObj.getFullYear(), targetDateObj.getMonth(), targetDateObj.getDate());
+  const createdDateRaw = new Date(task.created);
+  const startDate = new Date(createdDateRaw.getFullYear(), createdDateRaw.getMonth(), createdDateRaw.getDate());
+
+  if (targetDate < startDate) return false;
+
+  if (task.data_entrega) {
+    const limitDateRaw = new Date(task.data_entrega);
+    const limitDate = new Date(limitDateRaw.getFullYear(), limitDateRaw.getMonth(), limitDateRaw.getDate());
+    if (targetDate > limitDate) return false;
+  }
+
+  const freq = task.recurrence_freq || 'diario';
+
+  if (freq === 'diario') {
+    return true;
+  } else if (freq === 'semanal') {
+    return targetDate.getDay() === startDate.getDay();
+  } else if (freq === 'mensal') {
+    return targetDate.getDate() === startDate.getDate();
+  } else if (freq === 'anual') {
+    return targetDate.getDate() === startDate.getDate() && targetDate.getMonth() === startDate.getMonth();
+  }
+
+  return false;
+}
+
+// 6. VALIDAÇÃO E SALVAMENTO DE TAREFAS
+function validateTaskDates(dataExec, dataEntrega, isRecurring) {
+  if (!isRecurring && dataExec && dataEntrega) {
     const execDate = new Date(dataExec);
     const deliveryDate = new Date(dataEntrega);
     if (execDate > deliveryDate) {
@@ -190,14 +230,14 @@ async function handleSaveTask(e) {
   const categoria = document.getElementById('taskCategorySelect').value || null;
   const urgencia = document.getElementById('taskUrgencySelect').value;
   const status = document.getElementById('taskStatusSelect').value;
-  const data_entrega = document.getElementById('taskDeliveryDate').value;
-  const data_execucao = document.getElementById('taskExecDate').value || null;
   const is_recurring = document.getElementById('taskRecurringCheck').checked;
   const recurrence_freq = is_recurring ? document.getElementById('taskRecurrenceFreq').value : null;
   const descricao = document.getElementById('taskDescInput').value.trim();
 
-  // Validação Obrigatória de Prazos
-  if (!validateTaskDates(data_execucao, data_entrega)) {
+  const data_execucao = is_recurring ? null : document.getElementById('taskExecDate').value;
+  const data_entrega = document.getElementById('taskDeliveryDate').value;
+
+  if (!validateTaskDates(data_execucao, data_entrega, is_recurring)) {
     return;
   }
 
@@ -218,16 +258,12 @@ async function handleSaveTask(e) {
   try {
     let savedTask;
     if (id) {
-      // Atualizar Tarefa Existente
       savedTask = await pb.collection('tarefas').update(id, taskPayload);
     } else {
-      // Criar Nova Tarefa
       savedTask = await pb.collection('tarefas').create(taskPayload);
     }
 
-    // Salvar Subtarefas
     await saveSubtasks(savedTask.id);
-
     closeTaskModal();
     await loadAndProcessTasks();
     renderCurrentView();
@@ -237,7 +273,6 @@ async function handleSaveTask(e) {
   }
 }
 
-// SOFT DELETE: Envia para a Lixeira (campo deleted = true)
 async function handleDeleteTask() {
   const id = document.getElementById('taskIdInput').value;
   if (!id) return;
@@ -255,7 +290,6 @@ async function handleDeleteTask() {
   }
 }
 
-// SUBTAREFAS
 async function saveSubtasks(taskId) {
   const rows = document.querySelectorAll('.subtask-row');
   for (const row of rows) {
@@ -265,7 +299,6 @@ async function saveSubtasks(taskId) {
     const titulo = input.value.trim();
 
     if (!titulo && subid) {
-      // Excluir se o título ficou em branco
       await pb.collection('subtarefas').delete(subid);
       continue;
     }
@@ -303,7 +336,7 @@ function addSubtaskRow(subtask = { id: '', titulo: '', completa: false }) {
   container.appendChild(row);
 }
 
-// 6. RENDERIZAÇÃO DAS VISUALIZAÇÕES DO CALENDÁRIO
+// 7. RENDERIZAÇÃO DAS VISUALIZAÇÕES
 function renderCurrentView() {
   const mainContent = document.getElementById('calendarMainContent');
   const label = document.getElementById('currentPeriodLabel');
@@ -315,8 +348,7 @@ function renderCurrentView() {
     label.textContent = `Semana - ${MONTH_NAMES[selectedDate.getMonth()]} ${selectedDate.getFullYear()}`;
     renderWeekView(mainContent);
   } else if (currentView === 'dia') {
-    const formattedDateStr = `${WEEKDAY_NAMES[selectedDate.getDay()]}, ${selectedDate.getDate()} de ${MONTH_NAMES[selectedDate.getMonth()]}`;
-    label.textContent = formattedDateStr;
+    label.textContent = `${WEEKDAY_NAMES[selectedDate.getDay()]}, ${selectedDate.getDate()} de ${MONTH_NAMES[selectedDate.getMonth()]}`;
     renderDayView(mainContent, selectedDate);
   } else if (currentView === 'tarefas') {
     label.textContent = 'Todas as Tarefas';
@@ -324,7 +356,6 @@ function renderCurrentView() {
   }
 }
 
-// VISÃO DE MÊS
 function renderMonthView(container) {
   const year = selectedDate.getFullYear();
   const month = selectedDate.getMonth();
@@ -335,12 +366,10 @@ function renderMonthView(container) {
 
   let daysHtml = '';
 
-  // Dias do mês anterior
   for (let x = firstDayIndex; x > 0; x--) {
     daysHtml += `<div class="day-cell other-month">${prevMonthTotalDays - x + 1}</div>`;
   }
 
-  // Dias do mês atual
   const today = new Date();
   for (let i = 1; i <= totalDays; i++) {
     const isSelected = selectedDate.getDate() === i;
@@ -362,9 +391,7 @@ function renderMonthView(container) {
         ${daysHtml}
       </div>
     </div>
-    <div class="day-details-panel" id="monthSelectedDayDetails">
-      <!-- Painel do Dia Selecionado -->
-    </div>
+    <div class="day-details-panel" id="monthSelectedDayDetails"></div>
   `;
 
   renderDayPanel(document.getElementById('monthSelectedDayDetails'), selectedDate);
@@ -375,15 +402,13 @@ function selectMonthDay(dayNumber) {
   renderCurrentView();
 }
 
-// RENDERIZAÇÃO PAINEL DO DIA COM 3 SEÇÕES (Para Entregar, Para Fazer, Rotineiros)
 function renderDayPanel(targetElement, dateObj) {
   const dateStr = dateObj.toISOString().split('T')[0];
   const dayTitleStr = `${WEEKDAY_NAMES[dateObj.getDay()]}, ${dateObj.getDate()} de ${MONTH_NAMES[dateObj.getMonth()]}`;
 
-  // Filtrar tarefas
   const deliveryTasks = tasksList.filter(t => !t.is_recurring && t.data_entrega && t.data_entrega.startsWith(dateStr));
   const execTasks = tasksList.filter(t => !t.is_recurring && t.data_execucao && t.data_execucao.startsWith(dateStr));
-  const routineTasks = tasksList.filter(t => t.is_recurring);
+  const routineTasks = tasksList.filter(t => isRoutineForDate(t, dateObj));
 
   targetElement.innerHTML = `
     <div class="day-panel-header">
@@ -391,7 +416,7 @@ function renderDayPanel(targetElement, dateObj) {
       <span>${dayTitleStr}</span>
     </div>
 
-    <!-- SEÇÃO 1: PARA ENTREGAR HOJE (Rosa - Estático) -->
+    <!-- PARA ENTREGAR HOJE -->
     <div class="task-section-box section-pink">
       <div class="section-title">Para Entregar</div>
       <div class="section-cards-container">
@@ -399,7 +424,7 @@ function renderDayPanel(targetElement, dateObj) {
       </div>
     </div>
 
-    <!-- SEÇÃO 2: PARA FAZER HOJE (Mint - Suporta Drag and Drop!) -->
+    <!-- PARA FAZER HOJE (DRAG AND DROP HABILITADO) -->
     <div class="task-section-box section-mint drop-zone" data-dropdate="${dateStr}" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event)">
       <div class="section-title">Para Fazer</div>
       <div class="section-cards-container">
@@ -407,7 +432,7 @@ function renderDayPanel(targetElement, dateObj) {
       </div>
     </div>
 
-    <!-- SEÇÃO 3: ROTINEIROS (Verde - Estático) -->
+    <!-- ROTINEIROS -->
     <div class="task-section-box section-green">
       <div class="section-title">Rotineiros</div>
       <div class="section-cards-container">
@@ -417,7 +442,6 @@ function renderDayPanel(targetElement, dateObj) {
   `;
 }
 
-// VISÃO DE DIA
 function renderDayView(container, dateObj) {
   container.innerHTML = `
     <div class="day-details-panel" style="border-radius: 0; min-height: calc(100vh - 120px);">
@@ -427,10 +451,9 @@ function renderDayView(container, dateObj) {
   renderDayPanel(document.getElementById('singleDayPanel'), dateObj);
 }
 
-// VISÃO DE SEMANA
 function renderWeekView(container) {
   const startOfWeek = new Date(selectedDate);
-  startOfWeek.setDate(selectedDate.getDate() - selectedDate.getDay()); // Domingo
+  startOfWeek.setDate(selectedDate.getDate() - selectedDate.getDay());
 
   let weekDaysHtml = '';
 
@@ -441,7 +464,7 @@ function renderWeekView(container) {
 
     const deliveryTasks = tasksList.filter(t => !t.is_recurring && t.data_entrega && t.data_entrega.startsWith(dateStr));
     const execTasks = tasksList.filter(t => !t.is_recurring && t.data_execucao && t.data_execucao.startsWith(dateStr));
-    const routineTasks = tasksList.filter(t => t.is_recurring);
+    const routineTasks = tasksList.filter(t => isRoutineForDate(t, currentDay));
 
     weekDaysHtml += `
       <div class="week-day-column mb-1" style="background:#232B38; padding:0.75rem; border-radius:var(--radius-lg);">
@@ -449,19 +472,16 @@ function renderWeekView(container) {
           ${WEEKDAY_NAMES[currentDay.getDay()]} <span style="font-weight:400; font-size:0.8rem; color:#A0AEC0;">${currentDay.getDate()}</span>
         </div>
 
-        <!-- Section Para Entregar -->
         <div class="task-section-box section-pink" style="padding:0.5rem;">
           <div class="section-title" style="font-size:0.75rem;">Para Entregar</div>
           ${deliveryTasks.map(t => renderTaskCard(t, false)).join('')}
         </div>
 
-        <!-- Section Para Fazer (Draggable Target) -->
         <div class="task-section-box section-mint drop-zone" data-dropdate="${dateStr}" style="padding:0.5rem;" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event)">
           <div class="section-title" style="font-size:0.75rem;">Para Fazer</div>
           ${execTasks.map(t => renderTaskCard(t, true)).join('')}
         </div>
 
-        <!-- Section Rotineiros -->
         <div class="task-section-box section-green" style="padding:0.5rem;">
           <div class="section-title" style="font-size:0.75rem;">Rotineiros</div>
           ${routineTasks.map(t => renderTaskCard(t, false)).join('')}
@@ -479,7 +499,6 @@ function renderWeekView(container) {
   `;
 }
 
-// VISÃO DE TODAS AS TAREFAS (LISTA)
 function renderAllTasksView(container) {
   container.innerHTML = `
     <div style="padding: 1rem; width: 100%;">
@@ -493,7 +512,7 @@ function renderAllTasksView(container) {
   `;
 }
 
-// 7. COMPONENTE CARD DE TAREFA E SUPORTE A DRAG-AND-DROP
+// 8. CARD DE TAREFA E DRAG & DROP
 function renderTaskCard(task, isDraggable = false) {
   const isCompleted = task.status === 'concluida';
   const execFormatted = task.data_execucao ? formatDateBR(task.data_execucao) : '---';
@@ -518,14 +537,14 @@ function renderTaskCard(task, isDraggable = false) {
         <span class="flag-icon" style="color: ${flagColor};" title="Urgência: ${task.urgencia}">🚩</span>
       </div>
       <div class="meow-card-footer">
-        <span>Fazer: ${execFormatted}</span>
-        <span>Para: ${deliveryFormatted}</span>
+        ${task.is_recurring 
+          ? `<span>🔄 ${task.recurrence_freq || 'Rotina'}</span>` 
+          : `<span>Fazer: ${execFormatted}</span><span>Para:${deliveryFormatted}</span>`}
       </div>
     </div>
   `;
 }
 
-// HANDLERS DE DRAG AND DROP (APENAS EM CARDS DE "PARA FAZER")
 function handleDragStart(e, taskId) {
   draggingTaskId = taskId;
   e.dataTransfer.setData('text/plain', taskId);
@@ -535,13 +554,11 @@ function handleDragStart(e, taskId) {
 function handleDragOver(e) {
   e.preventDefault();
   e.dataTransfer.dropEffect = 'move';
-  const targetZone = e.currentTarget;
-  targetZone.classList.add('drop-zone-active');
+  e.currentTarget.classList.add('drop-zone-active');
 }
 
 function handleDragLeave(e) {
-  const targetZone = e.currentTarget;
-  targetZone.classList.remove('drop-zone-active');
+  e.currentTarget.classList.remove('drop-zone-active');
 }
 
 async function handleDrop(e) {
@@ -553,9 +570,8 @@ async function handleDrop(e) {
   if (!draggingTaskId || !newExecDateStr) return;
 
   const task = tasksList.find(t => t.id === draggingTaskId);
-  if (!task) return;
+  if (!task || task.is_recurring) return;
 
-  // Validação: Data de Execução NUNCA pode ser posterior à Data de Entrega
   if (task.data_entrega) {
     const deliveryDateStr = task.data_entrega.split(' ')[0];
     if (newExecDateStr > deliveryDateStr) {
@@ -566,7 +582,6 @@ async function handleDrop(e) {
   }
 
   try {
-    // Atualiza a data_execucao no PocketBase ao soltar o card na nova zona
     await pb.collection('tarefas').update(draggingTaskId, {
       data_execucao: `${newExecDateStr} 00:00:00.000Z`
     });
@@ -575,12 +590,12 @@ async function handleDrop(e) {
     await loadAndProcessTasks();
     renderCurrentView();
   } catch (err) {
-    console.error('Erro ao atualizar data de execução via Drag-and-Drop:', err);
+    console.error('Erro ao mover a tarefa:', err);
     alert('Erro ao mover a tarefa.');
   }
 }
 
-// 8. GERENCIAMENTO DO MODAL DE EDICAO DE TAREFA
+// 9. MODAL DE EDIÇÃO
 async function openTaskModal(taskId = null) {
   const modalOverlay = document.getElementById('taskModalOverlay');
   const form = document.getElementById('taskForm');
@@ -591,26 +606,27 @@ async function openTaskModal(taskId = null) {
     const task = tasksList.find(t => t.id === taskId);
     if (!task) return;
 
+    // Popula o select e deixa selecionada a categoria salva
+    populateCategoryOptions(task.categoria || '');
+
     document.getElementById('taskIdInput').value = task.id;
     document.getElementById('taskTitleInput').value = task.titulo;
-    document.getElementById('taskCategorySelect').value = task.categoria || '';
     document.getElementById('taskUrgencySelect').value = task.urgencia || 'normal';
     document.getElementById('taskStatusSelect').value = task.status || 'a_fazer';
     document.getElementById('taskDeliveryDate').value = task.data_entrega ? task.data_entrega.split(' ')[0] : '';
     document.getElementById('taskExecDate').value = task.data_execucao ? task.data_execucao.split(' ')[0] : '';
-    document.getElementById('taskRecurringCheck').checked = task.is_recurring || false;
     
-    if (task.is_recurring) {
-      document.getElementById('recurrenceFreqGroup').classList.remove('hidden');
+    const isRecurring = task.is_recurring || false;
+    document.getElementById('taskRecurringCheck').checked = isRecurring;
+    toggleRecurringFields(isRecurring);
+
+    if (isRecurring) {
       document.getElementById('taskRecurrenceFreq').value = task.recurrence_freq || 'semanal';
-    } else {
-      document.getElementById('recurrenceFreqGroup').classList.add('hidden');
     }
 
     document.getElementById('taskDescInput').value = task.descricao || '';
     document.getElementById('btnDeleteTask').classList.remove('hidden');
 
-    // Carregar subtarefas do PocketBase
     try {
       const subs = await pb.collection('subtarefas').getFullList({
         filter: `tarefa = "${task.id}" && user = "${currentUser.id}"`
@@ -621,12 +637,12 @@ async function openTaskModal(taskId = null) {
     }
 
   } else {
-    // Nova Tarefa
     form.reset();
+    populateCategoryOptions(''); // Re-popula após o reset para restaurar os options
     document.getElementById('taskIdInput').value = '';
     document.getElementById('taskDeliveryDate').value = selectedDate.toISOString().split('T')[0];
     document.getElementById('taskExecDate').value = selectedDate.toISOString().split('T')[0];
-    document.getElementById('recurrenceFreqGroup').classList.add('hidden');
+    toggleRecurringFields(false);
     document.getElementById('btnDeleteTask').classList.add('hidden');
   }
 
@@ -637,7 +653,6 @@ function closeTaskModal() {
   document.getElementById('taskModalOverlay').classList.remove('is-active');
 }
 
-// UTILITÁRIOS HELPERS
 function formatDateBR(dateString) {
   if (!dateString) return '';
   const dateOnly = dateString.split(' ')[0];

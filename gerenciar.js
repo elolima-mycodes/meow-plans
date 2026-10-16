@@ -1,556 +1,731 @@
-/* ==========================================================================
-   MEOW PLANS - GERENCIADOR CENTRALIZADO (LOGIC & POCKETBASE SDK)
-   ========================================================================== */
+/**
+ * MEOW PLANS - GERENCIADOR CENTRAL
+ * Módulo JavaScript vanilla para integração PocketBase, regras de negócio e reatividade do Frontend.
+ */
 
-// Inicialização do PocketBase SDK
-const pb = new PocketBase(window.location.origin.includes('localhost') ? 'http://127.0.0.1:8090' : window.location.origin);
+// 1. INICIALIZAÇÃO DO POCKETBASE SDK
+const POCKETBASE_URL = 'http://127.0.0.1:8090';
+const pb = new PocketBase(POCKETBASE_URL);
+// 2. ESTADO GLOBAL
+let currentUser = null;
+let categoriesCache = [];
+let tasksCache = [];
+let deletedCategoriesCache = [];
+let activeTab = 'tasks'; // 'tasks' | 'categories'
+let isTrashMode = false;
+let currentSubtasks = [];
 
-// Estado Global da Aplicação
-let categoriesList = [];
-let tasksList = [];
-let subtasksMap = {}; // taskId -> Array de subtarefas
-let tempSubtasks = []; // Subtarefas em edição no modal
-let modalTaskInstance = null;
-let modalCategoryInstance = null;
-let modalTrashInstance = null;
+// DOM Elements
+const elements = {
+  tabTasksBtn: document.getElementById('tab-tasks-btn'),
+  tabCategoriesBtn: document.getElementById('tab-categories-btn'),
+  tasksFiltersWrapper: document.getElementById('tasks-filters-wrapper'),
+  searchTextFilter: document.getElementById('search-text-filter'),
+  categoryFilterSelect: document.getElementById('category-filter-select'),
+  urgencyFilterSelect: document.getElementById('urgency-filter-select'),
+  statusFilterSelect: document.getElementById('status-filter-select'),
+  tabSectionTitle: document.getElementById('tab-section-title'),
+  btnAddAction: document.getElementById('btn-open-add-modal'),
+  addBtnLabel: document.getElementById('add-btn-label'),
+  tasksListContainer: document.getElementById('tasks-list-container'),
+  categoriesListContainer: document.getElementById('categories-list-container'),
+  trashListContainer: document.getElementById('trash-list-container'),
+  trashHeader: document.getElementById('trash-header'),
+  trashTitleLabel: document.getElementById('trash-title-label'),
+  btnOpenTrash: document.getElementById('btn-open-trash'),
+  btnCloseTrash: document.getElementById('btn-close-trash'),
+  logoutBtn: document.getElementById('logout-btn'),
 
-// ==========================================================================
-// INICIALIZAÇÃO E CICLO DE VIDA
-// ==========================================================================
+  // Modal Tarefa
+  taskModalOverlay: document.getElementById('task-modal-overlay'),
+  btnCloseTaskModal: document.getElementById('btn-close-task-modal'),
+  taskForm: document.getElementById('task-form'),
+  taskIdInput: document.getElementById('task-id'),
+  taskCategorySelect: document.getElementById('task-category-select'),
+  taskTitleInput: document.getElementById('task-title-input'),
+  taskUrgencySelect: document.getElementById('task-urgency-select'),
+  taskRoutineToggle: document.getElementById('task-routine-toggle'),
+  taskStatusSelect: document.getElementById('task-status-select'),
+  recurrenceFreqGroup: document.getElementById('recurrence-freq-group'),
+  taskRecurrenceFreq: document.getElementById('task-recurrence-freq'),
+  taskExecutionDate: document.getElementById('task-execution-date'),
+  taskDueDate: document.getElementById('task-due-date'),
+  taskDescriptionInput: document.getElementById('task-description-input'),
+  btnAddSubtaskRow: document.getElementById('btn-add-subtask-row'),
+  subtaskItemsContainer: document.getElementById('subtask-items-container'),
+  btnSaveTask: document.getElementById('btn-save-task'),
+
+  // Modal Categoria
+  categoryModalOverlay: document.getElementById('category-modal-overlay'),
+  btnCloseCategoryModal: document.getElementById('btn-close-category-modal'),
+  categoryForm: document.getElementById('category-form'),
+  categoryIdInput: document.getElementById('category-id'),
+  categoryNameInput: document.getElementById('category-name-input'),
+  categoryColorSelect: document.getElementById('category-color-select'),
+  categoryDescriptionInput: document.getElementById('category-description-input'),
+  btnSaveCategory: document.getElementById('btn-save-category')
+};
+
+// ==========================================
+// 3. INICIALIZAÇÃO E AUTENTICAÇÃO
+// ==========================================
 document.addEventListener('DOMContentLoaded', async () => {
-  // Verificação simples de autenticação
-  if (!pb.authStore.isValid) {
-    console.warn("Usuário não autenticado. Redirecionando ou ativando sessão padrão.");
-  } else {
-    setupUserInfo();
-  }
-
-  // Instanciar Modais do Bootstrap
-  modalTaskInstance = new bootstrap.Modal(document.getElementById('modalTask'));
-  modalCategoryInstance = new bootstrap.Modal(document.getElementById('modalCategory'));
-  modalTrashInstance = new bootstrap.Modal(document.getElementById('modalTrash'));
-
-  // Event listener para Logout
-  document.getElementById('btn-logout')?.addEventListener('click', () => {
-    pb.authStore.clear();
-    window.location.href = 'index.html';
-  });
-
-  // Carga inicial dos dados
-  await loadCategories();
-  await loadTasks();
+  checkAuthentication();
+  setupEventListeners();
+  await refreshData();
 });
 
-function setupUserInfo() {
-  const user = pb.authStore.record;
-  if (user) {
-    const avatarEl = document.getElementById('user-avatar-initial');
-    if (user.avatar && avatarEl) {
-      const avatarUrl = pb.files.getUrl(user, user.avatar);
-      avatarEl.innerHTML = `<img src="${avatarUrl}" class="rounded-circle" style="width:100%;height:100%;object-fit:cover;" />`;
-    } else if (avatarEl && user.name) {
-      avatarEl.textContent = user.name.charAt(0).toUpperCase();
-    }
-  }
-}
-
-// Alternar entre as abas 'Tarefas' e 'Categorias'
-function switchTab(tabName) {
-  const tabTasks = document.getElementById('tab-btn-tasks');
-  const tabCategories = document.getElementById('tab-btn-categories');
-  const viewTasks = document.getElementById('view-tasks');
-  const viewCategories = document.getElementById('view-categories');
-
-  if (tabName === 'tasks') {
-    tabTasks.classList.add('active');
-    tabCategories.classList.remove('active');
-    viewTasks.classList.remove('hidden');
-    viewCategories.classList.add('hidden');
-  } else {
-    tabCategories.classList.add('active');
-    tabTasks.classList.remove('active');
-    viewCategories.classList.remove('hidden');
-    viewTasks.classList.add('hidden');
-  }
-}
-
-// ==========================================================================
-// CATEGORIAS (FUNÇÕES PRINCIPAIS)
-// ==========================================================================
-
-/**
- * Carrega categorias do usuário logado e atualiza a UI e Selects
- */
-async function loadCategories() {
-  try {
-    const userId = pb.authStore.record?.id;
-    categoriesList = await pb.collection('Categorias').getFullList({
-      filter: `deleted = false ${userId ? `&& user = "${userId}"` : ''}`,
-      sort: '-created'
-    });
-
-    renderCategories();
-    populateCategorySelects();
-  } catch (error) {
-    console.error("Erro ao carregar categorias:", error);
-  }
-}
-
-/**
- * Renderiza a lista visual de Categorias
- */
-function renderCategories() {
-  const container = document.getElementById('categories-list-container');
-  if (!container) return;
-
-  if (categoriesList.length === 0) {
-    container.innerHTML = `<div class="text-center text-muted py-4">Nenhuma categoria cadastrada. 🐾</div>`;
+function checkAuthentication() {
+  if (!pb.authStore.isValid || !pb.authStore.model) {
+    window.location.href = 'login.html';
     return;
   }
-
-  container.innerHTML = categoriesList.map(cat => `
-    <div class="meow-item-card" style="border-left: 8px solid ${cat.cor || '#C2BEF6'}">
-      <div class="meow-card-left">
-        <div>
-          <div class="meow-card-title">${escapeHtml(cat.nome)}</div>
-        </div>
-      </div>
-      <div class="d-flex align-items-center gap-2">
-        <button class="btn btn-sm btn-outline-primary border-0" onclick="editCategory('${cat.id}')">✏️</button>
-        <button class="btn btn-sm btn-outline-danger border-0" onclick="deleteCategory('${cat.id}')">🗑️</button>
-      </div>
-    </div>
-  `).join('');
+  currentUser = pb.authStore.model;
 }
 
-/**
- * Preenche os selects de categorias nos formulários e no filtro
- */
-function populateCategorySelects() {
-  const taskSelect = document.getElementById('task-categoria');
-  const filterSelect = document.getElementById('filter-category-task');
+// ==========================================
+// 4. MÉTODOS DE DADOS DO POCKETBASE
+// ==========================================
 
-  const options = categoriesList.map(c => `<option value="${c.id}">${escapeHtml(c.nome)}</option>`).join('');
-
-  if (taskSelect) {
-    taskSelect.innerHTML = `<option value="">■ Categoria</option>` + options;
-  }
-  if (filterSelect) {
-    filterSelect.innerHTML = `<option value="">Filtro: Todas</option>` + options;
-  }
-}
-
-/**
- * Salva ou Atualiza uma Categoria no PocketBase
- */
-async function saveCategory(categoryData) {
+async function loadCategories() {
   try {
-    const userId = pb.authStore.record?.id;
-    const payload = { ...categoryData, user: userId, deleted: false };
-
-    if (categoryData.id) {
-      await pb.collection('Categorias').update(categoryData.id, payload);
-    } else {
-      await pb.collection('Categorias').create(payload);
+    if (isTrashMode && activeTab === 'categories') {
+      deletedCategoriesCache = await pb.collection('categorias').getFullList({
+        filter: `user = "${currentUser.id}" && deleted = true`,
+        sort: 'nome'
+      });
+      renderCategories();
+      return;
     }
 
-    await loadCategories();
-    modalCategoryInstance.hide();
-  } catch (error) {
-    console.error("Erro ao salvar categoria:", error);
-    alert("Não foi possível salvar a categoria.");
+    const records = await pb.collection('categorias').getFullList({
+      filter: `user = "${currentUser.id}" && deleted = false`,
+      sort: 'nome'
+    });
+    categoriesCache = records;
+    populateCategorySelects();
+    renderCategories();
+  } catch (err) {
+    console.error('Erro ao carregar categorias:', err);
   }
 }
 
-/**
- * RN05: Soft Delete de Categoria (deleted = true)
- */
-async function deleteCategory(id) {
-  if (!confirm("Deseja mover esta categoria para a lixeira?")) return;
+async function saveCategory(data) {
   try {
-    await pb.collection('Categorias').update(id, { deleted: true });
-    await loadCategories();
-  } catch (error) {
-    console.error("Erro ao excluir categoria:", error);
+    const payload = {
+      nome: data.nome,
+      cor: data.cor,
+      user: currentUser.id,
+      deleted: false
+    };
+
+    if (data.id) {
+      await pb.collection('categorias').update(data.id, payload);
+    } else {
+      await pb.collection('categorias').create(payload);
+    }
+
+    closeModals();
+    await refreshData();
+  } catch (err) {
+    console.error('Erro ao salvar categoria:', err);
+    alert('Não foi possível salvar a categoria. 🐾');
   }
 }
 
-// ==========================================================================
-// TAREFAS (FUNÇÕES PRINCIPAIS E REGRAS DE NEGÓCIO)
-// ==========================================================================
-
 /**
- * Carrega tarefas ativas e aplica RN02 (Soft Transition para Atrasada)
+ * Soft Delete de Categoria
  */
+
+async function deleteCategory(id) {
+  if (!confirm('Deseja mover esta categoria para a lixeira?')) return;
+  try {
+    await pb.collection('categorias').update(id, { deleted: true });
+    // Recarrega apenas os dados mantendo o contexto da aba/lixeira atual
+    await refreshData();
+  } catch (err) {
+    console.error('Erro ao mover categoria para lixeira:', err);
+  }
+}
+
 async function loadTasks() {
   try {
-    const userId = pb.authStore.record?.id;
-    tasksList = await pb.collection('tarefas').getFullList({
-      filter: `deleted = false ${userId ? `&& user = "${userId}"` : ''}`,
+    const filterQuery = (isTrashMode && activeTab === 'tasks')
+      ? `user = "${currentUser.id}" && deleted = true`
+      : `user = "${currentUser.id}" && deleted = false`;
+
+    const records = await pb.collection('tarefas').getFullList({
+      filter: filterQuery,
       expand: 'categoria',
       sort: '-created'
     });
 
-    // RN02: Atualização automática de tarefas atrasadas
     const todayStr = new Date().toISOString().split('T')[0];
-    for (let task of tasksList) {
-      if (task.data_execucao && task.data_execucao < todayStr && (task.status === 'a_fazer' || task.status === 'em_progresso')) {
-        task.status = 'atrasada';
-        // Atualiza em segundo plano no PocketBase
-        pb.collection('tarefas').update(task.id, { status: 'atrasada' }).catch(console.error);
+
+    for (let task of records) {
+      if (!task.deleted && task.data_execucao) {
+        const execDateStr = new Date(task.data_execucao).toISOString().split('T')[0];
+        if (execDateStr < todayStr && (task.status === 'a_fazer' || task.status === 'em_progresso')) {
+          task.status = 'atrasada';
+          pb.collection('tarefas').update(task.id, { status: 'atrasada' }).catch(console.error);
+        }
       }
     }
 
-    // Carregar subtarefas para cada tarefa
-    await loadSubtasksForTasks();
-
+    tasksCache = records;
     renderTasks();
-  } catch (error) {
-    console.error("Erro ao carregar tarefas:", error);
+  } catch (err) {
+    console.error('Erro ao carregar tarefas:', err);
   }
 }
 
-/**
- * Carrega subtarefas vinculadas às tarefas ativas
- */
-async function loadSubtasksForTasks() {
-  try {
-    const userId = pb.authStore.record?.id;
-    const allSubtasks = await pb.collection('subtarefas').getFullList({
-      filter: `${userId ? `user = "${userId}"` : ''}`
-    });
-
-    subtasksMap = {};
-    allSubtasks.forEach(sub => {
-      if (!subtasksMap[sub.tarefa]) {
-        subtasksMap[sub.tarefa] = [];
-      }
-      subtasksMap[sub.tarefa].push(sub);
-    });
-  } catch (error) {
-    console.error("Erro ao carregar subtarefas:", error);
-  }
-}
-
-/**
- * Renderiza os cards das tarefas de acordo com o filtro selecionado
- */
-function renderTasks() {
-  const container = document.getElementById('tasks-list-container');
-  const filterCatId = document.getElementById('filter-category-task')?.value;
-
-  if (!container) return;
-
-  let filtered = tasksList;
-  if (filterCatId) {
-    filtered = tasksList.filter(t => t.categoria === filterCatId);
-  }
-
-  if (filtered.length === 0) {
-    container.innerHTML = `<div class="text-center text-muted py-4">Nenhuma tarefa encontrada. 🐾</div>`;
-    return;
-  }
-
-  container.innerHTML = filtered.map(task => {
-    const catName = task.expand?.categoria?.nome || 'Geral';
-    const catColor = task.expand?.categoria?.cor || '#C2BEF6';
-    const subtasks = subtasksMap[task.id] || [];
-    const completedSubs = subtasks.filter(s => s.completa).length;
-    const progressText = subtasks.length > 0 ? `(${completedSubs}/${subtasks.length})` : '';
-
-    return `
-      <div class="meow-item-card" style="border-left: 8px solid ${catColor}">
-        <div class="meow-card-left">
-          <div class="meow-icon-badge">⏰</div>
-          <div>
-            <div class="meow-card-title">
-              ${escapeHtml(task.titulo)} <span class="text-muted fs-6">${progressText}</span>
-            </div>
-            <div class="meow-card-dates">
-              Fazer: ${formatDate(task.data_execucao)} | Para: ${formatDate(task.data_entrega)}
-            </div>
-          </div>
-        </div>
-        <div class="d-flex align-items-center gap-2">
-          <span class="flag-urgency" title="Urgência: ${task.urgencia}">${getUrgencyFlag(task.urgencia)}</span>
-          <button class="btn btn-sm btn-outline-primary border-0" onclick="editTask('${task.id}')">✏️</button>
-          <button class="btn btn-sm btn-outline-danger border-0" onclick="deleteTask('${task.id}')">🗑️</button>
-        </div>
-      </div>
-    `;
-  }).join('');
-}
-
-/**
- * RN01 e Salvamento: Valida prazos e persiste Tarefa com suas Subtarefas
- */
 async function saveTaskWithSubtasks(taskData, subtasksList) {
-  // RN01: Validação de Prazos (data_execucao NUNCA pode ser posterior à data_entrega)
   if (taskData.data_execucao && taskData.data_entrega) {
-    if (taskData.data_execucao > taskData.data_entrega) {
-      alert("⚠️ Alerta de Prazo: A Data de Execução JAMAIS pode ser posterior à Data de Entrega!");
-      return false;
+    const execDate = new Date(taskData.data_execucao);
+    const dueDate = new Date(taskData.data_entrega);
+
+    if (execDate > dueDate) {
+      alert('Atenção: A Data de Execução NUNCA pode ser posterior à Data de Entrega! 🐾');
+      return;
     }
   }
 
   try {
-    const userId = pb.authStore.record?.id;
-    const payload = {
-      ...taskData,
-      user: userId,
+    const taskPayload = {
+      titulo: taskData.titulo,
+      descricao: taskData.descricao,
+      categoria: taskData.categoria,
+      data_execucao: taskData.data_execucao ? new Date(taskData.data_execucao).toISOString() : null,
+      data_entrega: taskData.data_entrega ? new Date(taskData.data_entrega).toISOString() : null,
+      is_recurring: taskData.is_recurring,
+      recurrence_freq: taskData.recurrence_freq || 'diario',
+      urgencia: taskData.urgencia,
+      status: taskData.status,
+      user: currentUser.id,
       deleted: false
     };
 
-    let parentTask;
+    let savedTask = null;
     if (taskData.id) {
-      parentTask = await pb.collection('tarefas').update(taskData.id, payload);
+      savedTask = await pb.collection('tarefas').update(taskData.id, taskPayload);
     } else {
-      parentTask = await pb.collection('tarefas').create(payload);
+      savedTask = await pb.collection('tarefas').create(taskPayload);
     }
 
-    // Processamento de subtarefas (RN04)
-    for (let sub of subtasksList) {
-      if (sub.id) {
-        await pb.collection('subtarefas').update(sub.id, {
-          titulo: sub.titulo,
-          completa: sub.completa
-        });
-      } else {
-        await pb.collection('subtarefas').create({
-          titulo: sub.titulo,
-          completa: false,
-          tarefa: parentTask.id,
-          user: userId
-        });
+    if (savedTask && subtasksList) {
+      const existingSubtasks = taskData.id
+        ? await pb.collection('subtarefas').getFullList({ filter: `tarefa = "${savedTask.id}"` })
+        : [];
+
+      const currentSubtaskIds = subtasksList.filter(s => s.id).map(s => s.id);
+
+      for (let existing of existingSubtasks) {
+        if (!currentSubtaskIds.includes(existing.id)) {
+          await pb.collection('subtarefas').delete(existing.id);
+        }
+      }
+
+      for (let sub of subtasksList) {
+        if (sub.id) {
+          await pb.collection('subtarefas').update(sub.id, {
+            titulo: sub.titulo,
+            completa: sub.completa
+          });
+        } else {
+          await pb.collection('subtarefas').create({
+            titulo: sub.titulo,
+            completa: sub.completa || false,
+            tarefa: savedTask.id,
+            user: currentUser.id
+          });
+        }
       }
     }
 
-    await loadTasks();
-    modalTaskInstance.hide();
-    return true;
-  } catch (error) {
-    console.error("Erro ao salvar tarefa:", error);
-    alert("Falha ao salvar a tarefa. Verifique os dados.");
-    return false;
+    closeModals();
+    await refreshData();
+  } catch (err) {
+    console.error('Erro ao salvar tarefa:', err);
+    alert('Erro ao salvar tarefa. Verifique os campos. 🐾');
+  }
+}
+
+async function deleteTask(id) {
+  if (!confirm('Deseja mover esta tarefa para a lixeira?')) return;
+  try {
+    await pb.collection('tarefas').update(id, { deleted: true });
+    await refreshData();
+  } catch (err) {
+    console.error('Erro ao excluir tarefa:', err);
   }
 }
 
 /**
- * RN05: Soft Delete de Tarefa (deleted = true)
+ * RESTAURAR ITEM DA LIXEIRA (Soft Delete Undo)
  */
-async function deleteTask(id) {
-  if (!confirm("Enviar esta tarefa para a Lixeira?")) return;
-  try {
-    await pb.collection('tarefas').update(id, { deleted: true });
-    await loadTasks();
-  } catch (error) {
-    console.error("Erro ao deletar tarefa:", error);
-  }
-}
-
-// ==========================================================================
-// GERENCIAMENTO DA LIXEIRA (RESTAURAÇÃO DE SOFT DELETE)
-// ==========================================================================
-
-async function openTrashModal() {
-  try {
-    const userId = pb.authStore.record?.id;
-    
-    // Buscar tarefas e categorias deletadas
-    const deletedTasks = await pb.collection('tarefas').getFullList({
-      filter: `deleted = true ${userId ? `&& user = "${userId}"` : ''}`
-    });
-
-    const deletedCats = await pb.collection('Categorias').getFullList({
-      filter: `deleted = true ${userId ? `&& user = "${userId}"` : ''}`
-    });
-
-    const container = document.getElementById('trash-list-container');
-    const items = [...deletedTasks.map(t => ({...t, type: 'tarefa'})), ...deletedCats.map(c => ({...c, type: 'categoria'}))];
-
-    if (items.length === 0) {
-      container.innerHTML = `<div class="text-center text-muted py-3">A lixeira está vazia! 🐱</div>`;
-    } else {
-      container.innerHTML = items.map(item => `
-        <div class="meow-item-card is-deleted">
-          <div>
-            <span class="badge bg-secondary me-1">${item.type.toUpperCase()}</span>
-            <strong class="text-dark">${escapeHtml(item.titulo || item.nome)}</strong>
-          </div>
-          <button class="btn btn-sm btn-accent rounded-pill font-bold" onclick="restoreItem('${item.id}', '${item.type}')">
-            Restaurar ↩️
-          </button>
-        </div>
-      `).join('');
-    }
-
-    modalTrashInstance.show();
-  } catch (error) {
-    console.error("Erro ao abrir lixeira:", error);
-  }
-}
-
 async function restoreItem(id, type) {
   try {
-    const collectionName = type === 'tarefa' ? 'tarefas' : 'Categorias';
+    const collectionName = type === 'task' ? 'tarefas' : 'categorias';
     await pb.collection(collectionName).update(id, { deleted: false });
-    
+
+    // Se estiver no modo Lixeira, recarrega os dados sem fechar ou trocar de aba
+    if (isTrashMode) {
+      if (type === 'category') {
+        await loadCategories();
+      } else {
+        await loadTasks();
+      }
+    } else {
+      await refreshData();
+    }
+  } catch (err) {
+    console.error('Erro ao restaurar item:', err);
+  }
+}
+
+// ==========================================
+// 5. RENDERIZAÇÃO DE INTERFACE
+// ==========================================
+
+function populateCategorySelects() {
+  elements.categoryFilterSelect.innerHTML = '<option value="">Categoria: Todas</option>';
+  categoriesCache.forEach(cat => {
+    const opt = document.createElement('option');
+    opt.value = cat.id;
+    opt.textContent = cat.nome;
+    elements.categoryFilterSelect.appendChild(opt);
+  });
+
+  elements.taskCategorySelect.innerHTML = '<option value="" disabled selected>■ Categoria</option>';
+  categoriesCache.forEach(cat => {
+    const opt = document.createElement('option');
+    opt.value = cat.id;
+    opt.textContent = `■ ${cat.nome}`;
+    elements.taskCategorySelect.appendChild(opt);
+  });
+}
+
+/**
+ * Renderiza tarefas com suporte a busca de texto + múltiplos filtros combinados
+ */
+function renderTasks() {
+  if (activeTab !== 'tasks' && !isTrashMode) return;
+
+  const searchText = elements.searchTextFilter.value.trim().toLowerCase();
+  const selectedCat = elements.categoryFilterSelect.value;
+  const selectedUrg = elements.urgencyFilterSelect.value;
+  const selectedStat = elements.statusFilterSelect.value;
+
+  let filtered = tasksCache;
+
+  // Filtros Combinados
+  if (!isTrashMode) {
+    if (searchText) {
+      filtered = filtered.filter(t => 
+        (t.titulo && t.titulo.toLowerCase().includes(searchText)) ||
+        (t.descricao && t.descricao.toLowerCase().includes(searchText))
+      );
+    }
+
+    if (selectedCat) {
+      filtered = filtered.filter(t => t.categoria === selectedCat);
+    }
+
+    if (selectedUrg) {
+      filtered = filtered.filter(t => t.urgencia === selectedUrg);
+    }
+
+    if (selectedStat) {
+      filtered = filtered.filter(t => t.status === selectedStat);
+    }
+  }
+
+  const container = isTrashMode ? elements.trashListContainer : elements.tasksListContainer;
+  container.innerHTML = '';
+
+  if (filtered.length === 0) {
+    container.innerHTML = `<div class="text-center text-muted" style="padding: 2rem;">
+      Nenhuma tarefa encontrada ${isTrashMode ? 'na lixeira' : ''}. 🐾
+    </div>`;
+    return;
+  }
+
+  filtered.forEach(task => {
+    const categoryObj = task.expand?.categoria || {};
+    const categoryColor = categoryObj.cor || '#C2BEF6';
+
+    const execDateFormatted = task.data_execucao
+      ? new Date(task.data_execucao).toLocaleDateString('pt-BR')
+      : '--/--/----';
+    const dueDateFormatted = task.data_entrega
+      ? new Date(task.data_entrega).toLocaleDateString('pt-BR')
+      : '--/--/----';
+
+    const card = document.createElement('div');
+    card.className = `task-item-card ${task.deleted ? 'card-deleted' : ''}`;
+    card.style.borderLeftColor = categoryColor;
+
+    if (isTrashMode) {
+      card.innerHTML = `
+        <div class="task-item-info">
+          <span class="task-item-title">${escapeHtml(task.titulo)}</span>
+          <div class="task-item-dates">
+            <span>Fazer: ${execDateFormatted}</span>
+            <span>Para: ${dueDateFormatted}</span>
+          </div>
+        </div>
+        <div>
+          <button class="btn btn-accent" style="padding: 0.2rem 0.6rem; font-size: 0.75rem;" onclick="restoreItem('${task.id}', 'task')">
+            Restaurar
+          </button>
+        </div>
+      `;
+    } else {
+      card.innerHTML = `
+        <div class="task-item-info" onclick="openEditTaskModal('${task.id}')" style="cursor: pointer;">
+          <div class="flex-row" style="gap: 0.5rem; align-items: center;">
+            <span style="font-size: 0.9rem;">🕒</span>
+            <span class="task-item-title">${escapeHtml(task.titulo)}</span>
+          </div>
+          <div class="task-item-dates">
+            <span>Fazer: ${execDateFormatted}</span>
+            <span>Para: ${dueDateFormatted}</span>
+          </div>
+        </div>
+        <div class="task-item-meta">
+          <span class="badge ${getUrgencyBadgeClass(task.urgencia)}">${task.urgencia || 'normal'}</span>
+          <button class="btn-link" style="color: var(--color-danger); font-size: 0.85rem;" onclick="deleteTask('${task.id}')" title="Excluir">
+            🗑️
+          </button>
+        </div>
+      `;
+    }
+
+    container.appendChild(card);
+  });
+}
+
+function renderCategories() {
+  if (activeTab !== 'categories' && !isTrashMode) return;
+
+  const listToRender = isTrashMode ? deletedCategoriesCache : categoriesCache;
+  const container = isTrashMode ? elements.trashListContainer : elements.categoriesListContainer;
+  container.innerHTML = '';
+
+  if (listToRender.length === 0) {
+    container.innerHTML = `<div class="text-center text-muted" style="padding: 2rem;">
+      Nenhuma categoria encontrada ${isTrashMode ? 'na lixeira' : ''}. 🐾
+    </div>`;
+    return;
+  }
+
+  listToRender.forEach(cat => {
+    const card = document.createElement('div');
+    card.className = 'category-item-card';
+
+    if (isTrashMode) {
+      card.innerHTML = `
+        <div class="category-item-content">
+          <div class="category-color-badge" style="background-color: ${cat.cor || '#C2BEF6'};"></div>
+          <span style="font-weight: 700;">${escapeHtml(cat.nome)}</span>
+        </div>
+        <button class="btn btn-accent" style="padding: 0.2rem 0.6rem; font-size: 0.75rem;" onclick="restoreItem('${cat.id}', 'category')">
+          Restaurar
+        </button>
+      `;
+    } else {
+      card.innerHTML = `
+        <div class="category-item-content" onclick="openEditCategoryModal('${cat.id}')" style="cursor: pointer; flex: 1;">
+          <div class="category-color-badge" style="background-color: ${cat.cor || '#C2BEF6'};"></div>
+          <span style="font-weight: 700; color: var(--color-text-dark);">${escapeHtml(cat.nome)}</span>
+        </div>
+        <div>
+          <button class="btn-link" style="color: var(--color-danger);" onclick="deleteCategory('${cat.id}')" title="Excluir">
+            🗑️
+          </button>
+        </div>
+      `;
+    }
+
+    container.appendChild(card);
+  });
+}
+
+function renderSubtaskModalRows() {
+  elements.subtaskItemsContainer.innerHTML = '';
+
+  currentSubtasks.forEach((sub, index) => {
+    const row = document.createElement('div');
+    row.className = 'subtask-item-row';
+    row.innerHTML = `
+      <div class="flex-row" style="gap: 0.5rem; flex: 1;">
+        <input type="checkbox" ${sub.completa ? 'checked' : ''} onchange="toggleSubtaskStatus(${index}, this.checked)">
+        <input type="text" class="input-control" value="${escapeHtml(sub.titulo)}" style="min-height: 30px; padding: 0.2rem 0.5rem; font-size: 0.85rem;" onchange="updateSubtaskTitle(${index}, this.value)" placeholder="Título da subtarefa">
+      </div>
+      <button type="button" class="btn-link" style="color: var(--color-danger); margin-left: 0.5rem;" onclick="removeSubtaskRow(${index})">✕</button>
+    `;
+    elements.subtaskItemsContainer.appendChild(row);
+  });
+}
+
+// ==========================================
+// 6. EVENT LISTENERS E NAVEGAÇÃO
+// ==========================================
+
+function setupEventListeners() {
+  elements.tabTasksBtn.addEventListener('click', () => switchTab('tasks'));
+  elements.tabCategoriesBtn.addEventListener('click', () => switchTab('categories'));
+
+  elements.btnAddAction.addEventListener('click', () => {
+    if (activeTab === 'tasks') {
+      openAddTaskModal();
+    } else {
+      openAddCategoryModal();
+    }
+  });
+
+  elements.btnCloseTaskModal.addEventListener('click', closeModals);
+  elements.btnCloseCategoryModal.addEventListener('click', closeModals);
+
+  elements.btnOpenTrash.addEventListener('click', openTrashView);
+  elements.btnCloseTrash.addEventListener('click', closeTrashView);
+
+  elements.logoutBtn.addEventListener('click', () => {
+    pb.authStore.clear();
+    window.location.href = 'login.html';
+  });
+
+  // Listeners para os Filtros Combinados da Aba de Tarefas
+  elements.searchTextFilter.addEventListener('input', renderTasks);
+  elements.categoryFilterSelect.addEventListener('change', renderTasks);
+  elements.urgencyFilterSelect.addEventListener('change', renderTasks);
+  elements.statusFilterSelect.addEventListener('change', renderTasks);
+
+  elements.categoryForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    saveCategory({
+      id: elements.categoryIdInput.value,
+      nome: elements.categoryNameInput.value.trim(),
+      cor: elements.categoryColorSelect.value,
+      descricao: elements.categoryDescriptionInput.value.trim()
+    });
+  });
+
+  elements.taskForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+
+    const taskData = {
+      id: elements.taskIdInput.value,
+      categoria: elements.taskCategorySelect.value,
+      titulo: elements.taskTitleInput.value.trim(),
+      urgencia: elements.taskUrgencySelect.value,
+      is_recurring: elements.taskRoutineToggle.checked,
+      recurrence_freq: elements.taskRecurrenceFreq.value,
+      status: elements.taskStatusSelect.value,
+      data_execucao: elements.taskExecutionDate.value,
+      data_entrega: elements.taskDueDate.value,
+      descricao: elements.taskDescriptionInput.value.trim()
+    };
+
+    saveTaskWithSubtasks(taskData, currentSubtasks);
+  });
+
+  elements.taskRoutineToggle.addEventListener('change', (e) => {
+    if (e.target.checked) {
+      elements.recurrenceFreqGroup.classList.remove('hidden');
+    } else {
+      elements.recurrenceFreqGroup.classList.add('hidden');
+    }
+  });
+
+  elements.btnAddSubtaskRow.addEventListener('click', () => {
+    currentSubtasks.push({ id: null, titulo: '', completa: false });
+    renderSubtaskModalRows();
+  });
+}
+
+function switchTab(tab) {
+  activeTab = tab;
+  isTrashMode = false;
+  elements.trashHeader.classList.add('hidden');
+
+  if (tab === 'tasks') {
+    elements.tabTasksBtn.classList.add('active');
+    elements.tabCategoriesBtn.classList.remove('active');
+    elements.tasksListContainer.classList.remove('hidden');
+    elements.categoriesListContainer.classList.add('hidden');
+    elements.trashListContainer.classList.add('hidden');
+    elements.tasksFiltersWrapper.style.display = 'flex';
+    elements.tabSectionTitle.textContent = 'Minhas Tarefas';
+    elements.addBtnLabel.textContent = 'Adicionar Tarefa';
+  } else {
+    elements.tabCategoriesBtn.classList.add('active');
+    elements.tabTasksBtn.classList.remove('active');
+    elements.categoriesListContainer.classList.remove('hidden');
+    elements.tasksListContainer.classList.add('hidden');
+    elements.trashListContainer.classList.add('hidden');
+    elements.tasksFiltersWrapper.style.display = 'none';
+    elements.tabSectionTitle.textContent = 'Minhas Categorias';
+    elements.addBtnLabel.textContent = 'Adicionar Categoria';
+  }
+
+  refreshData();
+}
+
+/**
+ * Atualiza os dados da tela respeitando a aba ativa e o estado da lixeira
+ */
+
+async function refreshData() {
+  if (isTrashMode) {
+    if (activeTab === 'categories') {
+      await loadCategories();
+    } else {
+      await loadTasks();
+    }
+  } else {
     await loadCategories();
     await loadTasks();
-    openTrashModal(); // Recarrega o modal da lixeira
-  } catch (error) {
-    console.error("Erro ao restaurar item:", error);
   }
 }
 
-// ==========================================================================
-// FORMULÁRIOS & MANIPULAÇÃO DO MODAL
-// ==========================================================================
+// ==========================================
+// 7. CONTROLE DOS MODAIS E LIXEIRA
+// ==========================================
 
-function openCategoryModal() {
-  document.getElementById('form-category').reset();
-  document.getElementById('category-id').value = '';
-  modalCategoryInstance.show();
+function openAddTaskModal() {
+  elements.taskForm.reset();
+  elements.taskIdInput.value = '';
+  elements.btnSaveTask.textContent = 'Adicionar Tarefa';
+  elements.recurrenceFreqGroup.classList.add('hidden');
+  currentSubtasks = [];
+  renderSubtaskModalRows();
+  elements.taskModalOverlay.classList.add('is-active');
 }
 
-function editCategory(id) {
-  const cat = categoriesList.find(c => c.id === id);
-  if (!cat) return;
-
-  document.getElementById('category-id').value = cat.id;
-  document.getElementById('category-nome').value = cat.nome;
-  document.getElementById('category-cor').value = cat.cor || '#C2BEF6';
-  document.getElementById('category-descricao').value = cat.descricao || '';
-
-  modalCategoryInstance.show();
-}
-
-function handleCategorySubmit(event) {
-  event.preventDefault();
-  const data = {
-    id: document.getElementById('category-id').value,
-    nome: document.getElementById('category-nome').value,
-    cor: document.getElementById('category-cor').value,
-    descricao: document.getElementById('category-descricao').value
-  };
-  saveCategory(data);
-}
-
-function openTaskModal() {
-  document.getElementById('form-task').reset();
-  document.getElementById('task-id').value = '';
-  tempSubtasks = [];
-  renderSubtaskInputs();
-  toggleRecurrenceFreq(false);
-  modalTaskInstance.show();
-}
-
-function editTask(id) {
-  const task = tasksList.find(t => t.id === id);
+async function openEditTaskModal(id) {
+  const task = tasksCache.find(t => t.id === id);
   if (!task) return;
 
-  document.getElementById('task-id').value = task.id;
-  document.getElementById('task-titulo').value = task.titulo;
-  document.getElementById('task-categoria').value = task.categoria || '';
-  document.getElementById('task-urgencia').value = task.urgencia || 'normal';
-  document.getElementById('task-status').value = task.status || 'a_fazer';
-  document.getElementById('task-data-execucao').value = task.data_execucao ? task.data_execucao.split('T')[0] : '';
-  document.getElementById('task-data-entrega').value = task.data_entrega ? task.data_entrega.split('T')[0] : '';
-  document.getElementById('task-descricao').value = task.descricao || '';
-  document.getElementById('task-is-recurring').checked = !!task.is_recurring;
-  
-  toggleRecurrenceFreq(!!task.is_recurring);
+  elements.taskForm.reset();
+  elements.taskIdInput.value = task.id;
+  elements.taskCategorySelect.value = task.categoria || '';
+  elements.taskTitleInput.value = task.titulo || '';
+  elements.taskUrgencySelect.value = task.urgencia || 'normal';
+  elements.taskRoutineToggle.checked = task.is_recurring || false;
+  elements.taskStatusSelect.value = task.status || 'a_fazer';
+  elements.taskRecurrenceFreq.value = task.recurrence_freq || 'diario';
+  elements.taskDescriptionInput.value = task.descricao || '';
+
   if (task.is_recurring) {
-    document.getElementById('task-recurrence-freq').value = task.recurrence_freq || 'diario';
+    elements.recurrenceFreqGroup.classList.remove('hidden');
+  } else {
+    elements.recurrenceFreqGroup.classList.add('hidden');
   }
 
-  tempSubtasks = (subtasksMap[task.id] || []).map(s => ({ ...s }));
-  renderSubtaskInputs();
+  if (task.data_execucao) {
+    elements.taskExecutionDate.value = new Date(task.data_execucao).toISOString().split('T')[0];
+  }
+  if (task.data_entrega) {
+    elements.taskDueDate.value = new Date(task.data_entrega).toISOString().split('T')[0];
+  }
 
-  modalTaskInstance.show();
+  elements.btnSaveTask.textContent = 'Atualizar Tarefa';
+
+  try {
+    currentSubtasks = await pb.collection('subtarefas').getFullList({
+      filter: `tarefa = "${task.id}"`
+    });
+  } catch (err) {
+    currentSubtasks = [];
+  }
+
+  renderSubtaskModalRows();
+  elements.taskModalOverlay.classList.add('is-active');
 }
 
-function handleTaskSubmit(event) {
-  event.preventDefault();
-
-  const taskData = {
-    id: document.getElementById('task-id').value,
-    titulo: document.getElementById('task-titulo').value,
-    categoria: document.getElementById('task-categoria').value,
-    urgencia: document.getElementById('task-urgencia').value,
-    status: document.getElementById('task-status').value,
-    data_execucao: document.getElementById('task-data-execucao').value,
-    data_entrega: document.getElementById('task-data-entrega').value,
-    descricao: document.getElementById('task-descricao').value,
-    is_recurring: document.getElementById('task-is-recurring').checked,
-    recurrence_freq: document.getElementById('task-is-recurring').checked ? document.getElementById('task-recurrence-freq').value : null
-  };
-
-  saveTaskWithSubtasks(taskData, tempSubtasks);
+function openAddCategoryModal() {
+  elements.categoryForm.reset();
+  elements.categoryIdInput.value = '';
+  elements.btnSaveCategory.textContent = 'Adicionar Categoria';
+  elements.categoryModalOverlay.classList.add('is-active');
 }
 
-// Manipulação visual do checklist de subtarefas no modal
-function addSubtaskInput() {
-  tempSubtasks.push({ titulo: '', completa: false });
-  renderSubtaskInputs();
+function openEditCategoryModal(id) {
+  const category = categoriesCache.find(c => c.id === id);
+  if (!category) return;
+
+  elements.categoryIdInput.value = category.id;
+  elements.categoryNameInput.value = category.nome || '';
+  elements.categoryColorSelect.value = category.cor || '#C2BEF6';
+  elements.categoryDescriptionInput.value = category.descricao || '';
+
+  elements.btnSaveCategory.textContent = 'Atualizar Categoria';
+  elements.categoryModalOverlay.classList.add('is-active');
 }
 
-function updateSubtaskTitle(index, value) {
-  tempSubtasks[index].titulo = value;
+function closeModals() {
+  elements.taskModalOverlay.classList.remove('is-active');
+  elements.categoryModalOverlay.classList.remove('is-active');
 }
 
-function toggleSubtaskStatus(index, completed) {
-  tempSubtasks[index].completa = completed;
-}
+function openTrashView() {
+  isTrashMode = true;
+  elements.trashHeader.classList.remove('hidden');
+  elements.tasksListContainer.classList.add('hidden');
+  elements.categoriesListContainer.classList.add('hidden');
+  elements.trashListContainer.classList.remove('hidden');
 
-function removeSubtaskInput(index) {
-  tempSubtasks.splice(index, 1);
-  renderSubtaskInputs();
-}
-
-function renderSubtaskInputs() {
-  const container = document.getElementById('subtasks-container');
-  if (!container) return;
-
-  container.innerHTML = tempSubtasks.map((sub, idx) => `
-    <div class="d-flex align-items-center gap-2">
-      <input type="checkbox" ${sub.completa ? 'checked' : ''} onchange="toggleSubtaskStatus(${idx}, this.checked)">
-      <input type="text" class="meow-form-input py-1" value="${escapeHtml(sub.titulo || '')}" placeholder="Item do checklist..." onchange="updateSubtaskTitle(${idx}, this.value)">
-      <button type="button" class="btn btn-sm btn-outline-danger border-0" onclick="removeSubtaskInput(${idx})">✕</button>
-    </div>
-  `).join('');
-}
-
-function toggleRecurrenceFreq(show) {
-  const container = document.getElementById('container-recurrence-freq');
-  if (container) {
-    if (show) container.classList.remove('hidden');
-    else container.classList.add('hidden');
+  if (activeTab === 'categories') {
+    elements.trashTitleLabel.textContent = 'Lixeira de Categorias';
+    loadCategories();
+  } else {
+    elements.trashTitleLabel.textContent = 'Lixeira de Tarefas';
+    loadTasks();
   }
 }
 
-// ==========================================================================
-// FUNÇÕES AUXILIARES E UTILITÁRIAS
-// ==========================================================================
+function closeTrashView() {
+  isTrashMode = false;
+  elements.trashHeader.classList.add('hidden');
+  elements.trashListContainer.classList.add('hidden');
+  switchTab(activeTab);
+}
 
-function getUrgencyFlag(urgency) {
+// Helpers para Subtarefas
+window.toggleSubtaskStatus = function(index, checked) {
+  if (currentSubtasks[index]) {
+    currentSubtasks[index].completa = checked;
+  }
+};
+
+window.updateSubtaskTitle = function(index, value) {
+  if (currentSubtasks[index]) {
+    currentSubtasks[index].titulo = value;
+  }
+};
+
+window.removeSubtaskRow = function(index) {
+  currentSubtasks.splice(index, 1);
+  renderSubtaskModalRows();
+};
+
+function getUrgencyBadgeClass(urgency) {
   switch (urgency) {
-    case 'baixa': return '🟢';
-    case 'normal': return '🟡';
-    case 'alta': return '🟠';
-    case 'urgente': return '🔴';
-    default: return '🚩';
+    case 'baixa': return 'badge-urgency-low';
+    case 'normal': return 'badge-urgency-normal';
+    case 'alta': return 'badge-urgency-high';
+    case 'urgente': return 'badge-urgency-urgent';
+    default: return 'badge-urgency-normal';
   }
-}
-
-function formatDate(dateString) {
-  if (!dateString) return '--/--/----';
-  const cleanDate = dateString.split('T')[0];
-  const [year, month, day] = cleanDate.split('-');
-  return `${day}/${month}/${year}`;
 }
 
 function escapeHtml(text) {
   if (!text) return '';
-  return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+  return text
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
 }
