@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Miau Plans - Autenticação</title>
+  
+  <!-- Fonte Amigável/Fofa -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- CSS -->
+  <link rel="stylesheet" href="style.css" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
+
+
+  <!-- SDK do PocketBase Frontend -->
+  <script src="https://unpkg.com/pocketbase/dist/pocketbase.umd.js"></script>
+</head>
+<body>
+
+  <main class="auth-container">
+    <!-- Brand / Logo Header -->
+    <header class="brand-header flex-row text-center mb-1">
+      <img src="imgs/logo.png" alt="Miau Plans Logo" class="brand-logo" />
+      <h1 class="brand-title">
+        <span>Miau</span>
+        <span>Plans</span>
+      </h1>
+    </header>
+
+    <!-- Card de Autenticação -->
+    <section class="card auth-card" id="authCard">
+      <!-- Topo do Card (Header Escuro) -->
+      <div class="auth-card-header">
+        <h2 id="cardTitle" class="text-center">Acesse sua Conta</h2>
+      </div>
+
+      <!-- Corpo do Card -->
+      <div class="auth-card-body">
+        
+        <!-- Área de Alerta / Feedback -->
+        <div id="authAlert" class="alert-box hidden" role="alert"></div>
+
+        <!-- FORMULÁRIO DE LOGIN -->
+        <form id="loginForm" class="auth-form" novalidate>
+          <div class="form-group">
+            <label for="loginEmail" class="form-label">E-mail</label>
+            <input 
+              type="email" 
+              id="loginEmail" 
+              name="email" 
+              class="input-control"
+              placeholder="seuemail@exemplo.com" 
+              required 
+              autocomplete="email"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="loginPassword" class="form-label">Senha</label>
+            <input 
+              type="password" 
+              id="loginPassword" 
+              name="password" 
+              class="input-control"
+              placeholder="••••••••" 
+              required 
+              autocomplete="current-password"
+            />
+          </div>
+
+          <div class="auth-links flex-between mb-1">
+            <button type="button" class="btn-link" id="btnForgotPassword">Esqueci a Senha</button>
+            <button type="button" class="btn-link" id="btnGoToRegister">Cadastrar</button>
+          </div>
+
+          <button type="submit" class="btn btn-primary btn-block" id="btnLoginSubmit">
+            Entrar
+          </button>
+        </form>
+
+        <!-- FORMULÁRIO DE CADASTRO (Inicialmente oculto) -->
+        <form id="registerForm" class="auth-form hidden" novalidate>
+          <div class="form-group">
+            <label for="registerEmail" class="form-label">E-mail</label>
+            <input 
+              type="email" 
+              id="registerEmail" 
+              name="email" 
+              class="input-control"
+              placeholder="seuemail@exemplo.com" 
+              required 
+              autocomplete="email"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="registerPassword" class="form-label">Senha</label>
+            <input 
+              type="password" 
+              id="registerPassword" 
+              name="password" 
+              class="input-control"
+              placeholder="No mínimo 8 caracteres" 
+              required 
+              autocomplete="new-password"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="registerPasswordConfirm" class="form-label">Confirmar Senha</label>
+            <input 
+              type="password" 
+              id="registerPasswordConfirm" 
+              name="passwordConfirm" 
+              class="input-control"
+              placeholder="Confirmar senha" 
+              required 
+              autocomplete="new-password"
+            />
+          </div>
+
+          <div class="auth-links flex-between mb-1">
+            <button type="button" class="btn-link" id="btnGoToLogin">Login</button>
+          </div>
+
+          <button type="submit" class="btn btn-primary btn-block" id="btnRegisterSubmit">
+            Cadastrar
+          </button>
+        </form>
+
+      </div>
+    </section>
+  </main>
+
+  <script src="login.js"></script>
+</body>
+</html>
