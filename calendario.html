@@ -12,6 +12,9 @@
 
   <link rel="stylesheet" href="style.css" />
   
+  <!-- Bootstrap Icons -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
   <!-- PocketBase SDK (UMD) -->
   <script src="https://cdn.jsdelivr.net/npm/pocketbase@0.21.3/dist/pocketbase.umd.js"></script>
 
@@ -288,6 +291,41 @@
       font-size: 0.85rem;
     }
 
+    /* Estilização dos Ícones de Status nos Cards */
+    .status-icon {
+      font-size: 1.15rem;
+      vertical-align: middle;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .status-todo {
+      color: #8C4189; /* Rosa pastel */
+    }
+
+    .status-doing {
+      color: #D97706; /* Amarelo/Laranja */
+    }
+
+    .status-done {
+      color: #10B981; /* Verde Mint */
+    }
+
+    .status-overdue {
+      color: #EF4444; /* Vermelho/Coral */
+    }
+
+    .status-cancelled {
+      color: #9CA3AF; /* Cinza */
+    }
+
+    /* Efeito de texto riscado para tarefas concluídas */
+    .text-strikethrough {
+      text-decoration: line-through;
+      opacity: 0.7;
+    }
+
     .meow-card-footer {
       display: flex;
       align-items: center;
@@ -400,19 +438,22 @@
         </div>
 
         <div class="flex-row mb-1" style="gap: 0.5rem;">
-          <select id="taskUrgencySelect" class="select-control" style="flex: 1;">
-            <option value="baixa">🚩 Baixa</option>
-            <option value="normal" selected>🚩 Normal</option>
-            <option value="alta">🚩 Alta</option>
-            <option value="urgente">🚩 Urgente</option>
+        <div style="display: flex; align-items: center; gap: 0.5rem; flex: 1;">
+          <i id="urgencyFlagIcon" class="bi bi-flag-fill" style="font-size: 1.25rem; -webkit-text-stroke: 1px #2D3748;"></i>
+          <select id="taskUrgencySelect" class="select-control" style="flex: 1;" onchange="updateModalUrgencyFlag(this.value)">
+            <option value="baixa">Baixa</option>
+            <option value="normal" selected>Normal</option>
+            <option value="alta">Alta</option>
+            <option value="urgente">Urgente</option>
           </select>
+        </div>
 
           <select id="taskStatusSelect" class="select-control" style="flex: 1;">
-            <option value="a_fazer">⦿ A Fazer</option>
-            <option value="em_progresso">⏳ Em Progresso</option>
-            <option value="concluida">✓ Concluída</option>
-            <option value="atrasada">⚠️ Atrasada</option>
-            <option value="cancelada">🚫 Cancelada</option>
+            <option value="a_fazer">A Fazer</option>
+            <option value="em_progresso">Em Progresso</option>
+            <option value="concluida">Concluída</option>
+            <option value="atrasada">Atrasada</option>
+            <option value="cancelada">Cancelada</option>
           </select>
         </div>
 

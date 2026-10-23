@@ -211,14 +211,29 @@ function isRoutineForDate(task, targetDateObj) {
 
 // 6. VALIDAÇÃO E SALVAMENTO DE TAREFAS
 function validateTaskDates(dataExec, dataEntrega, isRecurring) {
+
+  // Pega a data de hoje formatada no padrão YYYY-MM-DD
+  const todayStr = getLocalDateStr();
+
+  // Validação 1: Bloquear criação/edição com datas passadas
+  if (dataEntrega && dataEntrega < todayStr) {
+    alert('⚠️ Regra de Negócio: A Data de Entrega/Limite não pode ser anterior ao dia de hoje!');
+    return false;
+  }
+
+  if (!isRecurring && dataExec && dataExec < todayStr) {
+    alert('⚠️ Regra de Negócio: A Data de Execução não pode ser anterior ao dia de hoje!');
+    return false;
+  }
+
+  // Validação 2: Data de execução nunca pode ser posterior à data de entrega
   if (!isRecurring && dataExec && dataEntrega) {
-    const execDate = new Date(dataExec);
-    const deliveryDate = new Date(dataEntrega);
-    if (execDate > deliveryDate) {
+    if (dataExec > dataEntrega) {
       alert('⚠️ Regra de Negócio: A Data de Execução NUNCA pode ser posterior à Data de Entrega!');
       return false;
     }
   }
+
   return true;
 }
 
@@ -518,10 +533,40 @@ function renderTaskCard(task, isDraggable = false) {
   const execFormatted = task.data_execucao ? formatDateBR(task.data_execucao) : '---';
   const deliveryFormatted = task.data_entrega ? formatDateBR(task.data_entrega) : '---';
 
-  let flagColor = '#718096';
-  if (task.urgencia === 'urgente') flagColor = 'var(--color-danger)';
-  if (task.urgencia === 'alta') flagColor = '#C65911';
-  if (task.urgencia === 'normal') flagColor = '#7F6000';
+  // 1. Mapeamento de Ícone e Cor do Status (Bootstrap Icons)
+  let statusIconHtml = '<i class="bi bi-circle status-icon todo"></i>';
+
+  if (task.status === 'a_fazer') {
+    statusIconHtml = '<i class="bi bi-circle status-icon status-todo" title="A Fazer"></i>';
+  } else if (task.status === 'em_progresso') {
+    statusIconHtml = '<i class="bi bi-hourglass-split status-icon status-doing" title="Em Progresso"></i>';
+  } else if (task.status === 'concluida') {
+    statusIconHtml = '<i class="bi bi-check-circle-fill status-icon status-done" title="Concluída"></i>';
+  } else if (task.status === 'atrasada') {
+    statusIconHtml = '<i class="bi bi-exclamation-triangle-fill status-icon status-overdue" title="Atrasada"></i>';
+  } else if (task.status === 'cancelada') {
+    statusIconHtml = '<i class="bi bi-x-circle-fill status-icon status-cancelled" title="Cancelada"></i>';
+  }
+
+  // Cores fiéis ao Design System para as bandeiras
+  let flagColor = '#A8F5B4'; // Normal (Verde)
+  let urgencyLabel = 'Normal';
+
+  if (task.urgencia === 'baixa') {
+    flagColor = '#C2E0FF'; // Azul pastel
+    urgencyLabel = 'Baixa';
+  } else if (task.urgencia === 'normal') {
+    flagColor = '#A8F5B4'; // Verde pastel
+    urgencyLabel = 'Normal';
+  } else if (task.urgencia === 'alta') {
+    flagColor = '#FFD8A8'; // Laranja pastel
+    urgencyLabel = 'Alta';
+  } else if (task.urgencia === 'urgente') {
+    flagColor = '#FFA8A8'; // Vermelho/Coral pastel
+    urgencyLabel = 'Urgente';
+  }
+
+ const flagIcon = `<i class="bi bi-flag-fill" style="color: ${flagColor}; -webkit-text-stroke: 1px #2D3748; font-size: 1.1rem; vertical-align: middle;"></i>`;
 
   return `
     <div class="meow-card ${isDraggable ? 'card-draggable' : ''}" 
@@ -529,12 +574,12 @@ function renderTaskCard(task, isDraggable = false) {
          ${isDraggable ? `draggable="true" ondragstart="handleDragStart(event, '${task.id}')"` : ''}>
       <div class="meow-card-header">
         <div class="meow-card-title-group">
-          <div class="status-check-circle ${isCompleted ? 'completed' : ''}">
-            ${isCompleted ? '✓' : 'O'}
-          </div>
-          <span class="meow-card-title">${escapeHtml(task.titulo)}</span>
+          ${statusIconHtml}
+          <span class="meow-card-title ${isCompleted ? 'text-strikethrough' : ''}">${escapeHtml(task.titulo)}</span>
         </div>
-        <span class="flag-icon" style="color: ${flagColor};" title="Urgência: ${task.urgencia}">🚩</span>
+       <span class="flag-icon" title="Urgência: ${urgencyLabel}">
+          ${flagIcon}
+        </span>
       </div>
       <div class="meow-card-footer">
         ${task.is_recurring 
@@ -569,6 +614,15 @@ async function handleDrop(e) {
   const newExecDateStr = targetZone.dataset.dropdate;
   if (!draggingTaskId || !newExecDateStr) return;
 
+  const todayStr = getLocalDateStr();
+
+  // Bloqueia se tentar soltar em um dia que já passou
+  if (newExecDateStr < todayStr) {
+    alert('⚠️ Regra de Negócio: Não é possível mover a Data de Execução para um dia que já passou!');
+    draggingTaskId = null;
+    return;
+  }
+
   const task = tasksList.find(t => t.id === draggingTaskId);
   if (!task || task.is_recurring) return;
 
@@ -595,6 +649,14 @@ async function handleDrop(e) {
   }
 }
 
+// Utilitário para pegar a data atual/local sem problemas de fuso horário UTC
+function getLocalDateStr(dateObj = new Date()) {
+  const year = dateObj.getFullYear();
+  const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+  const day = String(dateObj.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
 // 9. MODAL DE EDIÇÃO
 async function openTaskModal(taskId = null) {
   const modalOverlay = document.getElementById('taskModalOverlay');
@@ -602,16 +664,25 @@ async function openTaskModal(taskId = null) {
   const subtasksList = document.getElementById('subtasksList');
   subtasksList.innerHTML = '';
 
+  // Atualiza dinamicamente a data mínima permitida nos campos do formulário para HOJE
+  const todayStr = getLocalDateStr();
+  const deliveryInput = document.getElementById('taskDeliveryDate');
+  const execInput = document.getElementById('taskExecDate');
+
+  if (deliveryInput) deliveryInput.min = todayStr;
+  if (execInput) execInput.min = todayStr;
+
   if (taskId) {
     const task = tasksList.find(t => t.id === taskId);
     if (!task) return;
 
-    // Popula o select e deixa selecionada a categoria salva
     populateCategoryOptions(task.categoria || '');
 
     document.getElementById('taskIdInput').value = task.id;
     document.getElementById('taskTitleInput').value = task.titulo;
-    document.getElementById('taskUrgencySelect').value = task.urgencia || 'normal';
+    const urgencyValue = task.urgencia || 'normal';
+    document.getElementById('taskUrgencySelect').value = urgencyValue;
+    updateModalUrgencyFlag(urgencyValue); // <-- Atualiza a cor do ícone no modal
     document.getElementById('taskStatusSelect').value = task.status || 'a_fazer';
     document.getElementById('taskDeliveryDate').value = task.data_entrega ? task.data_entrega.split(' ')[0] : '';
     document.getElementById('taskExecDate').value = task.data_execucao ? task.data_execucao.split(' ')[0] : '';
@@ -638,10 +709,18 @@ async function openTaskModal(taskId = null) {
 
   } else {
     form.reset();
-    populateCategoryOptions(''); // Re-popula após o reset para restaurar os options
+    populateCategoryOptions('');
+
+    // Se o dia selecionado no calendário for anterior a hoje, força a data para HOJE
+    const selectedDateStr = getLocalDateStr(selectedDate);
+    const initialDateStr = selectedDateStr < todayStr ? todayStr : selectedDateStr;
+
     document.getElementById('taskIdInput').value = '';
-    document.getElementById('taskDeliveryDate').value = selectedDate.toISOString().split('T')[0];
-    document.getElementById('taskExecDate').value = selectedDate.toISOString().split('T')[0];
+    document.getElementById('taskDeliveryDate').value = initialDateStr;
+    document.getElementById('taskExecDate').value = initialDateStr;
+    document.getElementById('taskUrgencySelect').value = 'normal';
+    updateModalUrgencyFlag('normal'); // <-- Garante a cor verde para nova tarefa
+    
     toggleRecurringFields(false);
     document.getElementById('btnDeleteTask').classList.add('hidden');
   }
@@ -664,4 +743,19 @@ function formatDateBR(dateString) {
 function escapeHtml(str) {
   if (!str) return '';
   return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+
+// Atualiza apenas a cor do ícone da bandeira do Bootstrap Icons no Modal
+function updateModalUrgencyFlag(urgency) {
+  const flagIcon = document.getElementById('urgencyFlagIcon');
+  if (!flagIcon) return;
+
+  const colors = {
+    baixa: '#C2E0FF',   // Azul pastel
+    normal: '#A8F5B4',  // Verde pastel
+    alta: '#FFD8A8',    // Laranja pastel
+    urgente: '#FFA8A8'  // Vermelho/Coral pastel
+  };
+
+  flagIcon.style.color = colors[urgency] || colors.normal;
 }
