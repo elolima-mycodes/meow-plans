@@ -426,6 +426,32 @@ input:checked + .slider::before {
   border: 1px solid var(--color-danger);
 }
 
+/* RF02.3: Estilo visual acinzentado para tarefas concluídas */
+.meow-card.card-completed {
+  background-color: #E2E8F0 !important; /* Fundo cinza suave */
+  border-color: #CBD5E0 !important;     /* Borda acinzentada */
+  opacity: 0.75;
+}
+
+.meow-card.card-completed .meow-card-title {
+  color: #718096 !important;
+  text-decoration: line-through;
+}
+
+.meow-card.card-completed .meow-card-footer {
+  color: #A0AEC0 !important;
+}
+
+/* Cursor interativo no ícone de status */
+.status-icon-btn {
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+
+.status-icon-btn:hover {
+  transform: scale(1.2);
+}
+
 /* --------------------------------------------------------------------------
    7. CARDS & DRAG-AND-DROP CONTAINERS
    -------------------------------------------------------------------------- */

@@ -12,6 +12,7 @@ let currentView = 'mes'; // 'mes' | 'semana' | 'dia' | 'tarefas'
 let selectedDate = new Date();
 let tasksList = [];
 let categoriesList = [];
+let routineCompletionsList = [];
 let draggingTaskId = null;
 
 const MONTH_NAMES = [
@@ -156,6 +157,16 @@ async function loadAndProcessTasks() {
       expand: 'categoria'
     });
 
+    // Carrega o histórico de rotinas concluídas por dia
+    try {
+      routineCompletionsList = await pb.collection('conclusoes_rotina').getFullList({
+        filter: `user = "${currentUser.id}"`
+      });
+    } catch (err) {
+      console.warn('Coleção conclusoes_rotina ainda sem registros ou erro ao carregar:', err);
+      routineCompletionsList = [];
+    }
+
     const todayStr = new Date().toISOString().split('T')[0];
 
     tasksList = await Promise.all(rawTasks.map(async (task) => {
@@ -182,17 +193,29 @@ async function loadAndProcessTasks() {
 function isRoutineForDate(task, targetDateObj) {
   if (!task.is_recurring) return false;
 
-  const targetDate = new Date(targetDateObj.getFullYear(), targetDateObj.getMonth(), targetDateObj.getDate());
-  const createdDateRaw = new Date(task.created);
-  const startDate = new Date(createdDateRaw.getFullYear(), createdDateRaw.getMonth(), createdDateRaw.getDate());
+  // Data exibida no calendário (YYYY-MM-DD)
+  const targetStr = getLocalDateStr(targetDateObj);
+  
+  // Data inicial da rotina: prioriza data_execucao; se não houver, usa a data de criação
+  const baseDateStr = task.data_execucao 
+    ? task.data_execucao.split(' ')[0] 
+    : task.created.split(' ')[0];
 
-  if (targetDate < startDate) return false;
+  // Regra 1: Não exibe em dias anteriores ao início da rotina
+  if (targetStr < baseDateStr) return false;
 
+  // Regra 2: Se houver "Repetir até" (data_entrega), bloqueia se a data atual passou do limite
   if (task.data_entrega) {
-    const limitDateRaw = new Date(task.data_entrega);
-    const limitDate = new Date(limitDateRaw.getFullYear(), limitDateRaw.getMonth(), limitDateRaw.getDate());
-    if (targetDate > limitDate) return false;
+    const limitDateStr = task.data_entrega.split(' ')[0];
+    if (targetStr > limitDateStr) {
+      return false;
+    }
   }
+
+  // Regras de Frequência de Repetição
+  const baseParts = baseDateStr.split('-');
+  const startDate = new Date(parseInt(baseParts[0]), parseInt(baseParts[1]) - 1, parseInt(baseParts[2]));
+  const targetDate = new Date(targetDateObj.getFullYear(), targetDateObj.getMonth(), targetDateObj.getDate());
 
   const freq = task.recurrence_freq || 'diario';
 
@@ -261,8 +284,8 @@ async function handleSaveTask(e) {
     categoria,
     urgencia,
     status,
-    data_entrega: data_entrega ? `${data_entrega} 00:00:00.000Z` : null,
-    data_execucao: data_execucao ? `${data_execucao} 00:00:00.000Z` : null,
+    data_entrega: data_entrega ? `${data_entrega} 12:00:00.000Z` : null,
+    data_execucao: data_execucao ? `${data_execucao} 12:00:00.000Z` : null,
     is_recurring,
     recurrence_freq,
     descricao,
@@ -418,7 +441,7 @@ function selectMonthDay(dayNumber) {
 }
 
 function renderDayPanel(targetElement, dateObj) {
-  const dateStr = dateObj.toISOString().split('T')[0];
+  const dateStr = getLocalDateStr(dateObj);
   const dayTitleStr = `${WEEKDAY_NAMES[dateObj.getDay()]}, ${dateObj.getDate()} de ${MONTH_NAMES[dateObj.getMonth()]}`;
 
   const deliveryTasks = tasksList.filter(t => !t.is_recurring && t.data_entrega && t.data_entrega.startsWith(dateStr));
@@ -431,19 +454,19 @@ function renderDayPanel(targetElement, dateObj) {
       <span>${dayTitleStr}</span>
     </div>
 
-    <!-- PARA ENTREGAR HOJE -->
+   <!-- PARA ENTREGAR HOJE -->
     <div class="task-section-box section-pink">
       <div class="section-title">Para Entregar</div>
       <div class="section-cards-container">
-        ${deliveryTasks.map(t => renderTaskCard(t, false)).join('') || '<p class="text-center text-muted" style="font-size:0.75rem;">Nenhuma entrega para hoje ✨</p>'}
+        ${deliveryTasks.map(t => renderTaskCard(t, false, dateStr)).join('') || '<p class="text-center text-muted" style="font-size:0.75rem;">Nenhuma entrega para hoje ✨</p>'}
       </div>
     </div>
 
-    <!-- PARA FAZER HOJE (DRAG AND DROP HABILITADO) -->
+    <!-- PARA FAZER HOJE -->
     <div class="task-section-box section-mint drop-zone" data-dropdate="${dateStr}" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event)">
       <div class="section-title">Para Fazer</div>
       <div class="section-cards-container">
-        ${execTasks.map(t => renderTaskCard(t, true)).join('') || '<p class="text-center text-muted" style="font-size:0.75rem;">Nada agendado para fazer ✨</p>'}
+        ${execTasks.map(t => renderTaskCard(t, true, dateStr)).join('') || '<p class="text-center text-muted" style="font-size:0.75rem;">Nada agendado para fazer ✨</p>'}
       </div>
     </div>
 
@@ -451,7 +474,7 @@ function renderDayPanel(targetElement, dateObj) {
     <div class="task-section-box section-green">
       <div class="section-title">Rotineiros</div>
       <div class="section-cards-container">
-        ${routineTasks.map(t => renderTaskCard(t, false)).join('') || '<p class="text-center text-muted" style="font-size:0.75rem;">Sem rotinas para hoje 🐾</p>'}
+        ${routineTasks.map(t => renderTaskCard(t, false, dateStr)).join('') || '<p class="text-center text-muted" style="font-size:0.75rem;">Sem rotinas para hoje 🐾</p>'}
       </div>
     </div>
   `;
@@ -527,49 +550,87 @@ function renderAllTasksView(container) {
   `;
 }
 
-// 8. CARD DE TAREFA E DRAG & DROP
-function renderTaskCard(task, isDraggable = false) {
-  const isCompleted = task.status === 'concluida';
+// 8. CARD DE TAREFA E DRAG & DROP (RF02.3 & RF05.4)
+function renderTaskCard(task, isDraggable = false, currentDateStr = null) {
+  // Pega a data do dia em que o card está sendo renderizado (ex: '2026-11-04')
+  const targetDateStr = currentDateStr || getLocalDateStr(selectedDate);
+
+  // 1. Determina se esta tarefa está concluída HOJE
+  let isCompleted = false;
+
+  if (task.is_recurring) {
+    // Para rotinas: verifica se existe registro na tabela conclusoes_rotina para esta data
+    const hasCompletion = routineCompletionsList.some(
+      c => c.tarefa === task.id && c.data === targetDateStr
+    );
+    isCompleted = hasCompletion;
+  } else {
+    // Para tarefas normais: verifica o status direto do banco
+    isCompleted = task.status === 'concluida';
+  }
+
+  // 2. Formatadores de data para a rodapé do card
   const execFormatted = task.data_execucao ? formatDateBR(task.data_execucao) : '---';
   const deliveryFormatted = task.data_entrega ? formatDateBR(task.data_entrega) : '---';
 
-  // 1. Mapeamento de Ícone e Cor do Status (Bootstrap Icons)
-  let statusIconHtml = '<i class="bi bi-circle status-icon todo"></i>';
+  // 3. Monta a chamada do clique passando a data e se é rotina
+  const toggleOnClick = `toggleTaskStatus(event, '${task.id}', '${task.status}', '${targetDateStr}', ${task.is_recurring})`;
 
-  if (task.status === 'a_fazer') {
-    statusIconHtml = '<i class="bi bi-circle status-icon status-todo" title="A Fazer"></i>';
+  // 4. Monta o Ícone de Status dinâmico
+  let statusIconHtml = '';
+
+  if (isCompleted) {
+    // Ícone verde de concluído
+    statusIconHtml = `<i class="bi bi-check-circle-fill status-icon status-done status-icon-btn" 
+                        title="Reabrir tarefa" 
+                        style="cursor:pointer;" 
+                        onclick="${toggleOnClick}"></i>`;
   } else if (task.status === 'em_progresso') {
-    statusIconHtml = '<i class="bi bi-hourglass-split status-icon status-doing" title="Em Progresso"></i>';
-  } else if (task.status === 'concluida') {
-    statusIconHtml = '<i class="bi bi-check-circle-fill status-icon status-done" title="Concluída"></i>';
+    statusIconHtml = `<i class="bi bi-hourglass-split status-icon status-doing status-icon-btn" 
+                        title="Em Progresso - Clique para alternar" 
+                        style="cursor:pointer;" 
+                        onclick="${toggleOnClick}"></i>`;
   } else if (task.status === 'atrasada') {
-    statusIconHtml = '<i class="bi bi-exclamation-triangle-fill status-icon status-overdue" title="Atrasada"></i>';
+    statusIconHtml = `<i class="bi bi-exclamation-triangle-fill status-icon status-overdue status-icon-btn" 
+                        title="Atrasada - Clique para concluir" 
+                        style="cursor:pointer;" 
+                        onclick="${toggleOnClick}"></i>`;
   } else if (task.status === 'cancelada') {
-    statusIconHtml = '<i class="bi bi-x-circle-fill status-icon status-cancelled" title="Cancelada"></i>';
+    statusIconHtml = `<i class="bi bi-x-circle-fill status-icon status-cancelled status-icon-btn" 
+                        title="Cancelada" 
+                        style="cursor:pointer;" 
+                        onclick="${toggleOnClick}"></i>`;
+  } else {
+    // Padrão: A Fazer (círculo vazio)
+    statusIconHtml = `<i class="bi bi-circle status-icon status-todo status-icon-btn" 
+                        title="Marcar como Concluída" 
+                        style="cursor:pointer;" 
+                        onclick="${toggleOnClick}"></i>`;
   }
 
-  // Cores fiéis ao Design System para as bandeiras
-  let flagColor = '#A8F5B4'; // Normal (Verde)
+  // 5. Cores das bandeiras de urgência
+  let flagColor = '#A8F5B4';
   let urgencyLabel = 'Normal';
 
   if (task.urgencia === 'baixa') {
-    flagColor = '#C2E0FF'; // Azul pastel
+    flagColor = '#C2E0FF';
     urgencyLabel = 'Baixa';
   } else if (task.urgencia === 'normal') {
-    flagColor = '#A8F5B4'; // Verde pastel
+    flagColor = '#A8F5B4';
     urgencyLabel = 'Normal';
   } else if (task.urgencia === 'alta') {
-    flagColor = '#FFD8A8'; // Laranja pastel
+    flagColor = '#FFD8A8';
     urgencyLabel = 'Alta';
   } else if (task.urgencia === 'urgente') {
-    flagColor = '#FFA8A8'; // Vermelho/Coral pastel
+    flagColor = '#FFA8A8';
     urgencyLabel = 'Urgente';
   }
 
- const flagIcon = `<i class="bi bi-flag-fill" style="color: ${flagColor}; -webkit-text-stroke: 1px #2D3748; font-size: 1.1rem; vertical-align: middle;"></i>`;
+  const flagIcon = `<i class="bi bi-flag-fill" style="color: ${flagColor}; -webkit-text-stroke: 1px #2D3748; font-size: 1.1rem; vertical-align: middle;"></i>`;
 
+  // 6. Retorna o HTML do Card montado
   return `
-    <div class="meow-card ${isDraggable ? 'card-draggable' : ''}" 
+    <div class="meow-card ${isDraggable ? 'card-draggable' : ''} ${isCompleted ? 'card-completed' : ''}" 
          onclick="openTaskModal('${task.id}')"
          ${isDraggable ? `draggable="true" ondragstart="handleDragStart(event, '${task.id}')"` : ''}>
       <div class="meow-card-header">
@@ -577,17 +638,54 @@ function renderTaskCard(task, isDraggable = false) {
           ${statusIconHtml}
           <span class="meow-card-title ${isCompleted ? 'text-strikethrough' : ''}">${escapeHtml(task.titulo)}</span>
         </div>
-       <span class="flag-icon" title="Urgência: ${urgencyLabel}">
+        <span class="flag-icon" title="Urgência: ${urgencyLabel}">
           ${flagIcon}
         </span>
       </div>
       <div class="meow-card-footer">
         ${task.is_recurring 
           ? `<span>🔄 ${task.recurrence_freq || 'Rotina'}</span>` 
-          : `<span>Fazer: ${execFormatted}</span><span>Para:${deliveryFormatted}</span>`}
+          : `<span>Fazer: ${execFormatted}</span><span>Para: ${deliveryFormatted}</span>`}
       </div>
     </div>
   `;
+}
+
+// Alterna rapidamente o status da tarefa entre 'concluida' e 'a_fazer' (RF02.3 / RF05.4)
+async function toggleTaskStatus(event, taskId, currentStatus, targetDateStr = null, isRecurring = false) {
+  event.stopPropagation(); // Impede a abertura do modal ao clicar no ícone de status
+
+  // Garante uma data válida caso não seja informada
+  const dateStr = targetDateStr || getLocalDateStr(selectedDate);
+
+  try {
+    if (isRecurring) {
+      // Procura se já existe uma conclusão gravada para esta rotina nesta data
+      const existing = routineCompletionsList.find(c => c.tarefa === taskId && c.data === dateStr);
+
+      if (existing) {
+        // Se já foi concluída hoje, desmarca (remove da coleção conclusoes_rotina)
+        await pb.collection('conclusoes_rotina').delete(existing.id);
+      } else {
+        // Se não foi concluída hoje, cria o registro na coleção conclusoes_rotina
+        await pb.collection('conclusoes_rotina').create({
+          tarefa: taskId,
+          data: dateStr,
+          user: currentUser.id
+        });
+      }
+    } else {
+      // Para tarefas normais: altera o status direto na coleção tarefas
+      const newStatus = currentStatus === 'concluida' ? 'a_fazer' : 'concluida';
+      await pb.collection('tarefas').update(taskId, { status: newStatus });
+    }
+
+    await loadAndProcessTasks();
+    renderCurrentView();
+  } catch (err) {
+    console.error('Erro ao alternar status da tarefa:', err);
+    alert('Erro ao atualizar o status da tarefa.');
+  }
 }
 
 function handleDragStart(e, taskId) {
@@ -759,3 +857,4 @@ function updateModalUrgencyFlag(urgency) {
 
   flagIcon.style.color = colors[urgency] || colors.normal;
 }
+
