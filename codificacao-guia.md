@@ -10,3 +10,7 @@ Preciso que gere um prompt para que eu possa integrar o Calendário com a parte/
 - Expirar acesso após 30 min sem interação com a aplicação
 
 - Implementar como PWA
+
+
+Para a IA mostrar apenas as atualizações
+mostre exatamente e com total clareza as linhas que devo alterar
