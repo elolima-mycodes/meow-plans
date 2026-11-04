@@ -51,7 +51,7 @@ function renderUserAvatar() {
   }
 }
 
-// 3. EVENTOS
+// 3. EVENTOS DEFENSIVOS (Funciona tanto em calendario.html quanto gerenciar.html)
 function setupEventListeners() {
   document.querySelectorAll('.tab-btn[data-view]').forEach(btn => {
     btn.addEventListener('click', (e) => {
@@ -62,25 +62,41 @@ function setupEventListeners() {
     });
   });
 
-  document.getElementById('prevPeriodBtn').addEventListener('click', () => navigatePeriod(-1));
-  document.getElementById('nextPeriodBtn').addEventListener('click', () => navigatePeriod(1));
+  const prevBtn = document.getElementById('prevPeriodBtn');
+  if (prevBtn) prevBtn.addEventListener('click', () => navigatePeriod(-1));
 
-  document.getElementById('btnSair').addEventListener('click', () => {
-    pb.authStore.clear();
-    window.location.href = 'login.html';
-  });
+  const nextBtn = document.getElementById('nextPeriodBtn');
+  if (nextBtn) nextBtn.addEventListener('click', () => navigatePeriod(1));
 
-  document.getElementById('btnNovaTarefa').addEventListener('click', () => openTaskModal());
-  document.getElementById('closeTaskModalBtn').addEventListener('click', closeTaskModal);
+  const btnSair = document.getElementById('btnSair');
+  if (btnSair) {
+    btnSair.addEventListener('click', () => {
+      pb.authStore.clear();
+      window.location.href = 'login.html';
+    });
+  }
 
-  // Toggle do formulário ao marcar Recorrente/Rotina
-  document.getElementById('taskRecurringCheck').addEventListener('change', (e) => {
-    toggleRecurringFields(e.target.checked);
-  });
+  const btnNovaTarefa = document.getElementById('btnNovaTarefa');
+  if (btnNovaTarefa) btnNovaTarefa.addEventListener('click', () => openTaskModal());
 
-  document.getElementById('taskForm').addEventListener('submit', handleSaveTask);
-  document.getElementById('btnDeleteTask').addEventListener('click', handleDeleteTask);
-  document.getElementById('btnAddSubtaskBtn').addEventListener('click', () => addSubtaskRow());
+  const closeTaskModalBtn = document.getElementById('closeTaskModalBtn');
+  if (closeTaskModalBtn) closeTaskModalBtn.addEventListener('click', closeTaskModal);
+
+  const taskRecurringCheck = document.getElementById('taskRecurringCheck');
+  if (taskRecurringCheck) {
+    taskRecurringCheck.addEventListener('change', (e) => {
+      toggleRecurringFields(e.target.checked);
+    });
+  }
+
+  const taskForm = document.getElementById('taskForm');
+  if (taskForm) taskForm.addEventListener('submit', handleSaveTask);
+
+  const btnDeleteTask = document.getElementById('btnDeleteTask');
+  if (btnDeleteTask) btnDeleteTask.addEventListener('click', handleDeleteTask);
+
+  const btnAddSubtaskBtn = document.getElementById('btnAddSubtaskBtn');
+  if (btnAddSubtaskBtn) btnAddSubtaskBtn.addEventListener('click', () => addSubtaskRow());
 }
 
 function toggleRecurringFields(isRecurring) {
