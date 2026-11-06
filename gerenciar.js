@@ -6,11 +6,13 @@
 // 1. INICIALIZAÇÃO DO POCKETBASE SDK
 const POCKETBASE_URL = 'http://127.0.0.1:8090';
 const pb = new PocketBase(POCKETBASE_URL);
+
 // 2. ESTADO GLOBAL
 let currentUser = null;
 let categoriesCache = [];
 let tasksCache = [];
 let deletedCategoriesCache = [];
+let routineCompletionsList = [];
 let activeTab = 'tasks'; // 'tasks' | 'categories'
 let isTrashMode = false;
 let currentSubtasks = [];
@@ -62,7 +64,6 @@ const elements = {
   categoryIdInput: document.getElementById('category-id'),
   categoryNameInput: document.getElementById('category-name-input'),
   categoryColorSelect: document.getElementById('category-color-select'),
-  categoryDescriptionInput: document.getElementById('category-description-input'),
   btnSaveCategory: document.getElementById('btn-save-category')
 };
 
@@ -90,19 +91,33 @@ function checkAuthentication() {
 async function loadCategories() {
   try {
     if (isTrashMode && activeTab === 'categories') {
-      deletedCategoriesCache = await pb.collection('categorias').getFullList({
-        filter: `user = "${currentUser.id}" && deleted = true`,
-        sort: 'nome'
-      });
+      try {
+        deletedCategoriesCache = await pb.collection('Categorias').getFullList({
+          filter: `user = "${currentUser.id}" && deleted = true`,
+          sort: 'nome'
+        });
+      } catch (err) {
+        deletedCategoriesCache = await pb.collection('categorias').getFullList({
+          filter: `user = "${currentUser.id}" && deleted = true`,
+          sort: 'nome'
+        });
+      }
       renderCategories();
       return;
     }
 
-    const records = await pb.collection('categorias').getFullList({
-      filter: `user = "${currentUser.id}" && deleted = false`,
-      sort: 'nome'
-    });
-    categoriesCache = records;
+    try {
+      categoriesCache = await pb.collection('Categorias').getFullList({
+        filter: `user = "${currentUser.id}" && (deleted = false || deleted = null)`,
+        sort: 'nome'
+      });
+    } catch (err) {
+      categoriesCache = await pb.collection('categorias').getFullList({
+        filter: `user = "${currentUser.id}" && (deleted = false || deleted = null)`,
+        sort: 'nome'
+      });
+    }
+
     populateCategorySelects();
     renderCategories();
   } catch (err) {
@@ -115,14 +130,24 @@ async function saveCategory(data) {
     const payload = {
       nome: data.nome,
       cor: data.cor,
+      descricao: data.descricao || '',
       user: currentUser.id,
       deleted: false
     };
 
-    if (data.id) {
-      await pb.collection('categorias').update(data.id, payload);
-    } else {
-      await pb.collection('categorias').create(payload);
+    const collectionName = 'Categorias';
+    try {
+      if (data.id) {
+        await pb.collection(collectionName).update(data.id, payload);
+      } else {
+        await pb.collection(collectionName).create(payload);
+      }
+    } catch (e) {
+      if (data.id) {
+        await pb.collection('categorias').update(data.id, payload);
+      } else {
+        await pb.collection('categorias').create(payload);
+      }
     }
 
     closeModals();
@@ -133,15 +158,14 @@ async function saveCategory(data) {
   }
 }
 
-/**
- * Soft Delete de Categoria
- */
-
 async function deleteCategory(id) {
   if (!confirm('Deseja mover esta categoria para a lixeira?')) return;
   try {
-    await pb.collection('categorias').update(id, { deleted: true });
-    // Recarrega apenas os dados mantendo o contexto da aba/lixeira atual
+    try {
+      await pb.collection('Categorias').update(id, { deleted: true });
+    } catch (e) {
+      await pb.collection('categorias').update(id, { deleted: true });
+    }
     await refreshData();
   } catch (err) {
     console.error('Erro ao mover categoria para lixeira:', err);
@@ -152,7 +176,7 @@ async function loadTasks() {
   try {
     const filterQuery = (isTrashMode && activeTab === 'tasks')
       ? `user = "${currentUser.id}" && deleted = true`
-      : `user = "${currentUser.id}" && deleted = false`;
+      : `user = "${currentUser.id}" && (deleted = false || deleted = null)`;
 
     const records = await pb.collection('tarefas').getFullList({
       filter: filterQuery,
@@ -160,19 +184,30 @@ async function loadTasks() {
       sort: '-created'
     });
 
-    const todayStr = new Date().toISOString().split('T')[0];
-
-    for (let task of records) {
-      if (!task.deleted && task.data_execucao) {
-        const execDateStr = new Date(task.data_execucao).toISOString().split('T')[0];
-        if (execDateStr < todayStr && (task.status === 'a_fazer' || task.status === 'em_progresso')) {
-          task.status = 'atrasada';
-          pb.collection('tarefas').update(task.id, { status: 'atrasada' }).catch(console.error);
-        }
-      }
+    try {
+      routineCompletionsList = await pb.collection('conclusoes_rotina').getFullList({
+        filter: `user = "${currentUser.id}"`
+      });
+    } catch (err) {
+      routineCompletionsList = [];
     }
 
-    tasksCache = records;
+    const todayStr = getLocalDateStr();
+
+    tasksCache = await Promise.all(records.map(async (task) => {
+      let taskDeliveryStr = task.data_entrega ? task.data_entrega.split(' ')[0] : null;
+
+      if (!task.deleted && !task.is_recurring && taskDeliveryStr && taskDeliveryStr < todayStr && task.status !== 'concluida' && task.status !== 'cancelada' && task.status !== 'atrasada') {
+        try {
+          await pb.collection('tarefas').update(task.id, { status: 'atrasada' });
+          return { ...task, status: 'atrasada' };
+        } catch (e) {
+          console.error(`Erro ao atualizar atraso da tarefa ${task.id}:`, e);
+        }
+      }
+      return task;
+    }));
+
     renderTasks();
   } catch (err) {
     console.error('Erro ao carregar tarefas:', err);
@@ -180,11 +215,8 @@ async function loadTasks() {
 }
 
 async function saveTaskWithSubtasks(taskData, subtasksList) {
-  if (taskData.data_execucao && taskData.data_entrega) {
-    const execDate = new Date(taskData.data_execucao);
-    const dueDate = new Date(taskData.data_entrega);
-
-    if (execDate > dueDate) {
+  if (!taskData.is_recurring && taskData.data_execucao && taskData.data_entrega) {
+    if (taskData.data_execucao > taskData.data_entrega) {
       alert('Atenção: A Data de Execução NUNCA pode ser posterior à Data de Entrega! 🐾');
       return;
     }
@@ -194,11 +226,11 @@ async function saveTaskWithSubtasks(taskData, subtasksList) {
     const taskPayload = {
       titulo: taskData.titulo,
       descricao: taskData.descricao,
-      categoria: taskData.categoria,
-      data_execucao: taskData.data_execucao ? new Date(taskData.data_execucao).toISOString() : null,
-      data_entrega: taskData.data_entrega ? new Date(taskData.data_entrega).toISOString() : null,
+      categoria: taskData.categoria || null,
+      data_execucao: taskData.is_recurring ? null : (taskData.data_execucao ? `${taskData.data_execucao} 12:00:00.000Z` : null),
+      data_entrega: taskData.data_entrega ? `${taskData.data_entrega} 12:00:00.000Z` : null,
       is_recurring: taskData.is_recurring,
-      recurrence_freq: taskData.recurrence_freq || 'diario',
+      recurrence_freq: taskData.is_recurring ? (taskData.recurrence_freq || 'semanal') : null,
       urgencia: taskData.urgencia,
       status: taskData.status,
       user: currentUser.id,
@@ -226,14 +258,16 @@ async function saveTaskWithSubtasks(taskData, subtasksList) {
       }
 
       for (let sub of subtasksList) {
+        if (!sub.titulo.trim()) continue;
+
         if (sub.id) {
           await pb.collection('subtarefas').update(sub.id, {
-            titulo: sub.titulo,
+            titulo: sub.titulo.trim(),
             completa: sub.completa
           });
         } else {
           await pb.collection('subtarefas').create({
-            titulo: sub.titulo,
+            titulo: sub.titulo.trim(),
             completa: sub.completa || false,
             tarefa: savedTask.id,
             user: currentUser.id
@@ -260,15 +294,17 @@ async function deleteTask(id) {
   }
 }
 
-/**
- * RESTAURAR ITEM DA LIXEIRA (Soft Delete Undo)
- */
 async function restoreItem(id, type) {
   try {
-    const collectionName = type === 'task' ? 'tarefas' : 'categorias';
-    await pb.collection(collectionName).update(id, { deleted: false });
+    const collectionName = type === 'task' ? 'tarefas' : 'Categorias';
+    try {
+      await pb.collection(collectionName).update(id, { deleted: false });
+    } catch (e) {
+      if (type !== 'task') {
+        await pb.collection('categorias').update(id, { deleted: false });
+      }
+    }
 
-    // Se estiver no modo Lixeira, recarrega os dados sem fechar ou trocar de aba
     if (isTrashMode) {
       if (type === 'category') {
         await loadCategories();
@@ -305,9 +341,130 @@ function populateCategorySelects() {
   });
 }
 
-/**
- * Renderiza tarefas com suporte a busca de texto + múltiplos filtros combinados
- */
+// Renderização Visual Identica ao Calendário (meow-card)
+function renderTaskCardHTML(task) {
+  const targetDateStr = getLocalDateStr();
+  let isCompleted = false;
+
+  if (task.is_recurring) {
+    isCompleted = routineCompletionsList.some(
+      c => c.tarefa === task.id && c.data === targetDateStr
+    );
+  } else {
+    isCompleted = task.status === 'concluida';
+  }
+
+  const execFormatted = task.data_execucao ? formatDateBR(task.data_execucao) : '---';
+  const deliveryFormatted = task.data_entrega ? formatDateBR(task.data_entrega) : '---';
+
+  const toggleOnClick = `toggleTaskStatusFromManager(event, '${task.id}', '${task.status}', '${targetDateStr}', ${task.is_recurring})`;
+
+  let statusIconHtml = '';
+
+  if (isCompleted) {
+    statusIconHtml = `<i class="bi bi-check-circle-fill status-icon status-done status-icon-btn" 
+                        title="Reabrir tarefa" 
+                        style="cursor:pointer;" 
+                        onclick="${toggleOnClick}"></i>`;
+  } else if (task.status === 'em_progresso') {
+    statusIconHtml = `<i class="bi bi-hourglass-split status-icon status-doing status-icon-btn" 
+                        title="Em Progresso - Clique para alternar" 
+                        style="cursor:pointer;" 
+                        onclick="${toggleOnClick}"></i>`;
+  } else if (task.status === 'atrasada') {
+    statusIconHtml = `<i class="bi bi-exclamation-triangle-fill status-icon status-overdue status-icon-btn" 
+                        title="Atrasada - Clique para concluir" 
+                        style="cursor:pointer;" 
+                        onclick="${toggleOnClick}"></i>`;
+  } else if (task.status === 'cancelada') {
+    statusIconHtml = `<i class="bi bi-x-circle-fill status-icon status-cancelled status-icon-btn" 
+                        title="Cancelada" 
+                        style="cursor:pointer;" 
+                        onclick="${toggleOnClick}"></i>`;
+  } else {
+    statusIconHtml = `<i class="bi bi-circle status-icon status-todo status-icon-btn" 
+                        title="Marcar como Concluída" 
+                        style="cursor:pointer;" 
+                        onclick="${toggleOnClick}"></i>`;
+  }
+
+  let flagColor = '#A8F5B4';
+  let urgencyLabel = 'Normal';
+
+  if (task.urgencia === 'baixa') {
+    flagColor = '#C2E0FF';
+    urgencyLabel = 'Baixa';
+  } else if (task.urgencia === 'normal') {
+    flagColor = '#A8F5B4';
+    urgencyLabel = 'Normal';
+  } else if (task.urgencia === 'alta') {
+    flagColor = '#FFD8A8';
+    urgencyLabel = 'Alta';
+  } else if (task.urgencia === 'urgente') {
+    flagColor = '#FFA8A8';
+    urgencyLabel = 'Urgente';
+  }
+
+  const flagIcon = `<i class="bi bi-flag-fill" style="color: ${flagColor}; -webkit-text-stroke: 1px #2D3748; font-size: 1.1rem; vertical-align: middle;"></i>`;
+
+  const freqMap = { diario: 'Diário', semanal: 'Semanal', mensal: 'Mensal', anual: 'Anual' };
+  const freqLabel = freqMap[task.recurrence_freq] || 'Rotina';
+
+  return `
+    <div class="meow-card ${isCompleted ? 'card-completed' : ''}" 
+         onclick="openEditTaskModal('${task.id}')">
+      <div class="meow-card-header">
+        <div class="meow-card-title-group">
+          ${statusIconHtml}
+          <span class="meow-card-title ${isCompleted ? 'text-strikethrough' : ''}">${escapeHtml(task.titulo)}</span>
+        </div>
+        <div style="display:flex; align-items:center; gap:0.5rem;">
+          <span class="flag-icon" title="Urgência: ${urgencyLabel}">
+            ${flagIcon}
+          </span>
+          <button class="btn-link" style="color: var(--color-danger); font-size: 0.9rem; padding:0; border:none; background:none;" onclick="event.stopPropagation(); deleteTask('${task.id}')" title="Excluir">
+            🗑️
+          </button>
+        </div>
+      </div>
+      <div class="meow-card-footer">
+        ${task.is_recurring 
+          ? `<span>🔄 Repetir até: ${task.data_entrega ? formatDateBR(task.data_entrega) : 'Sem limite'} (${freqLabel})</span>` 
+          : `<span>Fazer: ${execFormatted}</span><span>Para: ${deliveryFormatted}</span>`}
+      </div>
+    </div>
+  `;
+}
+
+// Alterna status da tarefa ao clicar no ícone do card na tela Gerenciar
+window.toggleTaskStatusFromManager = async function(event, taskId, currentStatus, targetDateStr, isRecurring) {
+  event.stopPropagation();
+
+  const dateStr = targetDateStr || getLocalDateStr();
+
+  try {
+    if (isRecurring) {
+      const existing = routineCompletionsList.find(c => c.tarefa === taskId && c.data === dateStr);
+      if (existing) {
+        await pb.collection('conclusoes_rotina').delete(existing.id);
+      } else {
+        await pb.collection('conclusoes_rotina').create({
+          tarefa: taskId,
+          data: dateStr,
+          user: currentUser.id
+        });
+      }
+    } else {
+      const newStatus = currentStatus === 'concluida' ? 'a_fazer' : 'concluida';
+      await pb.collection('tarefas').update(taskId, { status: newStatus });
+    }
+
+    await refreshData();
+  } catch (err) {
+    console.error('Erro ao alternar status no gerenciador:', err);
+  }
+};
+
 function renderTasks() {
   if (activeTab !== 'tasks' && !isTrashMode) return;
 
@@ -318,7 +475,6 @@ function renderTasks() {
 
   let filtered = tasksCache;
 
-  // Filtros Combinados
   if (!isTrashMode) {
     if (searchText) {
       filtered = filtered.filter(t => 
@@ -326,15 +482,12 @@ function renderTasks() {
         (t.descricao && t.descricao.toLowerCase().includes(searchText))
       );
     }
-
     if (selectedCat) {
       filtered = filtered.filter(t => t.categoria === selectedCat);
     }
-
     if (selectedUrg) {
       filtered = filtered.filter(t => t.urgencia === selectedUrg);
     }
-
     if (selectedStat) {
       filtered = filtered.filter(t => t.status === selectedStat);
     }
@@ -351,21 +504,12 @@ function renderTasks() {
   }
 
   filtered.forEach(task => {
-    const categoryObj = task.expand?.categoria || {};
-    const categoryColor = categoryObj.cor || '#C2BEF6';
-
-    const execDateFormatted = task.data_execucao
-      ? new Date(task.data_execucao).toLocaleDateString('pt-BR')
-      : '--/--/----';
-    const dueDateFormatted = task.data_entrega
-      ? new Date(task.data_entrega).toLocaleDateString('pt-BR')
-      : '--/--/----';
-
-    const card = document.createElement('div');
-    card.className = `task-item-card ${task.deleted ? 'card-deleted' : ''}`;
-    card.style.borderLeftColor = categoryColor;
-
     if (isTrashMode) {
+      const execDateFormatted = task.data_execucao ? formatDateBR(task.data_execucao) : '--/--/----';
+      const dueDateFormatted = task.data_entrega ? formatDateBR(task.data_entrega) : '--/--/----';
+      
+      const card = document.createElement('div');
+      card.className = 'task-item-card card-deleted';
       card.innerHTML = `
         <div class="task-item-info">
           <span class="task-item-title">${escapeHtml(task.titulo)}</span>
@@ -380,28 +524,10 @@ function renderTasks() {
           </button>
         </div>
       `;
+      container.appendChild(card);
     } else {
-      card.innerHTML = `
-        <div class="task-item-info" onclick="openEditTaskModal('${task.id}')" style="cursor: pointer;">
-          <div class="flex-row" style="gap: 0.5rem; align-items: center;">
-            <span style="font-size: 0.9rem;">🕒</span>
-            <span class="task-item-title">${escapeHtml(task.titulo)}</span>
-          </div>
-          <div class="task-item-dates">
-            <span>Fazer: ${execDateFormatted}</span>
-            <span>Para: ${dueDateFormatted}</span>
-          </div>
-        </div>
-        <div class="task-item-meta">
-          <span class="badge ${getUrgencyBadgeClass(task.urgencia)}">${task.urgencia || 'normal'}</span>
-          <button class="btn-link" style="color: var(--color-danger); font-size: 0.85rem;" onclick="deleteTask('${task.id}')" title="Excluir">
-            🗑️
-          </button>
-        </div>
-      `;
+      container.innerHTML += renderTaskCardHTML(task);
     }
-
-    container.appendChild(card);
   });
 }
 
@@ -458,9 +584,9 @@ function renderSubtaskModalRows() {
     const row = document.createElement('div');
     row.className = 'subtask-item-row';
     row.innerHTML = `
-      <div class="flex-row" style="gap: 0.5rem; flex: 1;">
+      <div class="flex-row" style="gap: 0.5rem; flex: 1; align-items: center;">
         <input type="checkbox" ${sub.completa ? 'checked' : ''} onchange="toggleSubtaskStatus(${index}, this.checked)">
-        <input type="text" class="input-control" value="${escapeHtml(sub.titulo)}" style="min-height: 30px; padding: 0.2rem 0.5rem; font-size: 0.85rem;" onchange="updateSubtaskTitle(${index}, this.value)" placeholder="Título da subtarefa">
+        <input type="text" class="input-control" value="${escapeHtml(sub.titulo)}" style="min-height: 30px; padding: 0.2rem 0.5rem; font-size: 0.85rem; width:100%; border:1px solid #CBD5E0; border-radius:4px;" onchange="updateSubtaskTitle(${index}, this.value)" placeholder="Título da subtarefa">
       </div>
       <button type="button" class="btn-link" style="color: var(--color-danger); margin-left: 0.5rem;" onclick="removeSubtaskRow(${index})">✕</button>
     `;
@@ -495,7 +621,6 @@ function setupEventListeners() {
     window.location.href = 'login.html';
   });
 
-  // Listeners para os Filtros Combinados da Aba de Tarefas
   elements.searchTextFilter.addEventListener('input', renderTasks);
   elements.categoryFilterSelect.addEventListener('change', renderTasks);
   elements.urgencyFilterSelect.addEventListener('change', renderTasks);
@@ -506,8 +631,7 @@ function setupEventListeners() {
     saveCategory({
       id: elements.categoryIdInput.value,
       nome: elements.categoryNameInput.value.trim(),
-      cor: elements.categoryColorSelect.value,
-      descricao: elements.categoryDescriptionInput.value.trim()
+      cor: elements.categoryColorSelect.value
     });
   });
 
@@ -542,6 +666,11 @@ function setupEventListeners() {
     currentSubtasks.push({ id: null, titulo: '', completa: false });
     renderSubtaskModalRows();
   });
+
+  // Listener para mudar a cor da bolinha dinamicamente ao escolher uma opção
+  elements.categoryColorSelect.addEventListener('change', (e) => {
+    updateCategoryColorPreview(e.target.value);
+  });
 }
 
 function switchTab(tab) {
@@ -571,10 +700,6 @@ function switchTab(tab) {
 
   refreshData();
 }
-
-/**
- * Atualiza os dados da tela respeitando a aba ativa e o estado da lixeira
- */
 
 async function refreshData() {
   if (isTrashMode) {
@@ -614,7 +739,7 @@ async function openEditTaskModal(id) {
   elements.taskUrgencySelect.value = task.urgencia || 'normal';
   elements.taskRoutineToggle.checked = task.is_recurring || false;
   elements.taskStatusSelect.value = task.status || 'a_fazer';
-  elements.taskRecurrenceFreq.value = task.recurrence_freq || 'diario';
+  elements.taskRecurrenceFreq.value = task.recurrence_freq || 'semanal';
   elements.taskDescriptionInput.value = task.descricao || '';
 
   if (task.is_recurring) {
@@ -624,10 +749,10 @@ async function openEditTaskModal(id) {
   }
 
   if (task.data_execucao) {
-    elements.taskExecutionDate.value = new Date(task.data_execucao).toISOString().split('T')[0];
+    elements.taskExecutionDate.value = task.data_execucao.split(' ')[0];
   }
   if (task.data_entrega) {
-    elements.taskDueDate.value = new Date(task.data_entrega).toISOString().split('T')[0];
+    elements.taskDueDate.value = task.data_entrega.split(' ')[0];
   }
 
   elements.btnSaveTask.textContent = 'Atualizar Tarefa';
@@ -648,6 +773,10 @@ function openAddCategoryModal() {
   elements.categoryForm.reset();
   elements.categoryIdInput.value = '';
   elements.btnSaveCategory.textContent = 'Adicionar Categoria';
+
+  // Sincroniza a cor inicial da bolinha com o valor padrão do select
+  updateCategoryColorPreview(elements.categoryColorSelect.value || '#C2BEF6');
+
   elements.categoryModalOverlay.classList.add('is-active');
 }
 
@@ -658,7 +787,9 @@ function openEditCategoryModal(id) {
   elements.categoryIdInput.value = category.id;
   elements.categoryNameInput.value = category.nome || '';
   elements.categoryColorSelect.value = category.cor || '#C2BEF6';
-  elements.categoryDescriptionInput.value = category.descricao || '';
+
+  // Atualiza a cor da bolinha com a cor da categoria carregada
+  updateCategoryColorPreview(category.cor || '#C2BEF6');
 
   elements.btnSaveCategory.textContent = 'Atualizar Categoria';
   elements.categoryModalOverlay.classList.add('is-active');
@@ -692,7 +823,7 @@ function closeTrashView() {
   switchTab(activeTab);
 }
 
-// Helpers para Subtarefas
+// Helpers para Subtarefas e Utilitários
 window.toggleSubtaskStatus = function(index, checked) {
   if (currentSubtasks[index]) {
     currentSubtasks[index].completa = checked;
@@ -710,14 +841,19 @@ window.removeSubtaskRow = function(index) {
   renderSubtaskModalRows();
 };
 
-function getUrgencyBadgeClass(urgency) {
-  switch (urgency) {
-    case 'baixa': return 'badge-urgency-low';
-    case 'normal': return 'badge-urgency-normal';
-    case 'alta': return 'badge-urgency-high';
-    case 'urgente': return 'badge-urgency-urgent';
-    default: return 'badge-urgency-normal';
-  }
+function getLocalDateStr(dateObj = new Date()) {
+  const year = dateObj.getFullYear();
+  const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+  const day = String(dateObj.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+function formatDateBR(dateString) {
+  if (!dateString) return '';
+  const dateOnly = dateString.split(' ')[0];
+  const parts = dateOnly.split('-');
+  if (parts.length !== 3) return dateString;
+  return `${parts[2]}/${parts[1]}/${parts[0]}`;
 }
 
 function escapeHtml(text) {
@@ -728,4 +864,12 @@ function escapeHtml(text) {
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#039;");
+}
+
+// Atualiza a cor da bolinha indicadora do modal de categoria
+function updateCategoryColorPreview(hexColor) {
+  const previewEl = document.getElementById('category-color-preview');
+  if (previewEl && hexColor) {
+    previewEl.style.backgroundColor = hexColor;
+  }
 }

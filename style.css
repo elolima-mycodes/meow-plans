@@ -732,3 +732,71 @@ input:checked + .slider::before {
   color: #125420;
   border: 1px solid var(--color-mint-bright);
 }
+
+/* Estilo dos Cards Identico ao Calendario */
+.meow-card {
+  background: #FFFFFF;
+  border-radius: var(--radius-lg, 16px);
+  padding: 0.75rem 1rem;
+  margin-bottom: 0.75rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.meow-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.meow-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.meow-card-title-group {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.meow-card-title {
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: #2D3748;
+}
+
+.meow-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  color: #718096;
+  padding-top: 0.25rem;
+}
+
+/* Status e Riscos */
+.text-strikethrough {
+  text-decoration: line-through;
+  opacity: 0.6;
+}
+
+.card-completed {
+  opacity: 0.75;
+  background-color: #F7FAFC;
+}
+
+/* Bootstrap Icons Corrigidos */
+.status-icon {
+  font-size: 1.1rem;
+}
+.status-done { color: #38A169; }
+.status-doing { color: #DD6B20; }
+.status-overdue { color: #E53E3E; }
+.status-cancelled { color: #A0AEC0; }
+.status-todo { color: #CBD5E0; }

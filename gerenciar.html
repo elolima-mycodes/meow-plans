@@ -6,6 +6,8 @@
   <title>Meow Plans - Gerenciador Central</title>
   
   <!-- CSS Global do Projeto -->
+   <!-- Bootstrap Icons (Necessário para os ícones de status e bandeira do card) -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
   <link rel="stylesheet" href="style.css">
   
   <!-- Estilos Específicos da Tela de Gerenciamento (Mobile-First) -->
@@ -502,19 +504,19 @@
           <input type="text" class="form-cute-input text-center" id="category-name-input" placeholder="Título da Categoria" style="font-size: 1.1rem; font-weight: 700;" required>
         </div>
 
-        <div class="mb-1">
-          <select class="form-cute-input" id="category-color-select" required>
-            <option value="#C2BEF6">■ Lilás Pastel</option>
-            <option value="#F4C1F2">■ Rosa Pastel</option>
-            <option value="#BEF7F3">■ Verde Mint</option>
-            <option value="#FFC878">■ Amarelo Pastel</option>
-            <option value="#FF8A8A">■ Coral Soft</option>
-            <option value="#A0A0A0">■ Cinza Neutro</option>
-          </select>
-        </div>
+        <div class="mb-1" style="display: flex; align-items: center; gap: 0.6rem;">
+          <!-- Indicador Circular de Cor -->
+          <span id="category-color-preview" style="width: 22px; height: 22px; border-radius: 50%; background-color: #C2BEF6; border: 2px solid #FFFFFF; box-shadow: 0 0 4px rgba(0,0,0,0.15); flex-shrink: 0;"></span>
 
-        <div class="mb-1">
-          <textarea class="form-cute-textarea" id="category-description-input" placeholder="Descrição da categoria (opcional)..."></textarea>
+          <!-- Select de Cores -->
+          <select class="form-cute-input" id="category-color-select" required style="flex: 1;">
+            <option value="#C2BEF6">Lilás Pastel</option>
+            <option value="#F4C1F2">Rosa Pastel</option>
+            <option value="#BEF7F3">Verde Mint</option>
+            <option value="#FFC878">Amarelo Pastel</option>
+            <option value="#FF8A8A">Coral Soft</option>
+            <option value="#A0A0A0">Cinza Neutro</option>
+          </select>
         </div>
 
         <div class="text-center" style="margin-top: 1.5rem;">
