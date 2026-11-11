@@ -4,9 +4,9 @@ Meow Plans codificação
 
 OK - Adicionar biblioteca de cores pré-definidas para as categorias
 
-- Padronizar visualização do modal de criação/edição de tarefas
+OK - Padronizar visualização do modal de criação/edição de tarefas
 
-- Expirar acesso após 30 min sem interação com a aplicação
+OK - Expirar acesso após 2 horas (120 minutos) sem interação com a aplicação
 
 - Implementar modo claro e escuro
 

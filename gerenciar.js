@@ -70,6 +70,7 @@ const elements = {
 // ==========================================
 // 3. INICIALIZAÇÃO E AUTENTICAÇÃO
 // ==========================================
+
 document.addEventListener('DOMContentLoaded', async () => {
   checkAuthentication();
   setupEventListeners();
@@ -77,10 +78,20 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 
 function checkAuthentication() {
-  if (!pb.authStore.isValid || !pb.authStore.model) {
+  const maxInactivityMs = 120 * 60 * 1000; // 120 minutos
+  const lastActivity = localStorage.getItem('last_activity');
+  const now = Date.now();
+
+  // Se o token for inválido OU se passou do tempo limite sem interação
+  if (!pb.authStore.isValid || !pb.authStore.model || (lastActivity && (now - parseInt(lastActivity, 10) > maxInactivityMs))) {
+    pb.authStore.clear();
+    localStorage.removeItem('last_activity');
     window.location.href = 'login.html';
     return;
   }
+
+  // Atualiza o timestamp de atividade atual e define o usuário logado
+  localStorage.setItem('last_activity', now.toString());
   currentUser = pb.authStore.model;
 }
 
@@ -929,3 +940,32 @@ function updateManagerUrgencyFlag(urgency) {
 
   flagIcon.style.color = colors[urgency] || colors.normal;
 }
+
+// Gerenciador de inatividade (Sessão de 30 minutos)
+function initInactivityTracker() {
+  const updateActivity = () => {
+    if (pb.authStore.isValid) {
+      localStorage.setItem('last_activity', Date.now().toString());
+    }
+  };
+
+  // Eventos de interação do usuário
+  ['click', 'mousemove', 'keydown', 'scroll', 'touchstart'].forEach(eventType => {
+    window.addEventListener(eventType, updateActivity, { passive: true });
+  });
+
+  // Checagem periódica a cada 1 minuto caso a aba fique aberta e parada
+  setInterval(() => {
+    const lastActivity = localStorage.getItem('last_activity');
+    const maxInactivityMs = 120 * 60 * 1000;
+    if (lastActivity && (Date.now() - parseInt(lastActivity, 10) > maxInactivityMs)) {
+      pb.authStore.clear();
+      localStorage.removeItem('last_activity');
+      window.location.href = 'login.html';
+    }
+  }, 60000);
+}
+
+// Inicia o rastreador de inatividade ao carregar
+initInactivityTracker();
+

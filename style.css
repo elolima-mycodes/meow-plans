@@ -800,3 +800,46 @@ input:checked + .slider::before {
 .status-overdue { color: #E53E3E; }
 .status-cancelled { color: #A0AEC0; }
 .status-todo { color: #CBD5E0; }
+
+/* ==========================================================================
+   VARIÁVEIS DE CORES & TEMAS (LIGHT / DARK)
+   ========================================================================== */
+
+/* Tema Claro (Padrão) */
+:root {
+  --bg-app: #F7FAFC;
+  --bg-card: #FFFFFF;
+  --bg-header: #FFFFFF;
+  --bg-lilac-panel: #C2BEF6;
+  --bg-calendar-app: #2D3748; /* Ou um tom pastel claro */
+  
+  --text-main: #2D3748;
+  --text-muted: #718096;
+  --border-color: #E2E8F0;
+
+  --color-primary: #C2BEF6;
+  --color-secondary: #384252;
+}
+
+/* Tema Escuro */
+body.dark-theme {
+  --bg-app: #1A202C;
+  --bg-card: #2D3748;
+  --bg-header: #171923;
+  --bg-lilac-panel: #4A5568;
+  --bg-calendar-app: #1A202C;
+  
+  --text-main: #EDF2F7;
+  --text-muted: #A0AEC0;
+  --border-color: #4A5568;
+
+  --color-primary: #6B46C1;
+  --color-secondary: #E2E8F0;
+}
+
+/* Aplicação Global das Variáveis no Body */
+body {
+  background-color: var(--bg-app);
+  color: var(--text-main);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}

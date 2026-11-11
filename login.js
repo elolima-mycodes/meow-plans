@@ -8,9 +8,18 @@
 const POCKETBASE_URL = 'http://127.0.0.1:8090';
 const pb = new PocketBase(POCKETBASE_URL);
 
-// Redireciona para o app caso já esteja autenticado
+// Redireciona para o app caso já esteja autenticado e dentro do limite de 30 min
 if (pb.authStore.isValid) {
-  window.location.href = 'calendario.html'; // Descomentar ao integrar com a dashboard
+  const lastActivity = localStorage.getItem('last_activity');
+  const maxInactivityMs = 120 * 60 * 1000; // 120 minutos em ms
+
+  if (lastActivity && (Date.now() - parseInt(lastActivity, 10)) > maxInactivityMs) {
+    pb.authStore.clear();
+    localStorage.removeItem('last_activity');
+  } else {
+    localStorage.setItem('last_activity', Date.now().toString());
+    window.location.href = 'calendario.html';
+  }
 }
 
 // 2. Elementos do DOM
@@ -78,6 +87,8 @@ loginForm.addEventListener('submit', async (e) => {
     const authData = await pb.collection('users').authWithPassword(email, password);
 
     showAlert('Login realizado com sucesso! Redirecionando...', 'success');
+
+    localStorage.setItem('last_activity', Date.now().toString());
     
     setTimeout(() => {
       // Redireciona para a tela principal
@@ -137,6 +148,8 @@ registerForm.addEventListener('submit', async (e) => {
     await pb.collection('users').authWithPassword(email, password);
 
     showAlert('Conta criada com sucesso! Redirecionando...', 'success');
+
+    localStorage.setItem('last_activity', Date.now().toString());
 
     setTimeout(() => {
       window.location.href = 'calendario.html';

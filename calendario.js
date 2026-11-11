@@ -26,11 +26,18 @@ const WEEKDAY_NAMES = [
 
 // 2. INICIALIZAÇÃO
 document.addEventListener('DOMContentLoaded', async () => {
-  if (!pb.authStore.isValid) {
+  const maxInactivityMs = 120 * 60 * 1000; // 120 minutos
+  const lastActivity = localStorage.getItem('last_activity');
+  const now = Date.now();
+
+  if (!pb.authStore.isValid || (lastActivity && (now - parseInt(lastActivity, 10) > maxInactivityMs))) {
+    pb.authStore.clear();
+    localStorage.removeItem('last_activity');
     window.location.href = 'login.html';
     return;
   }
 
+  localStorage.setItem('last_activity', now.toString());
   currentUser = pb.authStore.model;
   renderUserAvatar();
   setupEventListeners();
@@ -902,3 +909,29 @@ function updateTaskCategoryColorPreview(categoryId) {
     previewEl.style.display = 'none';
   }
 }
+
+// Gerenciador de inatividade no Calendário (Sessão de 30 minutos)
+function initInactivityTracker() {
+  const updateActivity = () => {
+    if (pb.authStore.isValid) {
+      localStorage.setItem('last_activity', Date.now().toString());
+    }
+  };
+
+  ['click', 'mousemove', 'keydown', 'scroll', 'touchstart'].forEach(eventType => {
+    window.addEventListener(eventType, updateActivity, { passive: true });
+  });
+
+  setInterval(() => {
+    const lastActivity = localStorage.getItem('last_activity');
+    const maxInactivityMs = 120 * 60 * 1000;
+    if (lastActivity && (Date.now() - parseInt(lastActivity, 10) > maxInactivityMs)) {
+      pb.authStore.clear();
+      localStorage.removeItem('last_activity');
+      window.location.href = 'login.html';
+    }
+  }, 60000);
+}
+
+initInactivityTracker();
+
