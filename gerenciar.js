@@ -440,16 +440,16 @@ function renderTaskCardHTML(task) {
         </div>
       </div>
       <div class="meow-card-footer">
-        ${task.is_recurring 
-          ? `<span>🔄 Repetir até: ${task.data_entrega ? formatDateBR(task.data_entrega) : 'Sem limite'} (${freqLabel})</span>` 
-          : `<span>Fazer: ${execFormatted}</span><span>Para: ${deliveryFormatted}</span>`}
+        ${task.is_recurring
+      ? `<span>🔄 Repetir até: ${task.data_entrega ? formatDateBR(task.data_entrega) : 'Sem limite'} (${freqLabel})</span>`
+      : `<span>Fazer: ${execFormatted}</span><span>Para: ${deliveryFormatted}</span>`}
       </div>
     </div>
   `;
 }
 
 // Alterna status da tarefa ao clicar no ícone do card na tela Gerenciar
-window.toggleTaskStatusFromManager = async function(event, taskId, currentStatus, targetDateStr, isRecurring) {
+window.toggleTaskStatusFromManager = async function (event, taskId, currentStatus, targetDateStr, isRecurring) {
   event.stopPropagation();
 
   const dateStr = targetDateStr || getLocalDateStr();
@@ -489,7 +489,7 @@ function renderTasks() {
 
   if (!isTrashMode) {
     if (searchText) {
-      filtered = filtered.filter(t => 
+      filtered = filtered.filter(t =>
         (t.titulo && t.titulo.toLowerCase().includes(searchText)) ||
         (t.descricao && t.descricao.toLowerCase().includes(searchText))
       );
@@ -519,7 +519,7 @@ function renderTasks() {
     if (isTrashMode) {
       const execDateFormatted = task.data_execucao ? formatDateBR(task.data_execucao) : '--/--/----';
       const dueDateFormatted = task.data_entrega ? formatDateBR(task.data_entrega) : '--/--/----';
-      
+
       const card = document.createElement('div');
       card.className = 'task-item-card card-deleted';
       card.innerHTML = `
@@ -695,9 +695,13 @@ function setupEventListeners() {
 }
 
 function switchTab(tab) {
+
+
+
   activeTab = tab;
   isTrashMode = false;
   elements.trashHeader.classList.add('hidden');
+  elements.btnOpenTrash.classList.remove('hidden'); // <-- Garante que o botão fique visível ao trocar de aba
 
   if (tab === 'tasks') {
     elements.tabTasksBtn.classList.add('active');
@@ -746,7 +750,7 @@ function openAddTaskModal() {
   elements.recurrenceFreqGroup.classList.add('hidden');
   currentSubtasks = [];
   renderSubtaskModalRows();
-  
+
   // Atualiza a bolinha (oculta para nova tarefa sem categoria selecionada)
   updateTaskCategoryColorPreview(elements.taskCategorySelect.value);
 
@@ -838,6 +842,7 @@ function openTrashView() {
   elements.tasksListContainer.classList.add('hidden');
   elements.categoriesListContainer.classList.add('hidden');
   elements.trashListContainer.classList.remove('hidden');
+  elements.btnOpenTrash.classList.add('hidden'); // <-- Oculta o botão da lixeira ao abrir a lixeira
 
   if (activeTab === 'categories') {
     elements.trashTitleLabel.textContent = 'Lixeira de Categorias';
@@ -852,23 +857,24 @@ function closeTrashView() {
   isTrashMode = false;
   elements.trashHeader.classList.add('hidden');
   elements.trashListContainer.classList.add('hidden');
+  elements.btnOpenTrash.classList.remove('hidden'); // <-- Exibe o botão da lixeira ao fechar
   switchTab(activeTab);
 }
 
 // Helpers para Subtarefas e Utilitários
-window.toggleSubtaskStatus = function(index, checked) {
+window.toggleSubtaskStatus = function (index, checked) {
   if (currentSubtasks[index]) {
     currentSubtasks[index].completa = checked;
   }
 };
 
-window.updateSubtaskTitle = function(index, value) {
+window.updateSubtaskTitle = function (index, value) {
   if (currentSubtasks[index]) {
     currentSubtasks[index].titulo = value;
   }
 };
 
-window.removeSubtaskRow = function(index) {
+window.removeSubtaskRow = function (index) {
   currentSubtasks.splice(index, 1);
   renderSubtaskModalRows();
 };
@@ -969,3 +975,34 @@ function initInactivityTracker() {
 // Inicia o rastreador de inatividade ao carregar
 initInactivityTracker();
 
+// ==========================================
+// CONTROLE DE TEMA (CLARO / ESCURO)
+// ==========================================
+function initThemeTracker() {
+  const savedTheme = localStorage.getItem('app_theme') || 'light';
+
+  // Aplica o tema salvo ao carregar a página
+  if (savedTheme === 'dark') {
+    document.body.classList.add('dark-theme');
+  } else {
+    document.body.classList.remove('dark-theme');
+  }
+
+  const themeBtn = document.getElementById('themeToggleBtn');
+  if (themeBtn) {
+    themeBtn.textContent = savedTheme === 'dark' ? '☀️' : '🌙';
+
+    themeBtn.addEventListener('click', () => {
+      const isDark = document.body.classList.toggle('dark-theme');
+      const newTheme = isDark ? 'dark' : 'light';
+
+      localStorage.setItem('app_theme', newTheme);
+      themeBtn.textContent = isDark ? '☀️' : '🌙';
+    });
+  }
+}
+
+// Executa ao carregar o DOM
+document.addEventListener('DOMContentLoaded', () => {
+  initThemeTracker();
+});

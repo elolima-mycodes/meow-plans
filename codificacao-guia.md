@@ -8,8 +8,11 @@ OK - Padronizar visualização do modal de criação/edição de tarefas
 
 OK - Expirar acesso após 2 horas (120 minutos) sem interação com a aplicação
 
-- Implementar modo claro e escuro
+OK - Implementar modo claro e escuro
+
+OK - Deixar responsivo
+
+- Arrumar cores do modo claro
 
 - Implementar como PWA
-
 

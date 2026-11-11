@@ -60,6 +60,10 @@ function renderUserAvatar() {
 
 // 3. EVENTOS DEFENSIVOS (Funciona tanto em calendario.html quanto gerenciar.html)
 function setupEventListeners() {
+
+  // Inicializa o botão de alternar tema
+  initThemeTracker();
+
   document.querySelectorAll('.tab-btn[data-view]').forEach(btn => {
     btn.addEventListener('click', (e) => {
       document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -117,7 +121,7 @@ function toggleRecurringFields(isRecurring) {
   const freqGroup = document.getElementById('recurrenceFreqGroup');
   const execGroup = document.getElementById('taskExecDateGroup');
   const deliveryLabel = document.getElementById('taskDeliveryDateLabel');
-  
+
   if (isRecurring) {
     freqGroup.classList.remove('hidden');
     if (execGroup) execGroup.classList.add('hidden');
@@ -225,10 +229,10 @@ function isRoutineForDate(task, targetDateObj) {
 
   // Data exibida no calendário (YYYY-MM-DD)
   const targetStr = getLocalDateStr(targetDateObj);
-  
+
   // Data inicial da rotina: prioriza data_execucao; se não houver, usa a data de criação
-  const baseDateStr = task.data_execucao 
-    ? task.data_execucao.split(' ')[0] 
+  const baseDateStr = task.data_execucao
+    ? task.data_execucao.split(' ')[0]
     : task.created.split(' ')[0];
 
   // Regra 1: Não exibe em dias anteriores ao início da rotina
@@ -479,13 +483,13 @@ function renderDayPanel(targetElement, dateObj) {
   const routineTasks = tasksList.filter(t => isRoutineForDate(t, dateObj));
 
   targetElement.innerHTML = `
-    <div class="day-panel-header">
+    <div class="day-panel-header" style="margin-bottom: 0.5rem;">
       <button class="day-panel-close-btn">&times;</button>
       <span>${dayTitleStr}</span>
     </div>
 
-   <!-- PARA ENTREGAR HOJE -->
-    <div class="task-section-box section-pink">
+    <!-- PARA ENTREGAR HOJE -->
+    <div class="task-section-box section-pink" style="margin-bottom: 0.5rem;">
       <div class="section-title">Para Entregar</div>
       <div class="section-cards-container">
         ${deliveryTasks.map(t => renderTaskCard(t, false, dateStr)).join('') || '<p class="text-center text-muted" style="font-size:0.75rem;">Nenhuma entrega para hoje ✨</p>'}
@@ -493,7 +497,7 @@ function renderDayPanel(targetElement, dateObj) {
     </div>
 
     <!-- PARA FAZER HOJE -->
-    <div class="task-section-box section-mint drop-zone" data-dropdate="${dateStr}" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event)">
+    <div class="task-section-box section-mint drop-zone" data-dropdate="${dateStr}" style="margin-bottom: 0.5rem;" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event)">
       <div class="section-title">Para Fazer</div>
       <div class="section-cards-container">
         ${execTasks.map(t => renderTaskCard(t, true, dateStr)).join('') || '<p class="text-center text-muted" style="font-size:0.75rem;">Nada agendado para fazer ✨</p>'}
@@ -535,24 +539,33 @@ function renderWeekView(container) {
     const routineTasks = tasksList.filter(t => isRoutineForDate(t, currentDay));
 
     weekDaysHtml += `
-      <div class="week-day-column mb-1" style="background:#232B38; padding:0.75rem; border-radius:var(--radius-lg);">
-        <div class="text-center font-bold" style="color:#FFF; font-size:0.9rem; margin-bottom:0.5rem;">
+      <div class="week-day-column mb-1" style="background: var(--bg-card, #232B38); padding:0.75rem; border-radius:var(--radius-lg);">
+      <div class="text-center font-bold" style="color: var(--text-main, #FFF); font-size:0.9rem; margin-bottom:0.5rem;">
           ${WEEKDAY_NAMES[currentDay.getDay()]} <span style="font-weight:400; font-size:0.8rem; color:#A0AEC0;">${currentDay.getDate()}</span>
         </div>
 
-        <div class="task-section-box section-pink" style="padding:0.5rem;">
+        <!-- PARA ENTREGAR -->
+        <div class="task-section-box section-pink" style="padding: 0.5rem; margin-bottom: 0.5rem;">
           <div class="section-title" style="font-size:0.75rem;">Para Entregar</div>
-          ${deliveryTasks.map(t => renderTaskCard(t, false)).join('')}
+          <div class="section-cards-container">
+            ${deliveryTasks.map(t => renderTaskCard(t, false, dateStr)).join('') || '<p class="text-center text-muted" style="font-size:0.7rem; margin:0.25rem 0;">Sem entregas ✨</p>'}
+          </div>
         </div>
 
-        <div class="task-section-box section-mint drop-zone" data-dropdate="${dateStr}" style="padding:0.5rem;" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event)">
+        <!-- PARA FAZER -->
+        <div class="task-section-box section-mint drop-zone" data-dropdate="${dateStr}" style="padding: 0.5rem; margin-bottom: 0.5rem;" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event)">
           <div class="section-title" style="font-size:0.75rem;">Para Fazer</div>
-          ${execTasks.map(t => renderTaskCard(t, true)).join('')}
+          <div class="section-cards-container">
+            ${execTasks.map(t => renderTaskCard(t, true, dateStr)).join('') || '<p class="text-center text-muted" style="font-size:0.7rem; margin:0.25rem 0;">Nada a fazer ✨</p>'}
+          </div>
         </div>
 
-        <div class="task-section-box section-green" style="padding:0.5rem;">
+        <!-- ROTINEIROS -->
+        <div class="task-section-box section-green" style="padding: 0.5rem;">
           <div class="section-title" style="font-size:0.75rem;">Rotineiros</div>
-          ${routineTasks.map(t => renderTaskCard(t, false)).join('')}
+          <div class="section-cards-container">
+            ${routineTasks.map(t => renderTaskCard(t, false, dateStr)).join('') || '<p class="text-center text-muted" style="font-size:0.7rem; margin:0.25rem 0;">Sem rotinas 🐾</p>'}
+          </div>
         </div>
       </div>
     `;
@@ -673,9 +686,9 @@ function renderTaskCard(task, isDraggable = false, currentDateStr = null) {
         </span>
       </div>
       <div class="meow-card-footer">
-        ${task.is_recurring 
-          ? `<span>🔄 ${task.recurrence_freq || 'Rotina'}</span>` 
-          : `<span>Fazer: ${execFormatted}</span><span>Para: ${deliveryFormatted}</span>`}
+        ${task.is_recurring
+      ? `<span>🔄 ${task.recurrence_freq || 'Rotina'}</span>`
+      : `<span>Fazer: ${execFormatted}</span><span>Para: ${deliveryFormatted}</span>`}
       </div>
     </div>
   `;
@@ -815,7 +828,7 @@ async function openTaskModal(taskId = null) {
     document.getElementById('taskStatusSelect').value = task.status || 'a_fazer';
     document.getElementById('taskDeliveryDate').value = task.data_entrega ? task.data_entrega.split(' ')[0] : '';
     document.getElementById('taskExecDate').value = task.data_execucao ? task.data_execucao.split(' ')[0] : '';
-    
+
     const isRecurring = task.is_recurring || false;
     document.getElementById('taskRecurringCheck').checked = isRecurring;
     toggleRecurringFields(isRecurring);
@@ -850,7 +863,7 @@ async function openTaskModal(taskId = null) {
     document.getElementById('taskExecDate').value = initialDateStr;
     document.getElementById('taskUrgencySelect').value = 'normal';
     updateModalUrgencyFlag('normal'); // <-- Garante a cor verde para nova tarefa
-    
+
     toggleRecurringFields(false);
     document.getElementById('btnDeleteTask').classList.add('hidden');
   }
@@ -935,3 +948,29 @@ function initInactivityTracker() {
 
 initInactivityTracker();
 
+// ==========================================
+// CONTROLE DE TEMA (CLARO / ESCURO)
+// ==========================================
+function initThemeTracker() {
+  const savedTheme = localStorage.getItem('app_theme') || 'dark'; // Padrão escuro ou claro
+
+  if (savedTheme === 'dark') {
+    document.body.classList.add('dark-theme');
+  } else {
+    document.body.classList.remove('dark-theme');
+  }
+
+  const themeBtn = document.getElementById('themeToggleBtn');
+  if (themeBtn) {
+    themeBtn.textContent = savedTheme === 'dark' ? '☀️' : '🌙';
+
+    // Garante que não duplica o evento de clique
+    themeBtn.onclick = () => {
+      const isDark = document.body.classList.toggle('dark-theme');
+      const newTheme = isDark ? 'dark' : 'light';
+
+      localStorage.setItem('app_theme', newTheme);
+      themeBtn.textContent = isDark ? '☀️' : '🌙';
+    };
+  }
+}

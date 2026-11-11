@@ -1,15 +1,16 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Meow Plans - Gerenciador Central</title>
-  
+
   <!-- CSS Global do Projeto -->
-   <!-- Bootstrap Icons (Necessário para os ícones de status e bandeira do card) -->
+  <!-- Bootstrap Icons (Necessário para os ícones de status e bandeira do card) -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
   <link rel="stylesheet" href="style.css">
-  
+
   <!-- Estilos Específicos da Tela de Gerenciamento (Mobile-First) -->
   <style>
     /* Estilização da Barra Superior / Header */
@@ -317,15 +318,21 @@
   <!-- PocketBase SDK -->
   <script src="https://cdn.jsdelivr.net/npm/pocketbase@0.21.3/dist/pocketbase.umd.js"></script>
 </head>
+
 <body>
 
   <div class="app-container">
     <!-- Header Superior -->
     <header class="top-bar">
-      <button class="btn btn-outline" style="padding: 0.35rem 0.85rem; font-size: 0.85rem;" onclick="window.location.href='calendario.html'">
+      <button class="btn btn-outline" style="padding: 0.35rem 0.85rem; font-size: 0.85rem;"
+        onclick="window.location.href='calendario.html'">
         Calendário
       </button>
-
+      <!-- Exemplo de Botão de Alternar Tema no Header -->
+      <button id="themeToggleBtn" class="btn btn-outline" style="padding: 0.35rem 0.6rem; font-size: 1rem;"
+        title="Alternar Tema">
+        🌙
+      </button>
       <div class="user-profile-btn" id="user-profile-trigger">
         <div class="user-avatar-placeholder" id="user-avatar">🐱</div>
         <span class="text-muted" style="font-size: 0.75rem;" id="logout-btn">Sair</span>
@@ -350,7 +357,7 @@
       <!-- Área de Filtros Combinados (Disponível Apenas na Aba Tarefas) -->
       <div class="filters-container" id="tasks-filters-wrapper">
         <input type="text" class="filter-input" id="search-text-filter" placeholder="🔍 Buscar tarefa...">
-        
+
         <select class="filter-btn" id="category-filter-select">
           <option value="">Categoria: Todas</option>
         </select>
@@ -404,25 +411,30 @@
       <div class="modal-header">
         <div class="flex-row" style="align-items: center; gap: 0.4rem;">
           <!-- Indicador Circular de Cor da Categoria da Tarefa -->
-          <span id="task-category-color-preview" style="width: 18px; height: 18px; border-radius: 50%; display: none; border: 2px solid #FFFFFF; box-shadow: 0 0 4px rgba(0,0,0,0.15); flex-shrink: 0;"></span>
+          <span id="task-category-color-preview"
+            style="width: 18px; height: 18px; border-radius: 50%; display: none; border: 2px solid #FFFFFF; box-shadow: 0 0 4px rgba(0,0,0,0.15); flex-shrink: 0;"></span>
 
-          <select id="task-category-select" class="select-control" style="width: auto; min-height: 36px; font-size: 0.85rem; padding: 0.25rem 0.5rem; background: var(--color-primary); color: white; font-weight: 700; border: none;">
+          <select id="task-category-select" class="select-control"
+            style="width: auto; min-height: 36px; font-size: 0.85rem; padding: 0.25rem 0.5rem; background: var(--color-primary); color: white; font-weight: 700; border: none;">
             <option value="">Sem categoria</option>
           </select>
         </div>
-        <button class="day-panel-close-btn" id="btn-close-task-modal">&times;</button>
+        <button class="modal-close-icon" id="btn-close-task-modal">✕</button>
       </div>
 
       <form id="task-form">
         <input type="hidden" id="task-id" value="" />
 
         <div class="form-group">
-          <input type="text" id="task-title-input" class="input-control" placeholder="Título da Tarefa (ex: Biologia Exercícios)" required style="font-weight: 700; font-size: 1.1rem;" />
+          <input type="text" id="task-title-input" class="input-control"
+            placeholder="Título da Tarefa (ex: Biologia Exercícios)" required
+            style="font-weight: 700; font-size: 1.1rem;" />
         </div>
 
         <div class="flex-row mb-1" style="gap: 0.5rem;">
           <div style="display: flex; align-items: center; gap: 0.5rem; flex: 1;">
-            <i id="urgency-flag-icon" class="bi bi-flag-fill" style="font-size: 1.25rem; -webkit-text-stroke: 1px #2D3748; color: #A8F5B4;"></i>
+            <i id="urgency-flag-icon" class="bi bi-flag-fill"
+              style="font-size: 1.25rem; -webkit-text-stroke: 1px #2D3748; color: #A8F5B4;"></i>
             <select id="task-urgency-select" class="select-control" style="flex: 1;">
               <option value="baixa">Baixa</option>
               <option value="normal" selected>Normal</option>
@@ -468,25 +480,32 @@
         </div>
 
         <div class="form-group">
-          <textarea id="task-description-input" class="textarea-control" placeholder="Exercícios, observações ou notas..."></textarea>
+          <textarea id="task-description-input" class="textarea-control"
+            placeholder="Exercícios, observações ou notas..."></textarea>
         </div>
 
         <!-- SEÇÃO DE SUBTAREFAS -->
-        <div class="form-group" style="background: rgba(255,255,255,0.6); padding: 0.75rem; border-radius: var(--radius-md);">
+        <div class="form-group"
+          style="background: rgba(255,255,255,0.6); padding: 0.75rem; border-radius: var(--radius-md);">
           <label class="form-label">🐾 Subtarefas</label>
-          <div id="subtask-items-container" style="display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 0.5rem;">
+          <div id="subtask-items-container"
+            style="display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 0.5rem;">
             <!-- Lista dinâmica de subtarefas -->
           </div>
-          <button type="button" class="btn btn-outline btn-block" id="btn-add-subtask-row" style="min-height: 36px; font-size: 0.85rem;">
+          <button type="button" class="btn btn-outline btn-block" id="btn-add-subtask-row"
+            style="min-height: 36px; font-size: 0.85rem;">
             + Adicionar Subtarefa
           </button>
         </div>
 
         <div class="flex-between" style="margin-top: 1.25rem; gap: 0.5rem;">
-          <button type="button" class="btn btn-danger" id="btn-delete-task" style="flex: 1; min-height: 40px; font-size: 0.85rem;" onclick="if(document.getElementById('task-id').value) deleteTask(document.getElementById('task-id').value)">
+          <button type="button" class="btn btn-danger" id="btn-delete-task"
+            style="flex: 1; min-height: 40px; font-size: 0.85rem;"
+            onclick="if(document.getElementById('task-id').value) deleteTask(document.getElementById('task-id').value)">
             🗑 Excluir Tarefa
           </button>
-          <button type="submit" class="btn btn-secondary" id="btn-save-task" style="flex: 1; min-height: 40px; font-size: 0.85rem;">
+          <button type="submit" class="btn btn-secondary" id="btn-save-task"
+            style="flex: 1; min-height: 40px; font-size: 0.85rem;">
             Adicionar Tarefa
           </button>
         </div>
@@ -497,20 +516,22 @@
   <!-- MODAL 2: CRIAR / EDITAR CATEGORIA -->
   <div class="modal-overlay" id="category-modal-overlay">
     <div class="modal-cute-container">
-      <div class="flex-between mb-1">
-        <button class="modal-close-icon" id="btn-close-category-modal">✕</button>
+      <div class="display: flex; justify-content: flex-end; margin-bottom: 0.5rem;">
+        <button class="modal-close-icon" id="btn-close-category-modal" style="margin-left: auto; display: block; background: none; border: none;">✕</button>
       </div>
 
       <form id="category-form">
         <input type="hidden" id="category-id" value="">
 
         <div class="text-center mb-1">
-          <input type="text" class="form-cute-input text-center" id="category-name-input" placeholder="Título da Categoria" style="font-size: 1.1rem; font-weight: 700;" required>
+          <input type="text" class="form-cute-input text-center" id="category-name-input"
+            placeholder="Título da Categoria" style="font-size: 1.1rem; font-weight: 700;" required>
         </div>
 
         <div class="mb-1" style="display: flex; align-items: center; gap: 0.6rem;">
           <!-- Indicador Circular de Cor -->
-          <span id="category-color-preview" style="width: 22px; height: 22px; border-radius: 50%; background-color: #C2BEF6; border: 2px solid #FFFFFF; box-shadow: 0 0 4px rgba(0,0,0,0.15); flex-shrink: 0;"></span>
+          <span id="category-color-preview"
+            style="width: 22px; height: 22px; border-radius: 50%; background-color: #C2BEF6; border: 2px solid #FFFFFF; box-shadow: 0 0 4px rgba(0,0,0,0.15); flex-shrink: 0;"></span>
 
           <!-- Select de Cores -->
           <select class="form-cute-input" id="category-color-select" required style="flex: 1;">
@@ -524,7 +545,8 @@
         </div>
 
         <div class="text-center" style="margin-top: 1.5rem;">
-          <button type="submit" class="btn-add-action" style="width: 100%; justify-content: center; padding: 0.75rem; font-size: 1rem;" id="btn-save-category">
+          <button type="submit" class="btn-add-action"
+            style="width: 100%; justify-content: center; padding: 0.75rem; font-size: 1rem;" id="btn-save-category">
             Adicionar Categoria
           </button>
         </div>
@@ -534,4 +556,5 @@
 
   <script src="gerenciar.js"></script>
 </body>
+
 </html>

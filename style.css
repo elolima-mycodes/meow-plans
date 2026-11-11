@@ -10,33 +10,49 @@
    -------------------------------------------------------------------------- */
 :root {
   /* Brand Primary Colors */
-  --color-primary: #C2BEF6;        /* Lilás principal */
-  --color-primary-hover: #B0A9F3;  /* Lilás destaque */
-  --color-primary-light: #E8E6FC;  /* Lilás suavizado */
-  --color-pink-primary: #F4C1F2;   /* Rosa Pastel principal */
-  --color-pink-soft: #EEC6FF;      /* Rosa Lilás claro */
+  --color-primary: #C2BEF6;
+  /* Lilás principal */
+  --color-primary-hover: #B0A9F3;
+  /* Lilás destaque */
+  --color-primary-light: #E8E6FC;
+  /* Lilás suavizado */
+  --color-pink-primary: #F4C1F2;
+  /* Rosa Pastel principal */
+  --color-pink-soft: #EEC6FF;
+  /* Rosa Lilás claro */
 
   /* Accent & Highlight Colors */
-  --color-mint-light: #BEF7F3;     /* Verde Mint claro */
-  --color-mint-medium: #CCF6CC;    /* Verde Mint médio */
-  --color-mint-bright: #78FF92;    /* Verde Mint vibrante (Concluído/Sucesso) */
-  --color-yellow-orange: #FFC878;  /* Amarelo/Laranja (Atenção/Em Andamento) */
+  --color-mint-light: #BEF7F3;
+  /* Verde Mint claro */
+  --color-mint-medium: #CCF6CC;
+  /* Verde Mint médio */
+  --color-mint-bright: #78FF92;
+  /* Verde Mint vibrante (Concluído/Sucesso) */
+  --color-yellow-orange: #FFC878;
+  /* Amarelo/Laranja (Atenção/Em Andamento) */
 
   /* Status & Alerts */
-  --color-danger: #FF8A8A;         /* Coral/Vermelho (Alertas/Cancelados/Atrasados) */
+  --color-danger: #FF8A8A;
+  /* Coral/Vermelho (Alertas/Cancelados/Atrasados) */
   --color-danger-light: #FFE5E5;
-  --color-disabled: #B5B3AD;       /* Cinza desabilitado / Texto secundário */
+  --color-disabled: #B5B3AD;
+  /* Cinza desabilitado / Texto secundário */
 
   /* Neutral Backgrounds & Text */
-  --color-bg-app: #F8F9FA;         /* Fundo global da aplicação */
-  --color-card-bg: #FFFFFF;        /* Fundo dos cards e contêineres */
-  --color-border: #E2E8F0;        /* Bordas sutis */
-  --color-text-dark: #2D3748;      /* Texto principal de alto contraste */
-  --color-text-muted: #718096;     /* Texto secundário e legendas */
+  --color-bg-app: #F8F9FA;
+  /* Fundo global da aplicação */
+  --color-card-bg: #FFFFFF;
+  /* Fundo dos cards e contêineres */
+  --color-border: #E2E8F0;
+  /* Bordas sutis */
+  --color-text-dark: #2D3748;
+  /* Texto principal de alto contraste */
+  --color-text-muted: #718096;
+  /* Texto secundário e legendas */
 
   /* Typography */
   --font-family-base: 'Quicksand', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  
+
   /* Border Radius (Brand System) */
   --radius-sm: 8px;
   --radius-md: 12px;
@@ -61,7 +77,9 @@
 /* --------------------------------------------------------------------------
    2. RESET & BASE STYLES
    -------------------------------------------------------------------------- */
-*, *::before, *::after {
+*,
+*::before,
+*::after {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
@@ -87,13 +105,17 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-img, svg {
+img,
+svg {
   display: block;
   max-width: 100%;
   height: auto;
 }
 
-button, input, select, textarea {
+button,
+input,
+select,
+textarea {
   font: inherit;
   color: inherit;
   border: none;
@@ -106,23 +128,40 @@ a {
   text-decoration: none;
 }
 
-ul, ol {
+ul,
+ol {
   list-style: none;
 }
 
 /* --------------------------------------------------------------------------
    3. TYPOGRAPHY
    -------------------------------------------------------------------------- */
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   font-weight: 700;
   line-height: 1.2;
   color: var(--color-text-dark);
 }
 
-h1 { font-size: 1.75rem; }
-h2 { font-size: 1.35rem; }
-h3 { font-size: 1.15rem; }
-h4 { font-size: 1rem; }
+h1 {
+  font-size: 1.75rem;
+}
+
+h2 {
+  font-size: 1.35rem;
+}
+
+h3 {
+  font-size: 1.15rem;
+}
+
+h4 {
+  font-size: 1rem;
+}
 
 p {
   font-size: 0.95rem;
@@ -134,9 +173,17 @@ p {
   font-size: 0.85rem;
 }
 
-.text-center { text-align: center; }
-.text-right { text-align: right; }
-.font-bold { font-weight: 700; }
+.text-center {
+  text-align: center;
+}
+
+.text-right {
+  text-align: right;
+}
+
+.font-bold {
+  font-weight: 700;
+}
 
 /* --------------------------------------------------------------------------
    4. FORM CONTROLS & INPUTS
@@ -219,7 +266,7 @@ p {
   transition: var(--transition-fast);
 }
 
-.custom-checkbox input:checked ~ .checkmark {
+.custom-checkbox input:checked~.checkmark {
   background-color: var(--color-primary);
 }
 
@@ -229,7 +276,7 @@ p {
   display: none;
 }
 
-.custom-checkbox input:checked ~ .checkmark::after {
+.custom-checkbox input:checked~.checkmark::after {
   display: block;
 }
 
@@ -250,7 +297,10 @@ p {
 .slider {
   position: absolute;
   cursor: pointer;
-  top: 0; left: 0; right: 0; bottom: 0;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
   background-color: var(--color-disabled);
   transition: var(--transition-normal);
   border-radius: var(--radius-pill);
@@ -269,11 +319,11 @@ p {
   box-shadow: var(--shadow-sm);
 }
 
-input:checked + .slider {
+input:checked+.slider {
   background-color: var(--color-mint-bright);
 }
 
-input:checked + .slider::before {
+input:checked+.slider::before {
   transform: translateX(24px);
 }
 
@@ -428,8 +478,10 @@ input:checked + .slider::before {
 
 /* RF02.3: Estilo visual acinzentado para tarefas concluídas */
 .meow-card.card-completed {
-  background-color: #E2E8F0 !important; /* Fundo cinza suave */
-  border-color: #CBD5E0 !important;     /* Borda acinzentada */
+  background-color: #E2E8F0 !important;
+  /* Fundo cinza suave */
+  border-color: #CBD5E0 !important;
+  /* Borda acinzentada */
   opacity: 0.75;
 }
 
@@ -581,6 +633,13 @@ input:checked + .slider::before {
   flex-direction: column;
   gap: 1.25rem;
 }
+
+/* Aplica o espaçamento entre as seções nas colunas de tela grande */
+  .week-day-column {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
 
 .flex-row {
   display: flex;
@@ -739,7 +798,7 @@ input:checked + .slider::before {
   border-radius: var(--radius-lg, 16px);
   padding: 0.75rem 1rem;
   margin-bottom: 0.75rem;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
   display: flex;
   flex-direction: column;
   gap: 0.4rem;
@@ -749,7 +808,7 @@ input:checked + .slider::before {
 
 .meow-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .meow-card-header {
@@ -795,11 +854,26 @@ input:checked + .slider::before {
 .status-icon {
   font-size: 1.1rem;
 }
-.status-done { color: #38A169; }
-.status-doing { color: #DD6B20; }
-.status-overdue { color: #E53E3E; }
-.status-cancelled { color: #A0AEC0; }
-.status-todo { color: #CBD5E0; }
+
+.status-done {
+  color: #38A169;
+}
+
+.status-doing {
+  color: #DD6B20;
+}
+
+.status-overdue {
+  color: #E53E3E;
+}
+
+.status-cancelled {
+  color: #A0AEC0;
+}
+
+.status-todo {
+  color: #CBD5E0;
+}
 
 /* ==========================================================================
    VARIÁVEIS DE CORES & TEMAS (LIGHT / DARK)
@@ -809,10 +883,11 @@ input:checked + .slider::before {
 :root {
   --bg-app: #F7FAFC;
   --bg-card: #FFFFFF;
-  --bg-header: #FFFFFF;
   --bg-lilac-panel: #C2BEF6;
-  --bg-calendar-app: #2D3748; /* Ou um tom pastel claro */
-  
+  --bg-calendar-app: #C2BEF6; /* Fundo claro do calendário */
+  --bg-header: #E2E8F0;       /* Cabeçalho claro */
+  /* Ou um tom pastel claro */
+
   --text-main: #2D3748;
   --text-muted: #718096;
   --border-color: #E2E8F0;
@@ -825,10 +900,10 @@ input:checked + .slider::before {
 body.dark-theme {
   --bg-app: #1A202C;
   --bg-card: #2D3748;
-  --bg-header: #171923;
   --bg-lilac-panel: #4A5568;
-  --bg-calendar-app: #1A202C;
-  
+  --bg-calendar-app: #2D3748; /* Fundo escuro do calendário */
+  --bg-header: #232B38;       /* Cabeçalho escuro */
+
   --text-main: #EDF2F7;
   --text-muted: #A0AEC0;
   --border-color: #4A5568;
@@ -843,3 +918,4 @@ body {
   color: var(--text-main);
   transition: background-color 0.3s ease, color 0.3s ease;
 }
+
