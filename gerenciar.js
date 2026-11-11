@@ -677,6 +677,10 @@ function setupEventListeners() {
   elements.taskCategorySelect.addEventListener('change', (e) => {
     updateTaskCategoryColorPreview(e.target.value);
   });
+
+  elements.taskUrgencySelect.addEventListener('change', (e) => {
+    updateManagerUrgencyFlag(e.target.value);
+  });
 }
 
 function switchTab(tab) {
@@ -735,6 +739,8 @@ function openAddTaskModal() {
   // Atualiza a bolinha (oculta para nova tarefa sem categoria selecionada)
   updateTaskCategoryColorPreview(elements.taskCategorySelect.value);
 
+  updateManagerUrgencyFlag('normal');
+
   elements.taskModalOverlay.classList.add('is-active');
 }
 
@@ -754,6 +760,8 @@ async function openEditTaskModal(id) {
 
   // Exibe a cor da categoria da tarefa ou oculta caso não possua categoria
   updateTaskCategoryColorPreview(task.categoria || '');
+
+  updateManagerUrgencyFlag(task.urgencia || 'normal');
 
   if (task.is_recurring) {
     elements.recurrenceFreqGroup.classList.remove('hidden');
@@ -905,4 +913,19 @@ function updateTaskCategoryColorPreview(categoryId) {
   } else {
     previewEl.style.display = 'none';
   }
+}
+
+// Atualiza a cor da bandeira de urgência no modal da tarefa
+function updateManagerUrgencyFlag(urgency) {
+  const flagIcon = document.getElementById('urgency-flag-icon');
+  if (!flagIcon) return;
+
+  const colors = {
+    baixa: '#C2E0FF',
+    normal: '#A8F5B4',
+    alta: '#FFD8A8',
+    urgente: '#FFA8A8'
+  };
+
+  flagIcon.style.color = colors[urgency] || colors.normal;
 }
