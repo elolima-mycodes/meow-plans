@@ -749,7 +749,7 @@ input:checked+.slider::before {
   font-weight: 600;
   cursor: pointer;
   padding: 0;
-  text-decoration: underline;
+  text-decoration: none;
   transition: color var(--transition-fast);
 }
 
@@ -884,16 +884,20 @@ input:checked+.slider::before {
   --bg-app: #F7FAFC;
   --bg-card: #FFFFFF;
   --bg-lilac-panel: #C2BEF6;
-  --bg-calendar-app: #C2BEF6; /* Fundo claro do calendário */
+  --bg-calendar-app: #E8E6FC; /* Fundo lilás bem suave para o calendário */
   --bg-header: #E2E8F0;       /* Cabeçalho claro */
-  /* Ou um tom pastel claro */
 
   --text-main: #2D3748;
   --text-muted: #718096;
-  --border-color: #E2E8F0;
+  --border-color: #CBD5E0;
 
   --color-primary: #C2BEF6;
+  --color-primary-dark: #8C82F2;
   --color-secondary: #384252;
+
+  /* Cores Harmônicas para Modais */
+  --bg-modal: #FFFFFF;
+  --text-modal: #2D3748;
 }
 
 /* Tema Escuro */
@@ -908,8 +912,13 @@ body.dark-theme {
   --text-muted: #A0AEC0;
   --border-color: #4A5568;
 
-  --color-primary: #6B46C1;
+  --color-primary: #8C82F2;
+  --color-primary-dark: #6B46C1;
   --color-secondary: #E2E8F0;
+
+  /* Cores Harmônicas para Modais no Tema Escuro */
+  --bg-modal: #232B38;
+  --text-modal: #EDF2F7;
 }
 
 /* Aplicação Global das Variáveis no Body */
@@ -917,5 +926,168 @@ body {
   background-color: var(--bg-app);
   color: var(--text-main);
   transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* ==========================================================================
+   AJUSTES DE MODAIS HARMONIZADOS
+   ========================================================================== */
+
+.modal-cute-container {
+  background-color: var(--bg-modal) !important;
+  color: var(--text-modal) !important;
+  border: 1px solid var(--border-color);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+}
+
+.modal-cute-container .form-label,
+.modal-cute-container label,
+.modal-cute-container h1,
+.modal-cute-container h2,
+.modal-cute-container h3,
+.modal-cute-container h4 {
+  color: var(--text-modal) !important;
+}
+
+.modal-cute-container .input-control,
+.modal-cute-container .select-control,
+.modal-cute-container .textarea-control,
+.modal-cute-container .form-cute-input {
+  background-color: var(--bg-card) !important;
+  color: var(--text-main) !important;
+  border: 1px solid var(--border-color) !important;
+}
+
+/* Ajuste no container interno de subtarefas nos modais */
+.modal-cute-container .form-group[style*="background"] {
+  background: rgba(0, 0, 0, 0.05) !important;
+}
+
+body.dark-theme .modal-cute-container .form-group[style*="background"] {
+  background: rgba(255, 255, 255, 0.05) !important;
+}
+
+/* ==========================================================================
+   PERSONALIZAÇÃO FOFA/PASTEL DOS MODAIS (CLARO & ESCURO)
+   ========================================================================== */
+
+/* Container Principal do Modal */
+.modal-overlay .modal-cute-container {
+  background-color: var(--bg-card, #FFFFFF) !important;
+  border: 2px solid var(--color-primary, #C2BEF6) !important;
+  box-shadow: var(--shadow-lg) !important;
+}
+
+/* Modificação no tema escuro: apenas o fundo do cartão modal escurece suavemente */
+body.dark-theme .modal-overlay .modal-cute-container {
+  background-color: #232B38 !important;
+  border-color: #4A5568 !important;
+}
+
+/* --- RÓTULOS E TÍTULOS --- */
+.modal-overlay .modal-cute-container .form-label,
+.modal-overlay .modal-cute-container label,
+.modal-overlay .modal-cute-container span:not(.checkmark) {
+  color: var(--text-main) !important;
+  font-weight: 700 !important;
+}
+
+/* --- INPUTS DE TEXTO E DATAS (Fundo Branco com Borda Definida) --- */
+.modal-overlay .modal-cute-container input[type="text"],
+.modal-overlay .modal-cute-container input[type="date"],
+.modal-overlay .modal-cute-container .form-cute-input,
+.modal-overlay .modal-cute-container .input-control {
+  background-color: #FFFFFF !important;
+  color: #2D3748 !important;
+  border: 1.5px solid #CBD5E0 !important;
+  border-radius: var(--radius-md) !important;
+  font-weight: 600 !important;
+}
+
+/* --- SELECTS / CAIXAS DE SELEÇÃO --- */
+.modal-overlay .modal-cute-container select,
+.modal-overlay .modal-cute-container .select-control {
+  background-color: #FFFFFF !important;
+  color: #2D3748 !important;
+  border: 1.5px solid #CBD5E0 !important;
+  border-radius: var(--radius-md) !important;
+  font-weight: 600 !important;
+}
+
+/* Mantém o Select de Categoria com fundo colorido personalizado */
+.modal-overlay .modal-cute-container #taskCategorySelect,
+.modal-overlay .modal-cute-container #task-category-select {
+  background-color: var(--color-primary, #C2BEF6) !important;
+  color: #FFFFFF !important;
+  border: none !important;
+}
+
+/* --- CAIXA DE TEXTO / OBSERVAÇÕES (Estilo Fofo Cinza/Grafite) --- */
+.modal-overlay .modal-cute-container textarea,
+.modal-overlay .modal-cute-container .textarea-control,
+.modal-overlay .modal-cute-container .form-cute-textarea {
+  background-color: #4A5568 !important;
+  color: #FFFFFF !important;
+  border: none !important;
+  border-radius: var(--radius-md) !important;
+  font-weight: 500 !important;
+}
+
+.modal-overlay .modal-cute-container textarea::placeholder {
+  color: #CBD5E0 !important;
+}
+
+/* --- ÁREA DE SUBTAREFAS (Container Interno Pastel) --- */
+.modal-overlay .modal-cute-container .form-group[style*="background"] {
+  background: rgba(194, 190, 246, 0.2) !important;
+  border: 1px dashed var(--color-primary, #C2BEF6) !important;
+  border-radius: var(--radius-md) !important;
+}
+
+body.dark-theme .modal-overlay .modal-cute-container .form-group[style*="background"] {
+  background: rgba(255, 255, 255, 0.05) !important;
+  border-color: #4A5568 !important;
+}
+
+/* Linha individual das subtarefas */
+.modal-overlay .modal-cute-container .subtask-row {
+  background-color: #FFFFFF !important;
+  border-radius: var(--radius-sm) !important;
+  padding: 0.25rem 0.5rem !important;
+}
+
+.modal-overlay .modal-cute-container .subtask-row input[type="text"] {
+  border: none !important;
+  background: transparent !important;
+}
+
+/* Estilo do botão de subtarefa no modal */
+.modal-overlay #btnAddSubtaskBtn,
+.modal-overlay #btn-add-subtask-row {
+  background-color: #FFFFFF !important;
+  color: var(--color-primary-dark, #6B46C1) !important;
+  border: 1.5px solid var(--color-primary-dark, #8C82F2) !important;
+  font-weight: 700 !important;
+  transition: all 0.2s ease !important;
+}
+
+/* Estado Hover (ao passar o mouse) */
+.modal-overlay #btnAddSubtaskBtn:hover,
+.modal-overlay #btn-add-subtask-row:hover {
+  background-color: var(--color-primary-dark, #6B46C1) !important;
+  color: #FFFFFF !important;
+}
+
+/* Ajuste específico para o Tema Escuro */
+body.dark-theme .modal-overlay #btnAddSubtaskBtn,
+body.dark-theme .modal-overlay #btn-add-subtask-row {
+  background-color: rgba(255, 255, 255, 0.1) !important;
+  color: #FFFFFF !important;
+  border: 1.5px solid var(--color-primary, #8C82F2) !important;
+}
+
+body.dark-theme .modal-overlay #btnAddSubtaskBtn:hover,
+body.dark-theme .modal-overlay #btn-add-subtask-row:hover {
+  background-color: var(--color-primary, #8C82F2) !important;
+  color: #FFFFFF !important;
 }
 

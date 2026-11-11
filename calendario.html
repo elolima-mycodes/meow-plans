@@ -20,7 +20,7 @@
   <script src="https://cdn.jsdelivr.net/npm/pocketbase@0.21.3/dist/pocketbase.umd.js"></script>
 
   <style>
-    /* Estilos de Extensão Específicos da Tela de Calendário (Tema Escuro & Caixas Pastéis) */
+    /* Estilos de Extensão Específicos da Tela de Calendário */
     .calendar-app-wrapper {
       background-color: var(--bg-calendar-app, #2D3748);
       min-height: 100vh;
@@ -32,7 +32,7 @@
     .calendar-header-nav {
       background-color: var(--bg-header, #232B38);
       padding: 0.75rem 1rem;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      border-bottom: 1px solid var(--border-color, rgba(255, 255, 255, 0.1));
       display: flex;
       flex-direction: column;
       gap: 0.75rem;
@@ -53,29 +53,36 @@
       gap: 0.5rem;
     }
 
+    /* Botões de Seta do Mês */
     .nav-arrow-btn {
       width: 36px;
       height: 36px;
       border-radius: 50%;
-      border: 1px solid rgba(255, 255, 255, 0.3);
-      color: #FFFFFF;
+      border: 2px solid var(--border-color, #CBD5E0);
+      background-color: var(--bg-card, #FFFFFF);
+      color: var(--text-main, #2D3748);
       display: flex;
       align-items: center;
       justify-content: center;
       cursor: pointer;
       font-size: 1.1rem;
-      background: transparent;
       transition: var(--transition-fast);
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
     }
 
     .nav-arrow-btn:hover {
+      transform: scale(1.05);
+      border-color: var(--color-primary-dark, #8C82F2);
+    }
+
+    body.dark-theme .nav-arrow-btn:hover {
       background-color: rgba(255, 255, 255, 0.15);
     }
 
     .current-month-title {
       font-size: 1.05rem;
       font-weight: 700;
-      color: var(--text-main, #FFFFFF);
+      color: var(--text-main, #FFFFFF); /* <-- Cor dinâmica */
       white-space: nowrap;
     }
 
@@ -85,7 +92,7 @@
       align-items: center;
       gap: 0.5rem;
       width: 100%;
-      justify-content: center;
+      justify-content: space-between;
     }
 
     .btn-new-task {
@@ -95,7 +102,23 @@
       white-space: nowrap;
     }
 
-    /* Container de Abas com Rolagem Horizontal no Telemóvel */
+    .btn-add-action {
+      background-color: var(--color-mint-medium);
+      color: #125420;
+      font-size: 0.85rem;
+      font-weight: 700;
+      padding: 0.45rem 1rem;
+      border-radius: var(--radius-pill);
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      box-shadow: var(--shadow-sm);
+      white-space: nowrap;
+    }
+
+    /* Container de Abas com Rolagem Horizontal */
     .view-selector-tabs-wrapper {
       width: 100%;
       overflow-x: auto;
@@ -111,22 +134,23 @@
       display: flex;
       align-items: center;
       gap: 0.35rem;
-      background-color: rgba(0, 0, 0, 0.2);
+      background-color: var(--border-color, rgba(0, 0, 0, 0.1));
       padding: 0.35rem;
       border-radius: var(--radius-pill);
       min-width: max-content;
+      justify-content: space-around;
     }
 
     .user-avatar-badge {
       width: 42px;
       height: 42px;
       border-radius: 50%;
-      background-color: #E2E8F0;
+      background-color: var(--bg-card, #E2E8F0);
       border: 2px solid var(--color-primary);
       display: flex;
       align-items: center;
       justify-content: center;
-      color: var(--color-text-dark);
+      color: var(--text-main, #2D3748);
       font-weight: 700;
       overflow: hidden;
     }
@@ -137,23 +161,13 @@
       object-fit: cover;
     }
 
-    /* Seletor de Visualização (Abas) */
-    .view-selector-tabs {
-      display: flex;
-      align-items: center;
-      justify-content: space-around;
-      gap: 0.5rem;
-      background-color: rgba(0, 0, 0, 0.2);
-      padding: 0.35rem;
-      border-radius: var(--radius-pill);
-    }
-
+    /* Botões das Abas de Visão */
     .tab-btn {
       padding: 0.45rem 0.75rem;
       border-radius: var(--radius-pill);
       font-size: 0.8rem;
       font-weight: 700;
-      color: #A0AEC0;
+      color: var(--text-muted, #718096); /* <-- Texto dinâmico legível */
       background: transparent;
       border: none;
       cursor: pointer;
@@ -163,8 +177,8 @@
     }
 
     .tab-btn.active {
-      background-color: #FFFFFF;
-      color: var(--color-text-dark, #2D3748);
+      background-color: var(--bg-card, #FFFFFF);
+      color: var(--text-main, #2D3748);
       box-shadow: var(--shadow-sm);
     }
 
@@ -173,12 +187,14 @@
       padding: 1rem;
     }
 
+    /* Cabeçalho dos dias da semana (D, S, T, Q...) */
     .weekdays-header {
       display: grid;
       grid-template-columns: repeat(7, 1fr);
       text-align: center;
       font-weight: 700;
-      color: #A0AEC0;
+      color: var(--text-main, #2D3748); /* <-- Cor dinâmica */
+      opacity: 0.8;
       font-size: 0.85rem;
       margin-bottom: 0.5rem;
     }
@@ -189,40 +205,59 @@
       gap: 0.35rem;
     }
 
+    /* Números dos Dias no Calendário */
     .day-cell {
       aspect-ratio: 1;
       display: flex;
       align-items: center;
       justify-content: center;
       font-size: 0.9rem;
-      font-weight: 600;
+      font-weight: 700;
       border-radius: 50%;
       cursor: pointer;
-      color: #E2E8F0;
+      color: var(--text-main, #2D3748); /* <-- Números visíveis no tema claro */
       transition: background-color var(--transition-fast);
     }
 
     .day-cell:hover {
+      background-color: rgba(0, 0, 0, 0.08);
+    }
+
+    body.dark-theme .day-cell:hover {
       background-color: rgba(255, 255, 255, 0.1);
     }
 
     .day-cell.other-month {
-      opacity: 0.3;
+      opacity: 0.35;
     }
 
     .day-cell.selected {
-      background-color: var(--color-disabled);
-      color: #FFFFFF;
-      font-weight: 700;
+      background-color: var(--color-primary, #C2BEF6);
+      color: #FFFFFF !important;
+      font-weight: 800;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
     }
 
+    /* Ajuste de contraste para a seleção no Tema Claro */
+    body:not(.dark-theme) .day-cell.selected {
+      background-color: var(--color-primary-dark, #8C82F2); /* Tom lilás mais forte para destacar do fundo */
+      color: #FFFFFF !important;
+    }
+
+    /* Marcação do Dia de Hoje */
     .day-cell.today {
-      border: 2px solid var(--color-primary);
+      border: 2px solid var(--color-primary-dark, #8C82F2);
+      font-weight: 800;
     }
 
-    /* Painel do Dia Selecionado & Seções Coloridas Fofas */
+    /* Destaque extra se o dia de hoje também for o dia selecionado */
+    .day-cell.today.selected {
+      border: 2px solid #FFFFFF;
+    }
+
+    /* Painel do Dia Selecionado */
     .day-details-panel {
-      background-color: var(--bg-card, #232B38); /* <-- Usa a variável CSS em vez de cor fixa */
+      background-color: var(--bg-card, #232B38);
       border-top-left-radius: var(--radius-xl);
       border-top-right-radius: var(--radius-xl);
       padding: 1.25rem 1rem;
@@ -236,7 +271,7 @@
       display: flex;
       align-items: center;
       gap: 0.75rem;
-      color: #FFFFFF;
+      color: var(--text-main, #FFFFFF);
       font-size: 1.1rem;
       font-weight: 700;
     }
@@ -246,11 +281,11 @@
       cursor: pointer;
       border: none;
       background: none;
-      color: var(--color-text-dark);
+      color: var(--text-main, #2D3748);
       font-weight: 700;
     }
 
-    /* Seções pastéis inspiradas na interface do protótipo */
+    /* Seções pastéis */
     .task-section-box {
       border-radius: var(--radius-lg);
       padding: 0.85rem;
@@ -277,12 +312,12 @@
     .section-title {
       font-size: 0.9rem;
       font-weight: 700;
-      color: var(--color-text-dark);
+      color: var(--color-text-dark, #2D3748);
       text-align: center;
       margin-bottom: 0.25rem;
     }
 
-    /* Cards de Tarefa Dentro das Seções */
+    /* Cards de Tarefa */
     .meow-card {
       background-color: #FFFFFF;
       border-radius: var(--radius-md);
@@ -309,35 +344,12 @@
       gap: 0.5rem;
     }
 
-    .status-check-circle {
-      width: 20px;
-      height: 20px;
-      border-radius: 50%;
-      border: 2px solid var(--color-text-dark);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 0.7rem;
-      font-weight: 700;
-    }
-
-    .status-check-circle.completed {
-      background-color: var(--color-mint-bright);
-      border-color: var(--color-mint-bright);
-      color: #125420;
-    }
-
     .meow-card-title {
       font-size: 0.95rem;
       font-weight: 700;
-      color: var(--color-text-dark);
+      color: var(--color-text-dark, #2D3748);
     }
 
-    .flag-icon {
-      font-size: 0.85rem;
-    }
-
-    /* Estilização dos Ícones de Status nos Cards */
     .status-icon {
       font-size: 1.15rem;
       vertical-align: middle;
@@ -346,32 +358,12 @@
       justify-content: center;
     }
 
-    .status-todo {
-      color: #8C4189;
-      /* Rosa pastel */
-    }
+    .status-todo { color: #8C4189; }
+    .status-doing { color: #D97706; }
+    .status-done { color: #10B981; }
+    .status-overdue { color: #EF4444; }
+    .status-cancelled { color: #9CA3AF; }
 
-    .status-doing {
-      color: #D97706;
-      /* Amarelo/Laranja */
-    }
-
-    .status-done {
-      color: #10B981;
-      /* Verde Mint */
-    }
-
-    .status-overdue {
-      color: #EF4444;
-      /* Vermelho/Coral */
-    }
-
-    .status-cancelled {
-      color: #9CA3AF;
-      /* Cinza */
-    }
-
-    /* Efeito de texto riscado para tarefas concluídas */
     .text-strikethrough {
       text-decoration: line-through;
       opacity: 0.7;
@@ -382,11 +374,10 @@
       align-items: center;
       justify-content: space-between;
       font-size: 0.72rem;
-      color: var(--color-text-muted);
+      color: var(--color-text-muted, #718096);
       font-weight: 600;
     }
 
-    /* Drag & Drop Feedback Visual */
     .drop-zone-active {
       min-height: 60px;
       border: 2px dashed var(--color-primary);
@@ -399,27 +390,6 @@
       touch-action: none;
     }
 
-    .card-draggable:active {
-      cursor: grabbing;
-    }
-
-    /* Responsividade Móbile-First Strict -> Desktop Adapt */
-    @media (min-width: 768px) {
-      .week-columns-grid {
-        display: grid;
-        grid-template-columns: repeat(7, 1fr);
-        gap: 0.75rem;
-        overflow-x: auto;
-      }
-
-      .week-day-column {
-        display: flex;
-        flex-direction: column;
-        gap: 0.75rem;
-      }
-    }
-
-    /* Modal de Tarefa Fofo */
     .modal-cute-container {
       background-color: var(--color-primary-light);
       border-radius: var(--radius-xl);
@@ -429,11 +399,7 @@
       box-shadow: var(--shadow-lg);
     }
 
-    /* ==========================================================================
-       REGRAS DE ADAPTAÇÃO POR TAMANHO DE ECRÃ (MEDIA QUERIES)
-       ========================================================================== */
-
-    /* Ecrãs Médios (Tablets: >= 576px) */
+    /* MEDIA QUERIES */
     @media (min-width: 576px) {
       .header-top-bar {
         flex-direction: row;
@@ -445,7 +411,6 @@
       }
     }
 
-    /* Ecrãs Grandes (Desktops: >= 992px) */
     @media (min-width: 992px) {
       .calendar-header-nav {
         padding: 1rem 1.5rem;
@@ -469,8 +434,6 @@
         font-size: 0.85rem;
       }
     }
-
-
   </style>
 </head>
 
@@ -489,26 +452,25 @@
 
         <!-- 2. Ações do Utilizador -->
         <div class="header-user-actions">
+          <a href="gerenciar.html" class="btn-accent btn" id="btnTabGerenciador">Gerenciador</a>
           <button id="themeToggleBtn" class="btn btn-outline" style="padding: 0.35rem 0.6rem; font-size: 1rem;" title="Alternar Tema">
             🌙
           </button>
-          <button class="btn btn-accent btn-sm btn-new-task" id="btnNovaTarefa">
-            + Nova Tarefa
-          </button>
-          <div class="user-avatar-badge" id="userAvatar" title="Perfil do Usuário">
-            <span>🐾</span>
+          <div class="user-avatar-badge" id="userAvatar" title="Usuário">
           </div>
+          <button class="tab-btn" id="btnSair" style="color: var(--color-danger);">Sair</button>
         </div>
       </div>
 
       <!-- 3. Abas de Visão (com Scroll Suave em Telemóveis) -->
       <div class="view-selector-tabs-wrapper">
         <div class="view-selector-tabs">
-          <a href="gerenciar.html" class="tab-btn" id="btnTabGerenciador">Gerenciador</a>
+          <button class="btn btn-add-action btn-sm" id="btnNovaTarefa">
+            + Nova Tarefa
+          </button>
           <button class="tab-btn active" data-view="mes" id="btnTabMes">Mês</button>
           <button class="tab-btn" data-view="semana" id="btnTabSemana">Semana</button>
           <button class="tab-btn" data-view="dia" id="btnTabDia">Dia</button>
-          <button class="tab-btn" id="btnSair" style="color: var(--color-danger);">Sair</button>
         </div>
       </div>
     </header>

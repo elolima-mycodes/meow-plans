@@ -252,7 +252,7 @@
       cursor: pointer;
       border: none;
       background: none;
-      color: var(--color-text-dark);
+      color: var(--text-main, #2D3748);
       font-weight: 700;
     }
 
@@ -323,19 +323,32 @@
 
   <div class="app-container">
     <!-- Header Superior -->
-    <header class="top-bar">
-      <button class="btn btn-outline" style="padding: 0.35rem 0.85rem; font-size: 0.85rem;"
-        onclick="window.location.href='calendario.html'">
-        Calendário
-      </button>
-      <!-- Exemplo de Botão de Alternar Tema no Header -->
-      <button id="themeToggleBtn" class="btn btn-outline" style="padding: 0.35rem 0.6rem; font-size: 1rem;"
-        title="Alternar Tema">
-        🌙
-      </button>
-      <div class="user-profile-btn" id="user-profile-trigger">
-        <div class="user-avatar-placeholder" id="user-avatar">🐱</div>
-        <span class="text-muted" style="font-size: 0.75rem;" id="logout-btn">Sair</span>
+    <header class="top-bar" style="display: flex; justify-content: flex-end; width: 100%; padding: 1rem 1.5rem;">
+      <div class="header-user-actions" style="display: flex; align-items: center; gap: 0.65rem;">
+        
+        <!-- Botão Calendário (Estilo Mint Accent da Imagem) -->
+        <button class="btn btn-sm btn-accent" style="padding: 0.45rem 0.85rem; font-size: 0.85rem; font-weight: 700; border-radius: var(--radius-pill); white-space: nowrap;"
+          onclick="window.location.href='calendario.html'">
+          Calendário
+        </button>
+
+        <!-- Botão Alternar Tema -->
+        <button id="themeToggleBtn" class="btn btn-outline" title="Alternar Tema"
+          style="width: 38px; height: 38px; padding: 0; display: flex; align-items: center; justify-content: center; font-size: 1rem; border-radius: 12px; border: 2px solid #8C82F2;">
+          🌙
+        </button>
+
+        <!-- Badge Circular com a Inicial / Avatar -->
+        <div class="user-avatar-badge" id="userAvatar" title="Perfil do Usuário"
+          style="width: 38px; height: 38px; border-radius: 50%; border: 2px solid #8C82F2; display: flex; align-items: center; justify-content: center; font-weight: 700; color: var(--text-main); font-size: 0.95rem;">
+          <span>🐾</span>
+        </div>
+
+        <!-- Botão Sair Vermelho -->
+        <button class="btn-link" id="logout-btn" 
+          style="color: var(--color-danger, #EF4444); font-weight: 700; font-size: 0.85rem; text-decoration: none; border: none; background: none; padding: 0 0.25rem; cursor: pointer;">
+          Sair
+        </button>
       </div>
     </header>
 
@@ -349,14 +362,14 @@
     <div class="action-bar">
       <div class="action-bar-top">
         <span id="tab-section-title" style="font-weight: 700; font-size: 0.95rem;">Minhas Tarefas</span>
-        <button class="btn-add-action" id="btn-open-add-modal">
-          <span id="add-btn-icon">⊕</span> <span id="add-btn-label">Adicionar Tarefa</span>
+        <button class="btn-add-action btn-accent" id="btn-open-add-modal">
+          <span id="add-btn-icon">+</span> <span id="add-btn-label">Adicionar Tarefa</span>
         </button>
       </div>
 
       <!-- Área de Filtros Combinados (Disponível Apenas na Aba Tarefas) -->
       <div class="filters-container" id="tasks-filters-wrapper">
-        <input type="text" class="filter-input" id="search-text-filter" placeholder="🔍 Buscar tarefa...">
+        <input type="text" class="filter-input" id="search-text-filter" placeholder="Buscar tarefa...">
 
         <select class="filter-btn" id="category-filter-select">
           <option value="">Categoria: Todas</option>

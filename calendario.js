@@ -14,6 +14,7 @@ let tasksList = [];
 let categoriesList = [];
 let routineCompletionsList = [];
 let draggingTaskId = null;
+let deletedSubtaskIds = []; // Guarda os IDs das subtarefas para excluir no banco
 
 const MONTH_NAMES = [
   'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
@@ -63,6 +64,15 @@ function setupEventListeners() {
 
   // Inicializa o botão de alternar tema
   initThemeTracker();
+
+  // ✅ Redireciona para a página de perfil ao clicar no avatar
+  const avatarEl = document.getElementById('userAvatar');
+  if (avatarEl) {
+    avatarEl.style.cursor = 'pointer';
+    avatarEl.addEventListener('click', () => {
+      window.location.href = 'usuario.html';
+    });
+  }
 
   document.querySelectorAll('.tab-btn[data-view]').forEach(btn => {
     btn.addEventListener('click', (e) => {
@@ -363,6 +373,16 @@ async function handleDeleteTask() {
 }
 
 async function saveSubtasks(taskId) {
+  // 1. Exclui no PocketBase todas as subtarefas marcadas para remoção
+  for (const subid of deletedSubtaskIds) {
+    try {
+      await pb.collection('subtarefas').delete(subid);
+    } catch (err) {
+      console.error(`Erro ao apagar subtarefa ${subid}:`, err);
+    }
+  }
+
+  // 2. Cria ou atualiza as subtarefas que continuam na tela
   const rows = document.querySelectorAll('.subtask-row');
   for (const row of rows) {
     const subid = row.dataset.subid;
@@ -402,10 +422,18 @@ function addSubtaskRow(subtask = { id: '', titulo: '', completa: false }) {
 
   row.innerHTML = `
     <input type="checkbox" class="subtask-check" ${subtask.completa ? 'checked' : ''} />
-    <input type="text" class="input-control subtask-input" value="${subtask.titulo}" placeholder="Título da subtarefa..." style="min-height:32px; padding:0.25rem 0.5rem; font-size:0.85rem;" />
-    <button type="button" class="btn-link" style="color:var(--color-danger); text-decoration:none;" onclick="this.parentElement.remove()">&times;</button>
+    <input type="text" class="input-control subtask-input" value="${escapeHtml(subtask.titulo)}" placeholder="Título da subtarefa..." style="min-height:32px; padding:0.25rem 0.5rem; font-size:0.85rem;" />
+    <button type="button" class="btn-link" style="color:var(--color-danger); text-decoration:none;" onclick="removeSubtaskRow(this, '${subtask.id}')">&times;</button>
   `;
   container.appendChild(row);
+}
+
+// Remove o elemento da tela e registra o ID para exclusão no PocketBase
+function removeSubtaskRow(btnElement, subtaskId) {
+  if (subtaskId) {
+    deletedSubtaskIds.push(subtaskId);
+  }
+  btnElement.parentElement.remove();
 }
 
 // 7. RENDERIZAÇÃO DAS VISUALIZAÇÕES
@@ -484,7 +512,6 @@ function renderDayPanel(targetElement, dateObj) {
 
   targetElement.innerHTML = `
     <div class="day-panel-header" style="margin-bottom: 0.5rem;">
-      <button class="day-panel-close-btn">&times;</button>
       <span>${dayTitleStr}</span>
     </div>
 
@@ -800,6 +827,7 @@ function getLocalDateStr(dateObj = new Date()) {
 
 // 9. MODAL DE EDIÇÃO
 async function openTaskModal(taskId = null) {
+  deletedSubtaskIds = []; // <-- Reseta a lista de subtarefas a serem excluídas
   const modalOverlay = document.getElementById('taskModalOverlay');
   const form = document.getElementById('taskForm');
   const subtasksList = document.getElementById('subtasksList');

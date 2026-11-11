@@ -93,6 +93,8 @@ function checkAuthentication() {
   // Atualiza o timestamp de atividade atual e define o usuário logado
   localStorage.setItem('last_activity', now.toString());
   currentUser = pb.authStore.model;
+
+  renderUserAvatar();
 }
 
 // ==========================================
@@ -598,7 +600,7 @@ function renderSubtaskModalRows() {
     row.innerHTML = `
       <div class="flex-row" style="gap: 0.5rem; flex: 1; align-items: center;">
         <input type="checkbox" ${sub.completa ? 'checked' : ''} onchange="toggleSubtaskStatus(${index}, this.checked)">
-        <input type="text" class="input-control" value="${escapeHtml(sub.titulo)}" style="min-height: 30px; padding: 0.2rem 0.5rem; font-size: 0.85rem; width:100%; border:1px solid #CBD5E0; border-radius:4px;" onchange="updateSubtaskTitle(${index}, this.value)" placeholder="Título da subtarefa">
+        <input type="text" class="input-control subtask-input" value="${escapeHtml(sub.titulo)}" style="min-height: 30px; padding: 0.2rem 0.5rem; font-size: 0.85rem; width:100%; border: none" onchange="updateSubtaskTitle(${index}, this.value)" placeholder="Título da subtarefa">
       </div>
       <button type="button" class="btn-link" style="color: var(--color-danger); margin-left: 0.5rem;" onclick="removeSubtaskRow(${index})">✕</button>
     `;
@@ -621,6 +623,15 @@ function setupEventListeners() {
       openAddCategoryModal();
     }
   });
+
+  // ✅ Redireciona para a página de perfil ao clicar no avatar
+  const avatarEl = document.getElementById('userAvatar');
+  if (avatarEl) {
+    avatarEl.style.cursor = 'pointer';
+    avatarEl.addEventListener('click', () => {
+      window.location.href = 'usuario.html';
+    });
+  }
 
   elements.btnCloseTaskModal.addEventListener('click', closeModals);
   elements.btnCloseCategoryModal.addEventListener('click', closeModals);
@@ -1006,3 +1017,18 @@ function initThemeTracker() {
 document.addEventListener('DOMContentLoaded', () => {
   initThemeTracker();
 });
+
+function renderUserAvatar() {
+  const avatarEl = document.getElementById('userAvatar');
+  if (!avatarEl) return;
+
+  if (currentUser && currentUser.avatar) {
+    const avatarUrl = pb.files.getUrl(currentUser, currentUser.avatar);
+    avatarEl.innerHTML = `<img src="${avatarUrl}" alt="${currentUser.name || 'User'}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;" />`;
+  } else if (currentUser && (currentUser.name || currentUser.username)) {
+    const displayName = currentUser.name || currentUser.username;
+    avatarEl.innerHTML = `<span>${displayName.charAt(0).toUpperCase()}</span>`;
+  } else {
+    avatarEl.innerHTML = `<span>🐾</span>`;
+  }
+}
