@@ -422,9 +422,12 @@
   <div class="modal-overlay" id="taskModalOverlay">
     <div class="modal-card modal-cute-container">
       <div class="modal-header">
-        <div class="flex-row">
+        <div class="flex-row" style="align-items: center; gap: 0.4rem;">
+          <!-- Indicador Circular de Cor da Categoria da Tarefa -->
+          <span id="taskCategoryColorPreview" style="width: 18px; height: 18px; border-radius: 50%; display: none; border: 2px solid #FFFFFF; box-shadow: 0 0 4px rgba(0,0,0,0.15); flex-shrink: 0;"></span>
+
           <select id="taskCategorySelect" class="select-control" style="width: auto; min-height: 36px; font-size: 0.85rem; padding: 0.25rem 0.5rem; background: var(--color-primary); color: white; font-weight: 700; border: none;">
-            <option value="">Sem Categoria</option>
+            <option value="">Sem categoria</option>
           </select>
         </div>
         <button class="day-panel-close-btn" id="closeTaskModalBtn">&times;</button>

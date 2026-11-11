@@ -409,12 +409,15 @@
         <input type="hidden" id="task-id" value="">
 
         <div class="flex-row mb-1">
-          <div style="width: 40%;">
-            <select class="form-cute-input" id="task-category-select" required>
-              <option value="" disabled selected>■ Categoria</option>
+          <div style="width: 45%; display: flex; align-items: center; gap: 0.4rem;">
+            <!-- Indicador Circular de Cor da Categoria da Tarefa -->
+            <span id="task-category-color-preview" style="width: 18px; height: 18px; border-radius: 50%; display: none; border: 2px solid #FFFFFF; box-shadow: 0 0 4px rgba(0,0,0,0.15); flex-shrink: 0;"></span>
+            
+            <select class="form-cute-input" id="task-category-select" style="flex: 1;">
+              <option value="">Sem categoria</option>
             </select>
           </div>
-          <div style="width: 60%;">
+          <div style="width: 55%;">
             <input type="text" class="form-cute-input" id="task-title-input" placeholder="Título da Tarefa" required>
           </div>
         </div>

@@ -332,11 +332,12 @@ function populateCategorySelects() {
     elements.categoryFilterSelect.appendChild(opt);
   });
 
-  elements.taskCategorySelect.innerHTML = '<option value="" disabled selected>■ Categoria</option>';
+  // Opção padrão para tarefas sem categoria
+  elements.taskCategorySelect.innerHTML = '<option value="">Sem categoria</option>';
   categoriesCache.forEach(cat => {
     const opt = document.createElement('option');
     opt.value = cat.id;
-    opt.textContent = `■ ${cat.nome}`;
+    opt.textContent = cat.nome;
     elements.taskCategorySelect.appendChild(opt);
   });
 }
@@ -671,6 +672,11 @@ function setupEventListeners() {
   elements.categoryColorSelect.addEventListener('change', (e) => {
     updateCategoryColorPreview(e.target.value);
   });
+
+  // Listener para atualizar a cor da bolinha ao trocar a categoria no modal da tarefa
+  elements.taskCategorySelect.addEventListener('change', (e) => {
+    updateTaskCategoryColorPreview(e.target.value);
+  });
 }
 
 function switchTab(tab) {
@@ -725,6 +731,10 @@ function openAddTaskModal() {
   elements.recurrenceFreqGroup.classList.add('hidden');
   currentSubtasks = [];
   renderSubtaskModalRows();
+  
+  // Atualiza a bolinha (oculta para nova tarefa sem categoria selecionada)
+  updateTaskCategoryColorPreview(elements.taskCategorySelect.value);
+
   elements.taskModalOverlay.classList.add('is-active');
 }
 
@@ -741,6 +751,9 @@ async function openEditTaskModal(id) {
   elements.taskStatusSelect.value = task.status || 'a_fazer';
   elements.taskRecurrenceFreq.value = task.recurrence_freq || 'semanal';
   elements.taskDescriptionInput.value = task.descricao || '';
+
+  // Exibe a cor da categoria da tarefa ou oculta caso não possua categoria
+  updateTaskCategoryColorPreview(task.categoria || '');
 
   if (task.is_recurring) {
     elements.recurrenceFreqGroup.classList.remove('hidden');
@@ -871,5 +884,25 @@ function updateCategoryColorPreview(hexColor) {
   const previewEl = document.getElementById('category-color-preview');
   if (previewEl && hexColor) {
     previewEl.style.backgroundColor = hexColor;
+  }
+}
+
+// Atualiza a bolinha indicadora de cor da categoria no modal de tarefas
+function updateTaskCategoryColorPreview(categoryId) {
+  const previewEl = document.getElementById('task-category-color-preview');
+  if (!previewEl) return;
+
+  if (!categoryId) {
+    // Se não houver categoria vinculada, oculta a bolinha de cor
+    previewEl.style.display = 'none';
+    return;
+  }
+
+  const catObj = categoriesCache.find(c => c.id === categoryId);
+  if (catObj && catObj.cor) {
+    previewEl.style.backgroundColor = catObj.cor;
+    previewEl.style.display = 'inline-block';
+  } else {
+    previewEl.style.display = 'none';
   }
 }

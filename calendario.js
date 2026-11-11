@@ -97,6 +97,13 @@ function setupEventListeners() {
 
   const btnAddSubtaskBtn = document.getElementById('btnAddSubtaskBtn');
   if (btnAddSubtaskBtn) btnAddSubtaskBtn.addEventListener('click', () => addSubtaskRow());
+
+  const taskCategorySelect = document.getElementById('taskCategorySelect');
+  if (taskCategorySelect) {
+    taskCategorySelect.addEventListener('change', (e) => {
+      updateTaskCategoryColorPreview(e.target.value);
+    });
+  }
 }
 
 function toggleRecurringFields(isRecurring) {
@@ -154,7 +161,7 @@ function populateCategoryOptions(selectedCategoryId = '') {
   const categorySelect = document.getElementById('taskCategorySelect');
   if (!categorySelect) return;
 
-  categorySelect.innerHTML = '<option value="">Sem Categoria</option>';
+  categorySelect.innerHTML = '<option value="">Sem categoria</option>';
   categoriesList.forEach(cat => {
     const option = document.createElement('option');
     option.value = cat.id;
@@ -791,6 +798,7 @@ async function openTaskModal(taskId = null) {
     if (!task) return;
 
     populateCategoryOptions(task.categoria || '');
+    updateTaskCategoryColorPreview(task.categoria || ''); // <-- Atualiza a cor do círculo no modal
 
     document.getElementById('taskIdInput').value = task.id;
     document.getElementById('taskTitleInput').value = task.titulo;
@@ -824,6 +832,7 @@ async function openTaskModal(taskId = null) {
   } else {
     form.reset();
     populateCategoryOptions('');
+    updateTaskCategoryColorPreview('');
 
     // Se o dia selecionado no calendário for anterior a hoje, força a data para HOJE
     const selectedDateStr = getLocalDateStr(selectedDate);
@@ -874,3 +883,22 @@ function updateModalUrgencyFlag(urgency) {
   flagIcon.style.color = colors[urgency] || colors.normal;
 }
 
+// Atualiza a bolinha indicadora de cor da categoria no modal do calendário
+function updateTaskCategoryColorPreview(categoryId) {
+  const previewEl = document.getElementById('taskCategoryColorPreview');
+  if (!previewEl) return;
+
+  if (!categoryId) {
+    // Tarefa sem categoria: oculta o círculo de cor
+    previewEl.style.display = 'none';
+    return;
+  }
+
+  const catObj = categoriesList.find(c => c.id === categoryId);
+  if (catObj && catObj.cor) {
+    previewEl.style.backgroundColor = catObj.cor;
+    previewEl.style.display = 'inline-block';
+  } else {
+    previewEl.style.display = 'none';
+  }
+}

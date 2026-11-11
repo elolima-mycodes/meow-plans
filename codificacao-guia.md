@@ -2,10 +2,14 @@ Forneça apenas as alterações necessárias com total clareza para que eu possa
 
 Meow Plans codificação
 
-- Adicionar biblioteca de cores pré-definidas para as categorias
+OK - Adicionar biblioteca de cores pré-definidas para as categorias
+
+- Padronizar visualização do modal de criação/edição de tarefas
 
 - Expirar acesso após 30 min sem interação com a aplicação
 
+- Implementar modo claro e escuro
+
 - Implementar como PWA
 
-IMPLEMENTAR ÚLTIMAS MUDANÇAS NO PROMPT: Meow Plans: Codificação Calendário
+
