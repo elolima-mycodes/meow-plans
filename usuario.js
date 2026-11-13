@@ -124,3 +124,12 @@ function initThemeTracker() {
     };
   }
 }
+
+// Registro do Service Worker (PWA)
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js')
+      .then(() => console.log('PWA: Service Worker registrado com sucesso!'))
+      .catch((err) => console.error('PWA: Erro ao registrar Service Worker:', err));
+  });
+}

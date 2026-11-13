@@ -18,6 +18,18 @@
 
   <!-- PocketBase SDK (UMD) -->
   <script src="https://cdn.jsdelivr.net/npm/pocketbase@0.21.3/dist/pocketbase.umd.js"></script>
+  
+  <!-- jsPDF + AutoTable para Exportação PDF (RF07.2) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+
+  <!-- Configuração PWA -->
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#8C82F2" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <link rel="apple-touch-icon" href="icons/icon-192.png" />
 
   <style>
     /* Estilos de Extensão Específicos da Tela de Calendário */
@@ -471,6 +483,16 @@
           <button class="tab-btn active" data-view="mes" id="btnTabMes">Mês</button>
           <button class="tab-btn" data-view="semana" id="btnTabSemana">Semana</button>
           <button class="tab-btn" data-view="dia" id="btnTabDia">Dia</button>
+
+          <!-- Botões de Exportação (Visíveis apenas na aba Semana - RF07.2) -->
+          <div id="weekExportButtons" class="hidden" style="display: inline-flex; gap: 0.35rem; margin-left: 0.35rem; border-left: 1px solid var(--border-color); padding-left: 0.5rem;">
+            <button class="tab-btn" id="btnExportWeekCSV" title="Exportar Semana em CSV" style="color: var(--text-main);">
+              <i class="bi bi-filetype-csv"></i> CSV
+            </button>
+            <button class="tab-btn" id="btnExportWeekPDF" title="Exportar Semana em PDF" style="color: var(--text-main);">
+              <i class="bi bi-file-earmark-pdf"></i> PDF
+            </button>
+          </div>
         </div>
       </div>
     </header>

@@ -65,7 +65,7 @@ function setupEventListeners() {
   // Inicializa o botão de alternar tema
   initThemeTracker();
 
-  // ✅ Redireciona para a página de perfil ao clicar no avatar
+  // Redireciona para a página de perfil ao clicar no avatar
   const avatarEl = document.getElementById('userAvatar');
   if (avatarEl) {
     avatarEl.style.cursor = 'pointer';
@@ -125,6 +125,12 @@ function setupEventListeners() {
       updateTaskCategoryColorPreview(e.target.value);
     });
   }
+
+  const btnExportCSV = document.getElementById('btnExportWeekCSV');
+  if (btnExportCSV) btnExportCSV.addEventListener('click', exportWeekToCSV);
+
+  const btnExportPDF = document.getElementById('btnExportWeekPDF');
+  if (btnExportPDF) btnExportPDF.addEventListener('click', exportWeekToPDF);
 }
 
 function toggleRecurringFields(isRecurring) {
@@ -440,6 +446,18 @@ function removeSubtaskRow(btnElement, subtaskId) {
 function renderCurrentView() {
   const mainContent = document.getElementById('calendarMainContent');
   const label = document.getElementById('currentPeriodLabel');
+  const exportGroup = document.getElementById('weekExportButtons');
+
+  // Exibe os botões de exportação apenas na visualização semanal
+  if (exportGroup) {
+    if (currentView === 'semana') {
+      exportGroup.classList.remove('hidden');
+      exportGroup.style.display = 'inline-flex';
+    } else {
+      exportGroup.classList.add('hidden');
+      exportGroup.style.display = 'none';
+    }
+  }
 
   if (currentView === 'mes') {
     label.textContent = `${MONTH_NAMES[selectedDate.getMonth()]} de ${selectedDate.getFullYear()}`;
@@ -1001,4 +1019,128 @@ function initThemeTracker() {
       themeBtn.textContent = isDark ? '☀️' : '🌙';
     };
   }
+}
+
+// ==========================================================================
+// 10. EXPORTAÇÃO DA VISUALIZAÇÃO SEMANAL (CSV & PDF - RF07.2)
+// ==========================================================================
+
+function getCurrentWeekExportData() {
+  const startOfWeek = new Date(selectedDate);
+  startOfWeek.setDate(selectedDate.getDate() - selectedDate.getDay());
+
+  const rows = [];
+
+  for (let i = 0; i < 7; i++) {
+    const currentDay = new Date(startOfWeek);
+    currentDay.setDate(startOfWeek.getDate() + i);
+    const dateStr = getLocalDateStr(currentDay);
+    const dayLabel = `${WEEKDAY_NAMES[currentDay.getDay()]} (${formatDateBR(dateStr)})`;
+
+    const deliveryTasks = tasksList.filter(t => !t.is_recurring && t.data_entrega && t.data_entrega.startsWith(dateStr));
+    const execTasks = tasksList.filter(t => !t.is_recurring && t.data_execucao && t.data_execucao.startsWith(dateStr));
+    const routineTasks = tasksList.filter(t => isRoutineForDate(t, currentDay));
+
+    const pushTask = (task, secao) => {
+      const catName = task.expand?.categoria?.nome || 'Sem categoria';
+      const isDone = task.is_recurring
+        ? routineCompletionsList.some(c => c.tarefa === task.id && c.data === dateStr)
+        : task.status === 'concluida';
+
+      rows.push({
+        dia: dayLabel,
+        secao,
+        titulo: task.titulo,
+        categoria: catName,
+        urgencia: (task.urgencia || 'normal').toUpperCase(),
+        status: isDone ? 'Concluída' : (task.status || 'A Fazer').replace('_', ' ')
+      });
+    };
+
+    deliveryTasks.forEach(t => pushTask(t, 'Para Entregar'));
+    execTasks.forEach(t => pushTask(t, 'Para Fazer'));
+    routineTasks.forEach(t => pushTask(t, 'Rotineiros'));
+  }
+
+  return { startOfWeek, rows };
+}
+
+function exportWeekToCSV() {
+  const { startOfWeek, rows } = getCurrentWeekExportData();
+
+  if (rows.length === 0) {
+    alert('Não há tarefas cadastradas nesta semana para exportar. 🐾');
+    return;
+  }
+
+  // Cabeçalho com BOM (\uFEFF) para acentuação correta no Excel
+  const headers = ['Dia da Semana', 'Seção', 'Tarefa', 'Categoria', 'Urgência', 'Status'];
+  const csvLines = [
+    headers.join(';'),
+    ...rows.map(r => [
+      `"${r.dia}"`,
+      `"${r.secao}"`,
+      `"${r.titulo.replace(/"/g, '""')}"`,
+      `"${r.categoria}"`,
+      `"${r.urgencia}"`,
+      `"${r.status}"`
+    ].join(';'))
+  ];
+
+  const blob = new Blob(['\uFEFF' + csvLines.join('\n')], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `meow-plans-semana-${getLocalDateStr(startOfWeek)}.csv`;
+  link.click();
+  URL.revokeObjectURL(url);
+}
+
+function exportWeekToPDF() {
+  const { startOfWeek, rows } = getCurrentWeekExportData();
+
+  if (rows.length === 0) {
+    alert('Não há tarefas cadastradas nesta semana para exportar. 🐾');
+    return;
+  }
+
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+
+  const endOfWeek = new Date(startOfWeek);
+  endOfWeek.setDate(startOfWeek.getDate() + 6);
+
+  // Título do Documento
+  doc.setFontSize(16);
+  doc.setTextColor(45, 55, 72);
+  doc.text('Meow Plans - Planejamento Semanal', 14, 18);
+
+  doc.setFontSize(10);
+  doc.setTextColor(100, 116, 139);
+  doc.text(
+    `Período: ${formatDateBR(getLocalDateStr(startOfWeek))} a ${formatDateBR(getLocalDateStr(endOfWeek))}`,
+    14,
+    25
+  );
+
+  // Tabela formatada
+  doc.autoTable({
+    startY: 32,
+    head: [['Dia', 'Seção', 'Tarefa', 'Categoria', 'Urgência', 'Status']],
+    body: rows.map(r => [r.dia, r.secao, r.titulo, r.categoria, r.urgencia, r.status]),
+    headStyles: { fillColor: [140, 130, 242], textColor: 255, fontStyle: 'bold' },
+    alternateRowStyles: { fillColor: [248, 250, 252] },
+    styles: { fontSize: 8.5, cellPadding: 3 }
+  });
+
+  doc.save(`meow-plans-semana-${getLocalDateStr(startOfWeek)}.pdf`);
+}
+
+// Registro do Service Worker (PWA)
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js')
+      .then(() => console.log('PWA: Service Worker registrado com sucesso!'))
+      .catch((err) => console.error('PWA: Erro ao registrar Service Worker:', err));
+  });
 }

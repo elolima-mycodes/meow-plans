@@ -2,7 +2,11 @@ Forneça apenas as alterações necessárias com total clareza para que eu possa
 
 Meow Plans codificação
 
-- Ajustar visual
+OK - Ajustar visual
 
-- Implementar como PWA
+OK - Implementar exportação de arquivos PDF/CSV das tarefas da semana
+
+OK - Implementar como PWA
+
+- Implementar pets
 

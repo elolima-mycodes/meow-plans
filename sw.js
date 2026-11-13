@@ -1,28 +1,55 @@
-const CACHE_NAME = 'meowplans-v1';
-const ASSETS = [
+const CACHE_NAME = 'meow-plans-v1';
+const STATIC_ASSETS = [
   './',
-  './index.html',
-  './styles.css',
-  './pocketbase-service.js',
-  './app.js',
-  './manifest.json',
-  './logo-sem-fundo.png',
-  'https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css',
-  'https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css',
-  'https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.css',
-  'https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js',
-  'https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js',
-  'https://cdn.jsdelivr.net/npm/pocketbase@0.21.1/dist/pocketbase.umd.js'
+  './login.html',
+  './calendario.html',
+  './gerenciar.html',
+  './usuario.html',
+  './style.css',
+  './calendario.js',
+  './gerenciar.js',
+  './usuario.js'
 ];
 
-self.addEventListener('install', (e) => {
-  e.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS))
+// Instalação: salva os arquivos estáticos em cache
+self.addEventListener('install', (event) => {
+  event.waitUntil(
+    caches.open(CACHE_NAME).then((cache) => {
+      return cache.addAll(STATIC_ASSETS);
+    })
   );
+  self.skipWaiting();
 });
 
-self.addEventListener('fetch', (e) => {
-  e.respondWith(
-    caches.match(e.request).then((res) => res || fetch(e.request))
+// Ativação: limpa caches antigos quando você atualizar a versão
+self.addEventListener('activate', (event) => {
+  event.waitUntil(
+    caches.keys().then((keys) => {
+      return Promise.all(
+        keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))
+      );
+    })
+  );
+  self.clients.claim();
+});
+
+// Interceptação de requisições:
+// - Chamadas ao PocketBase (127.0.0.1:8090) vão direto para a rede
+// - Arquivos estáticos usam Network-First com fallback para Cache
+self.addEventListener('fetch', (event) => {
+  if (event.request.url.includes('127.0.0.1:8090') || event.request.method !== 'GET') {
+    return;
+  }
+
+  event.respondWith(
+    fetch(event.request)
+      .then((networkResponse) => {
+        const responseClone = networkResponse.clone();
+        caches.open(CACHE_NAME).then((cache) => {
+          cache.put(event.request, responseClone);
+        });
+        return networkResponse;
+      })
+      .catch(() => caches.match(event.request))
   );
 });

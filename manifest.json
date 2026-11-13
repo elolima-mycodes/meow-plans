@@ -1,15 +1,42 @@
 {
-  "name": "MeowPlans - Gestão de Tarefas",
-  "short_name": "MeowPlans",
+  "name": "Meow Plans - Planejador",
+  "short_name": "Meow Plans",
+  "description": "Organizador de tarefas, rotinas e calendário pessoal.",
   "start_url": "./index.html",
+  "scope": "./",
   "display": "standalone",
-  "background_color": "#F8F9FA",
-  "theme_color": "#F4C1F2",
+  "background_color": "#232B38",
+  "theme_color": "#8C82F2",
+  "orientation": "portrait-primary",
   "icons": [
     {
-      "src": "logo-sem-fundo.png",
-      "sizes": "192x192 512x512",
-      "type": "image/png"
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ],
+
+  "screenshots": [
+    {
+      "src": "icons/screenshot_desktop.png",
+      "sizes": "1898x895",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Visualização do Calendário no Desktop"
+    },
+    {
+      "src": "icons/screenshot_mobile.png",
+      "sizes": "335x652",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Visualização do Calendário no Celular"
     }
   ]
 }

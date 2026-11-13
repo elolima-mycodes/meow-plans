@@ -1091,3 +1091,32 @@ body.dark-theme .modal-overlay #btn-add-subtask-row:hover {
   color: #FFFFFF !important;
 }
 
+/* ==========================================================================
+   FIX: LEGIBILIDADE NO TEMA ESCURO (TELA DE PERFIL E FORMULÁRIOS)
+   ========================================================================== */
+
+/* 1. Títulos e Rótulos (Meu Perfil, Nome de Usuário, E-mail, Alterar Senha) */
+body.dark-theme h2,
+body.dark-theme h3,
+body.dark-theme .form-label,
+body.dark-theme label {
+  color: var(--text-main, #EDF2F7) !important;
+}
+
+/* 2. Botões com Borda (← Voltar e Alterar Foto) */
+body.dark-theme .btn-outline {
+  color: var(--text-main, #EDF2F7) !important;
+  border-color: var(--color-primary, #8C82F2) !important;
+  background-color: rgba(255, 255, 255, 0.05) !important;
+}
+
+body.dark-theme .btn-outline:hover {
+  background-color: var(--color-primary, #8C82F2) !important;
+  color: #FFFFFF !important;
+}
+
+/* 3. Garante que o texto digitado dentro dos inputs brancos continue escuro */
+body.dark-theme .input-control {
+  background-color: #FFFFFF !important;
+  color: #2D3748 !important;
+}
