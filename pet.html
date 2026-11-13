@@ -1,0 +1,1805 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Meow Plans - Meu Pet</title>
+
+  <!-- Configuração PWA -->
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#8C82F2" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <link rel="apple-touch-icon" href="icons/icon-192.png" />
+
+  <!-- Fontes Pixel Art -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet" />
+
+  <!-- SDK PocketBase -->
+  <script src="https://cdn.jsdelivr.net/npm/pocketbase@0.21.5/dist/pocketbase.umd.js"></script>
+
+  <style>
+    :root {
+      --bg-page: #232B38;
+      --bg-panel: #2E3748;
+      --bg-card: #3A4559;
+      --bg-dark: #1A202C;
+      --border-pixel: #131720;
+      --border-light: #5A6885;
+      --accent-purple: #8C82F2;
+      --accent-purple-dark: #6358D4;
+      --accent-pink: #F48FB1;
+      --accent-gold: #FFD54F;
+      --accent-green: #66BB6A;
+      --accent-blue: #4FC3F7;
+      --text-main: #F8F9FA;
+      --text-muted: #B0BEC5;
+    }
+
+    * {
+      box-sizing: border-box;
+      image-rendering: pixelated;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: var(--bg-page);
+      background-image:
+        linear-gradient(45deg, #283140 25%, transparent 25%),
+        linear-gradient(-45deg, #283140 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, #283140 75%),
+        linear-gradient(-45deg, transparent 75%, #283140 75%);
+      background-size: 32px 32px;
+      background-position: 0 0, 0 16px, 16px -16px, -16px 0;
+      color: var(--text-main);
+      font-family: 'VT323', monospace;
+      font-size: 21px;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      user-select: none;
+    }
+
+    h1, h2, h3, .pixel-font {
+      font-family: 'Press Start 2P', cursive;
+      letter-spacing: 1px;
+    }
+
+    /* Moldura Pixel Art 3D */
+    .pixel-box {
+      background: var(--bg-panel);
+      border: 4px solid var(--border-pixel);
+      box-shadow:
+        inset 4px 4px 0px var(--border-light),
+        inset -4px -4px 0px #1D2330,
+        6px 6px 0px rgba(0, 0, 0, 0.4);
+    }
+
+    /* Botões Pixel Art */
+    .pixel-btn {
+      font-family: 'Press Start 2P', cursive;
+      font-size: 10px;
+      line-height: 1.4;
+      padding: 12px 14px;
+      background: var(--accent-purple);
+      color: #FFF;
+      border: 4px solid var(--border-pixel);
+      box-shadow:
+        inset 3px 3px 0px #B9B2FF,
+        inset -3px -3px 0px var(--accent-purple-dark),
+        4px 4px 0px var(--border-pixel);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      text-decoration: none;
+      transition: transform 0.06s;
+    }
+
+    .pixel-btn:hover:not(:disabled) {
+      filter: brightness(1.08);
+      transform: translate(-1px, -1px);
+    }
+
+    .pixel-btn:active:not(:disabled) {
+      transform: translate(3px, 3px);
+      box-shadow:
+        inset 3px 3px 0px var(--accent-purple-dark),
+        0px 0px 0px var(--border-pixel);
+    }
+
+    .pixel-btn:disabled {
+      opacity: 0.48;
+      cursor: not-allowed;
+    }
+
+    .pixel-btn.green {
+      background: #43A047;
+      box-shadow: inset 3px 3px 0px #81C784, inset -3px -3px 0px #2E7D32, 4px 4px 0px var(--border-pixel);
+    }
+
+    .pixel-btn.pink {
+      background: #E05A87;
+      box-shadow: inset 3px 3px 0px #FF9EC0, inset -3px -3px 0px #AD3B62, 4px 4px 0px var(--border-pixel);
+    }
+
+    .pixel-btn.blue {
+      background: #2997D8;
+      box-shadow: inset 3px 3px 0px #81D4FA, inset -3px -3px 0px #1565C0, 4px 4px 0px var(--border-pixel);
+    }
+
+    .pixel-btn.gold {
+      background: #F5B014;
+      color: #1A1A1A;
+      box-shadow: inset 3px 3px 0px #FFE082, inset -3px -3px 0px #B27B00, 4px 4px 0px var(--border-pixel);
+    }
+
+    .pixel-btn.dark {
+      background: #46536B;
+      box-shadow: inset 3px 3px 0px #6D7FA1, inset -3px -3px 0px #2A3242, 4px 4px 0px var(--border-pixel);
+    }
+
+    .px-icon {
+      width: 18px;
+      height: 18px;
+      flex-shrink: 0;
+      shape-rendering: crispEdges;
+    }
+
+    /* Cabeçalho */
+    .top-bar {
+      width: calc(100% - 24px);
+      max-width: 1020px;
+      margin: 14px auto;
+      padding: 12px 16px;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 14px;
+      margin: 0;
+      color: #FFF;
+      text-shadow: 2px 2px 0px var(--border-pixel);
+    }
+
+    .coin-area {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .coin-badge {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--bg-dark);
+      border: 4px solid var(--border-pixel);
+      padding: 8px 14px;
+      font-family: 'Press Start 2P', cursive;
+      font-size: 13px;
+      color: var(--accent-gold);
+      box-shadow: inset 3px 3px 0px #2D3748;
+      cursor: pointer;
+    }
+
+    /* Grid Principal */
+    .main-grid {
+      width: 100%;
+      max-width: 1020px;
+      padding: 0 12px 32px;
+      display: grid;
+      grid-template-columns: 1fr 360px;
+      gap: 18px;
+    }
+
+    @media (max-width: 880px) {
+      .main-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* Palco do Quarto */
+    .room-panel {
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .room-top-info {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      gap: 8px;
+    }
+
+    .pet-name-tag {
+      font-size: 14px;
+      color: var(--accent-pink);
+      margin: 0;
+      text-shadow: 2px 2px 0px var(--border-pixel);
+    }
+
+    .mood-pill {
+      background: var(--bg-dark);
+      border: 3px solid var(--border-pixel);
+      padding: 4px 10px;
+      font-size: 19px;
+      color: #A5D6A7;
+    }
+
+    .canvas-viewport {
+      position: relative;
+      width: 100%;
+      border: 4px solid var(--border-pixel);
+      background: #141821;
+      box-shadow: inset 0 0 0 4px #2B3344;
+      cursor: pointer;
+    }
+
+    #roomCanvas {
+      width: 100%;
+      height: auto;
+      display: block;
+      aspect-ratio: 3 / 2;
+    }
+
+    /* Balão de Fala Pixelado */
+    .speech-bubble {
+      position: absolute;
+      top: 12px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #FFFDF9;
+      color: #2A2138;
+      border: 4px solid #2A2138;
+      padding: 8px 14px;
+      font-family: 'Press Start 2P', cursive;
+      font-size: 9px;
+      line-height: 1.6;
+      text-align: center;
+      box-shadow: 4px 4px 0px rgba(0, 0, 0, 0.35);
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.15s;
+      z-index: 6;
+      max-width: 88%;
+    }
+
+    .speech-bubble.visible {
+      opacity: 1;
+    }
+
+    .speech-bubble::after {
+      content: '';
+      position: absolute;
+      bottom: -10px;
+      left: 50%;
+      transform: translateX(-50%);
+      border-width: 10px 10px 0;
+      border-style: solid;
+      border-color: #2A2138 transparent;
+    }
+
+    .room-hint {
+      text-align: center;
+      font-size: 17px;
+      color: var(--text-muted);
+      margin-top: 8px;
+    }
+
+    .care-actions {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    @media (max-width: 540px) {
+      .care-actions {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* Painel Direito */
+    .sidebar-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .card-box {
+      padding: 16px;
+    }
+
+    .panel-heading {
+      font-size: 11px;
+      color: var(--accent-gold);
+      margin: 0 0 14px 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      text-shadow: 2px 2px 0px var(--border-pixel);
+    }
+
+    /* Barras de Status Pixeladas */
+    .stat-group {
+      margin-bottom: 14px;
+    }
+
+    .stat-group:last-child {
+      margin-bottom: 0;
+    }
+
+    .stat-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 5px;
+      font-size: 20px;
+    }
+
+    .stat-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .bar-track {
+      width: 100%;
+      height: 22px;
+      background: var(--bg-dark);
+      border: 3px solid var(--border-pixel);
+      padding: 2px;
+      position: relative;
+    }
+
+    .bar-fill {
+      height: 100%;
+      width: 80%;
+      transition: width 0.3s steps(10);
+    }
+
+    .bar-fome {
+      background: #FF8A65;
+      box-shadow: inset 0 3px 0 #FFCCBC, inset 0 -3px 0 #D84315;
+    }
+
+    .bar-carinho {
+      background: #F48FB1;
+      box-shadow: inset 0 3px 0 #FCE4EC, inset 0 -3px 0 #C2185B;
+    }
+
+    .bar-energia {
+      background: #4FC3F7;
+      box-shadow: inset 0 3px 0 #E1F5FE, inset 0 -3px 0 #0277BD;
+    }
+
+    /* Loja Pixel Art */
+    .shop-tabs {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 4px;
+      margin-bottom: 12px;
+    }
+
+    .shop-tab {
+      font-family: 'Press Start 2P', cursive;
+      font-size: 8px;
+      padding: 8px 2px;
+      background: var(--bg-dark);
+      color: var(--text-muted);
+      border: 3px solid var(--border-pixel);
+      cursor: pointer;
+    }
+
+    .shop-tab.active {
+      background: var(--accent-purple);
+      color: #FFF;
+    }
+
+    .shop-items-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      max-height: 295px;
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+
+    .shop-card {
+      background: var(--bg-card);
+      border: 3px solid var(--border-pixel);
+      padding: 10px 8px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      text-align: center;
+    }
+
+    .shop-card.equipped {
+      border-color: var(--accent-gold);
+      background: #46506B;
+    }
+
+    .swatch-box {
+      width: 40px;
+      height: 40px;
+      border: 3px solid var(--border-pixel);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .item-label {
+      font-size: 18px;
+      line-height: 1.05;
+    }
+
+    .item-action-btn {
+      width: 100%;
+      font-family: 'Press Start 2P', cursive;
+      font-size: 8px;
+      padding: 7px 4px;
+      border: 2px solid var(--border-pixel);
+      background: var(--accent-gold);
+      color: #1A1A1A;
+      cursor: pointer;
+    }
+
+    .item-action-btn.owned {
+      background: #64B5F6;
+    }
+
+    .item-action-btn.equipped-btn {
+      background: #81C784;
+      cursor: default;
+    }
+
+    /* Modais (Adoção e Ajuda Moedas) */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(14, 18, 26, 0.92);
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+
+    .modal-box {
+      width: 100%;
+      max-width: 780px;
+      padding: 24px;
+      text-align: center;
+    }
+
+    .species-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin: 18px 0;
+    }
+
+    @media (max-width: 700px) {
+      .species-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    .species-card {
+      background: var(--bg-card);
+      border: 4px solid var(--border-pixel);
+      padding: 12px 8px;
+      cursor: pointer;
+      transition: transform 0.08s;
+    }
+
+    .species-card:hover {
+      transform: translateY(-4px);
+    }
+
+    .species-card.selected {
+      border-color: var(--accent-gold);
+      background: #4B5675;
+      box-shadow: 0 0 0 3px var(--accent-purple);
+    }
+
+    .species-card canvas {
+      width: 96px;
+      height: 96px;
+      margin: 0 auto 8px;
+      display: block;
+    }
+
+    .pixel-input {
+      font-family: 'Press Start 2P', cursive;
+      font-size: 12px;
+      padding: 12px;
+      width: 100%;
+      max-width: 340px;
+      background: var(--bg-dark);
+      color: #FFF;
+      border: 4px solid var(--border-pixel);
+      margin-bottom: 16px;
+      text-align: center;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Barra Superior -->
+  <header class="top-bar pixel-box">
+    <a href="gerenciar.html" class="pixel-btn dark">
+      <svg class="px-icon" viewBox="0 0 16 16"><path fill="#FFF" d="M9 2h2v2H9V2zM7 4h2v2H7V4zM5 6h2v2H5V6zM3 7h2v2H3V7zm2 2h2v2H5V9zm2 2h2v2H7v-2zm2 2h2v2H9v-2z"/></svg>
+      VOLTAR
+    </a>
+
+    <h1 class="brand-title">
+      <svg class="px-icon" viewBox="0 0 16 16">
+        <path fill="#B8A5F2" d="M3 2h2v3H3V2zm8 0h2v3h-2V2zM2 5h12v8H2V5z"/>
+        <path fill="#F59BB9" d="M4 3h1v2H4V3zm7 0h1v2h-1V3zM7 9h2v1H7V9z"/>
+        <path fill="#232B38" d="M5 7h2v2H5V7zm4 0h2v2H9V7z"/>
+      </svg>
+      MEOW PETS
+    </h1>
+
+    <div class="coin-area">
+      <div class="coin-badge" id="coinBadge" title="Clique para saber como ganhar moedas">
+        <svg class="px-icon" viewBox="0 0 16 16">
+          <path fill="#8D6E00" d="M5 1h6v1h2v2h1v8h-1v2h-2v1H5v-1H3v-2H2V4h1V2h2V1z"/>
+          <path fill="#FFD54F" d="M5 2h6v2h2v8h-2v2H5v-2H3V4h2V2z"/>
+          <path fill="#FFF9C4" d="M5 3h4v1H5V3zM4 4h1v6H4V4z"/>
+          <path fill="#FFA000" d="M7 5h2v6H7V5z"/>
+        </svg>
+        <span id="coinBalance">0</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Conteúdo Principal -->
+  <main class="main-grid">
+    <!-- Quarto Interativo -->
+    <section class="room-panel pixel-box">
+      <div class="room-top-info">
+        <h2 class="pet-name-tag" id="petNameDisplay">CARREGANDO...</h2>
+        <span class="mood-pill" id="petMoodBadge">Feliz</span>
+      </div>
+
+      <div class="canvas-viewport" id="canvasClickArea" title="Clique no seu pet para fazer carinho!">
+        <div class="speech-bubble" id="speechBubble">Miau! Que bom te ver!</div>
+        <canvas id="roomCanvas" width="360" height="240"></canvas>
+      </div>
+
+      <div class="room-hint">Dica: Clique diretamente no seu pet no quarto para dar carinho!</div>
+
+      <div class="care-actions">
+        <button class="pixel-btn green" id="btnFeed">
+          <svg class="px-icon" viewBox="0 0 16 16">
+            <path fill="#FFF" d="M11 2h3v3h-2v2h-2v2H8v2H6v2H3v-3h2V8h2V6h2V4h2V2z"/>
+            <path fill="#FF8A65" d="M4 7h5v5H4V7z"/>
+          </svg>
+          ALIMENTAR (10)
+        </button>
+
+        <button class="pixel-btn pink" id="btnPet">
+          <svg class="px-icon" viewBox="0 0 16 16">
+            <path fill="#FFF" d="M3 3h3v1h1v1h2V4h1V3h3v1h1v4h-1v2h-2v2H9v2H7v-2H5v-2H3V8H2V4h1V3z"/>
+          </svg>
+          CARINHO
+        </button>
+
+        <button class="pixel-btn blue" id="btnSleep">
+          <svg class="px-icon" viewBox="0 0 16 16">
+            <path fill="#FFF" d="M2 3h5v2H5v2h2v2H2V7h2V5H2V3zm6 3h6v2h-3v2h3v2H8v-2h3V8H8V6z"/>
+          </svg>
+          <span id="btnSleepText">DORMIR</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- Barra Lateral: Status e Loja -->
+    <aside class="sidebar-panel">
+      <!-- Status -->
+      <div class="card-box pixel-box">
+        <h3 class="panel-heading">STATUS DO PET</h3>
+
+        <div class="stat-group">
+          <div class="stat-header">
+            <span class="stat-title">
+              <svg class="px-icon" viewBox="0 0 16 16"><path fill="#FF8A65" d="M4 5h6v6H4V5z"/><path fill="#FFF" d="M10 3h3v2h-2v2h-1V3zM2 11h2v3H2v-3z"/></svg>
+              Fome
+            </span>
+            <span id="txtFome">85%</span>
+          </div>
+          <div class="bar-track">
+            <div class="bar-fill bar-fome" id="barFome" style="width: 85%;"></div>
+          </div>
+        </div>
+
+        <div class="stat-group">
+          <div class="stat-header">
+            <span class="stat-title">
+              <svg class="px-icon" viewBox="0 0 16 16"><path fill="#F48FB1" d="M3 3h3v1h1v1h2V4h1V3h3v1h1v4h-1v2h-2v2H9v2H7v-2H5v-2H3V8H2V4h1V3z"/></svg>
+              Carinho
+            </span>
+            <span id="txtCarinho">85%</span>
+          </div>
+          <div class="bar-track">
+            <div class="bar-fill bar-carinho" id="barCarinho" style="width: 85%;"></div>
+          </div>
+        </div>
+
+        <div class="stat-group">
+          <div class="stat-header">
+            <span class="stat-title">
+              <svg class="px-icon" viewBox="0 0 16 16"><path fill="#4FC3F7" d="M8 1h3v5h3l-6 9v-6H5l3-8z"/></svg>
+              Energia
+            </span>
+            <span id="txtEnergia">85%</span>
+          </div>
+          <div class="bar-track">
+            <div class="bar-fill bar-energia" id="barEnergia" style="width: 85%;"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Loja Rápida -->
+      <div class="card-box pixel-box">
+        <h3 class="panel-heading">LOJA DO QUARTO</h3>
+
+        <div class="shop-tabs">
+          <button class="shop-tab active" data-cat="parede">PAREDE</button>
+          <button class="shop-tab" data-cat="chao">CHÃO</button>
+          <button class="shop-tab" data-cat="movel">MÓVEIS</button>
+          <button class="shop-tab" data-cat="objeto">OBJETOS</button>
+        </div>
+
+        <div class="shop-items-grid" id="shopGrid"></div>
+      </div>
+    </aside>
+  </main>
+
+  <!-- Modal de Adoção Inicial (Exibido apenas se o usuário ainda não escolheu seu pet) -->
+  <div id="adoptionModal" class="modal-backdrop hidden">
+    <div class="modal-box pixel-box">
+      <h2 style="font-size: 15px; color: var(--accent-gold); margin-top: 0;">ESCOLHA SEU COMPANHEIRO!</h2>
+      <p style="font-size: 21px; color: var(--text-muted); margin: 8px 0 14px;">
+        Você cuidará exclusivamente do pet escolhido ao completar suas tarefas.
+      </p>
+
+      <div class="species-grid" id="speciesGrid">
+        <div class="species-card selected" data-species="gato">
+          <canvas id="prev-gato" width="32" height="32"></canvas>
+          <div class="pixel-font" style="font-size: 10px; color: #C7B8FF;">GATINHO</div>
+        </div>
+        <div class="species-card" data-species="pato">
+          <canvas id="prev-pato" width="32" height="32"></canvas>
+          <div class="pixel-font" style="font-size: 10px; color: #FFF176;">PATINHO</div>
+        </div>
+        <div class="species-card" data-species="corvo">
+          <canvas id="prev-corvo" width="32" height="32"></canvas>
+          <div class="pixel-font" style="font-size: 10px; color: #B39DDB;">CORVINHO</div>
+        </div>
+        <div class="species-card" data-species="dinossauro">
+          <canvas id="prev-dinossauro" width="32" height="32"></canvas>
+          <div class="pixel-font" style="font-size: 10px; color: #EF9A9A;">RAPTOR</div>
+        </div>
+      </div>
+
+      <div>
+        <input type="text" id="inputPetName" class="pixel-input" maxlength="16" placeholder="Digite um nome..." />
+      </div>
+
+      <button class="pixel-btn gold" id="btnConfirmAdopt">ADOTAR COMPANHEIRO</button>
+    </div>
+  </div>
+
+  <!-- Modal Explicativo das Moedas -->
+  <div id="coinHelpModal" class="modal-backdrop hidden">
+    <div class="modal-box pixel-box" style="max-width: 480px;">
+      <h2 style="font-size: 14px; color: var(--accent-gold); margin-top: 0;">COMO GANHAR MOEDAS?</h2>
+      <p style="font-size: 21px; line-height: 1.4; color: #E2E8F0;">
+        Cada tarefa ou rotina concluída no <strong>Calendário</strong> ou <strong>Gerenciador</strong> rende <strong>+10 moedas</strong> automaticamente!
+      </p>
+      <p style="font-size: 19px; color: var(--text-muted);">
+        (Concluir novamente a mesma tarefa já recompensada não gera moedas extras.)
+      </p>
+      <button class="pixel-btn" id="btnCloseCoinHelp">ENTENDI!</button>
+    </div>
+  </div>
+
+  <script>
+    // =========================================================================
+    // 1. PERSISTÊNCIA (POCKETBASE + LOCALSTORAGE SINCRONIZADOS)
+    // =========================================================================
+    const POCKETBASE_URL = 'http://127.0.0.1:8090';
+    const pb = new PocketBase(POCKETBASE_URL);
+    const PET_STORAGE_KEY = 'meow_plans_pet_data_v1';
+
+    let petState = {
+      id: null,
+      tipo: null, // 'gato' | 'pato' | 'corvo' | 'dinossauro'
+      nome: '',
+      fome: 85,
+      carinho: 85,
+      energia: 85,
+      moedas: 50,
+      ultimaInteracao: Date.now(),
+      inventario: ['parede_lavanda', 'chao_pinho', 'movel_cama_rosa', 'obj_vasinho'],
+      equipados: {
+        parede: 'parede_lavanda',
+        chao: 'chao_pinho',
+        movel: 'movel_cama_rosa',
+        objeto: 'obj_vasinho'
+      }
+    };
+
+    // =========================================================================
+    // 2. CATÁLOGO DA LOJA (PAREDES, CHÃOS, MÓVEIS E OBJETOS)
+    // =========================================================================
+    const SHOP_CATALOG = [
+      // Papéis de Parede
+      { id: 'parede_lavanda', cat: 'parede', nome: 'Lavanda Meow', preco: 0, c1: '#D6CCF7', c2: '#C2B3F0' },
+      { id: 'parede_pessego', cat: 'parede', nome: 'Pêssego Doce', preco: 30, c1: '#FAD4C0', c2: '#F2B89B' },
+      { id: 'parede_menta', cat: 'parede', nome: 'Menta Suave', preco: 45, c1: '#C8E6C9', c2: '#A5D6A7' },
+      { id: 'parede_noite', cat: 'parede', nome: 'Céu Estrelado', preco: 65, c1: '#283149', c2: '#1E2538' },
+
+      // Chãos
+      { id: 'chao_pinho', cat: 'chao', nome: 'Pinho Claro', preco: 0, c1: '#D7A87E', c2: '#BA875B' },
+      { id: 'chao_rosa', cat: 'chao', nome: 'Tapete Fofo', preco: 35, c1: '#F48FB1', c2: '#EC407A' },
+      { id: 'chao_xadrez', cat: 'chao', nome: 'Xadrez Retrô', preco: 50, c1: '#ECEFF1', c2: '#B0BEC5' },
+      { id: 'chao_grama', cat: 'chao', nome: 'Jardim Macio', preco: 60, c1: '#81C784', c2: '#66BB6A' },
+
+      // Móveis
+      { id: 'movel_cama_rosa', cat: 'movel', nome: 'Almofada Rosa', preco: 0, c1: '#F06292', c2: '#FCE4EC' },
+      { id: 'movel_arranhador', cat: 'movel', nome: 'Torre Gato', preco: 45, c1: '#D7CCC8', c2: '#8D6E63' },
+      { id: 'movel_estante', cat: 'movel', nome: 'Estante Livros', preco: 60, c1: '#A1887F', c2: '#8C82F2' },
+      { id: 'movel_pc', cat: 'movel', nome: 'Setup Gamer', preco: 90, c1: '#7E57C2', c2: '#4FC3F7' },
+
+      // Objetos
+      { id: 'obj_vasinho', cat: 'objeto', nome: 'Vasinho Pixel', preco: 0, c1: '#66BB6A', c2: '#D84315' },
+      { id: 'obj_pelucia', cat: 'objeto', nome: 'Pelúcia Gato', preco: 30, c1: '#B8A5F2', c2: '#F59BB9' },
+      { id: 'obj_luminaria', cat: 'objeto', nome: 'Luminária Lua', preco: 45, c1: '#FFD54F', c2: '#5C6BC0' },
+      { id: 'obj_trofeu', cat: 'objeto', nome: 'Troféu Foco', preco: 75, c1: '#FFD54F', c2: '#FFA000' }
+    ];
+
+    // =========================================================================
+    // 3. SPRITES 32x32 PIXEL ART FIÉIS ÀS ARTES OFICIAIS
+    // =========================================================================
+    const PALETTES = {
+      gato: {
+        O: '#594B73', // Contorno roxo-acinzentado
+        P: '#B8A5F2', // Lilás principal
+        W: '#FAF8FF', // Branco cremoso
+        K: '#F59BB9', // Rosa orelhas e patinha
+        E: '#3E3254'  // Olhos e focinho
+      },
+      pato: {
+        O: '#594B73', // Contorno roxo-acinzentado
+        Y: '#FDE892', // Amarelo pastel
+        C: '#FFF9E6', // Creme rosto e barriga
+        B: '#F6A552', // Laranja bico e patas
+        E: '#3E3254'  // Olhos
+      },
+      corvo: {
+        O: '#3D344E', // Contorno escuro
+        M: '#6B5F82', // Plumagem roxo-ardósia
+        D: '#534868', // Asas e cauda escuras
+        L: '#9B8FB3', // Bico cinza-lavanda
+        H: '#C5BCD9', // Brilho do bico
+        E: '#241E30'  // Olho
+      },
+      dinossauro: {
+        O: '#48354A', // Contorno escuro
+        R: '#C94355', // Penas vermelho-carmesim
+        D: '#6D344C', // Pontas das penas ameixa escuro
+        C: '#F5E2DB', // Garganta e barriga creme
+        B: '#5B4C61', // Focinho cinza-arroxeado
+        K: '#EE96AF', // Língua rosa
+        E: '#2B202E'  // Olho
+      }
+    };
+
+    // Matrizes 32x32 (2 frames cada: idle/walk A e B)
+    const SPRITES = {
+      gato: [
+        [
+          "................................",
+          "................................",
+          "...........OO..........OO.......",
+          "..........OPPO........OPPO......",
+          ".........OPKPPOOOOOOOOPKPPO.....",
+          "........OOPKKPPPPPPPPPPKKPOO....",
+          "........OPPPPPPPPPPPPPPPPPPO....",
+          ".......OOPPPPPPPPPWWPPPPPPPOO...",
+          ".......OPPPPPPPPPWWWWPPPPPPPO...",
+          "......OOPPPPPPPPWWWWWWPPPPPPOO..",
+          "......OPPPEEPPPWWWWWWWWPPEEPPO..",
+          "..OOO.OPPPEEPPWWWWEEWWWWPPEEPO..",
+          ".OPPPOOPPPPPPWWWWEEEEWWWWPPPPO..",
+          ".OWWWO.OOPPPPPWWWWWWWWWWPPPOO...",
+          ".OPPPO..OOPPPPPPPPPPPPPPPPOO....",
+          "..OPPP..OPWWWWWWWWWWWWWWWWPO....",
+          "...OPPOOOPWWWWWWWWWWWWWWWWPO....",
+          "....OOOOPPPWWWWWWWWWWWWWWWPO....",
+          ".....OOPPPPPWWWWWWWWWWWWWWPO....",
+          ".....OPPPPPPPWWWWWWWWWWWWPPO....",
+          ".....OPPPPPPPWWWWWWWWWWWPPO.....",
+          ".....OOPPPPPWWWWWWWWWOOOOO......",
+          "......OOPPPWWWWWWWWWOPWWWO......",
+          ".......OOOWWWOOOOOWWOPWWWO......",
+          "........OWWWOPKKKPOOWOOOO.......",
+          "........OWWWOPKPKPO.............",
+          ".........OOOOOPKKPO.............",
+          "..............OOOO..............",
+          "................................",
+          "................................",
+          "................................",
+          "................................"
+        ],
+        [
+          "................................",
+          "................................",
+          "...........OO..........OO.......",
+          "..........OPPO........OPPO......",
+          ".........OPKPPOOOOOOOOPKPPO.....",
+          "........OOPKKPPPPPPPPPPKKPOO....",
+          "........OPPPPPPPPPPPPPPPPPPO....",
+          ".......OOPPPPPPPPPWWPPPPPPPOO...",
+          ".......OPPPPPPPPPWWWWPPPPPPPO...",
+          "......OOPPPPPPPPWWWWWWPPPPPPOO..",
+          "......OPPPEEPPPWWWWWWWWPPEEPPO..",
+          "...OOO.OPPPEEPPWWWWEEWWWWPPEEPO.",
+          "..OPPPOOPPPPPPWWWWEEEEWWWWPPPPO.",
+          "..OWWWO.OOPPPPPWWWWWWWWWWPPPOO..",
+          "..OPPPO..OOPPPPPPPPPPPPPPPPOO...",
+          "...OPPP..OPWWWWWWWWWWWWWWWWPO...",
+          "....OPPOOOPWWWWWWWWWWWWWWWWPO...",
+          ".....OOOOPPPWWWWWWWWWWWWWWWPO...",
+          ".....OOPPPPPWWWWWWWWWWWWWWPO....",
+          ".....OPPPPPPPWWWWWWWWWWWWPPO....",
+          ".....OPPPPPPPWWWWWWWWWWWPPO.....",
+          ".....OOPPPPPWWWWWWWWWOOOOO......",
+          "......OOPPPWWWWWWWWWOPWWWO......",
+          ".......OOOWWWOOOOOWWOPWWWO......",
+          ".........OWWWOPKKKPOOOOOO.......",
+          ".........OWWWOPKPKPO............",
+          "..........OOOOOPKKPO............",
+          "...............OOOO.............",
+          "................................",
+          "................................",
+          "................................",
+          "................................"
+        ]
+      ],
+      pato: [
+        [
+          "................................",
+          "................................",
+          "..............OOO...............",
+          ".............OYYYO..............",
+          "............OYYYYYOO............",
+          "...........OYYYYYYYYO...........",
+          ".........OOYYYYYYYYYYOO.........",
+          "........OYYYYYYYYYYYYYYO........",
+          ".......OYYYYYYYYYYYYYYYYO.......",
+          "......OYYYYYYYYYYYYYYYYYYO......",
+          "......OYYYYYYYYYYYYYYYYYYO......",
+          "......OYYYEEYYYYYYYYEEYYYO......",
+          "......OYYYEEYYBBBBYYEEYYYO......",
+          "......OYYYYCCBBBBBBCCYYYYO......",
+          "......OYYYYCCCCCCCCCCYYYYO......",
+          ".......OYYYYCCCCCCCCYYYYO.......",
+          "........OOYYYYCCCCYYYYOO........",
+          "...OO.....OOOOOOOOOOOO..........",
+          "..OYYO...OYYYYYYYYYYYYO.........",
+          ".OYYYYO.OYYYYCCCCCCYYYYO........",
+          "OYYYYYYOOYYYCCCCCCCCYYYO........",
+          "OYYYYYYYYYYYCCCCCCCCYYYYO.......",
+          ".OYYYYYYYYYYCCCCCCCCYYYYO.......",
+          "..OYYYYYYYYYYCCCCCCYYYYO........",
+          "...OYYYYYYYYYYCCCCYYYYO.........",
+          "....OOYYYYYYYYYYYYYYOO..........",
+          "......OOOOOBBBBOOBBBBO..........",
+          "..........OBBBBOOBBBBO..........",
+          "...........OOOO..OOOO...........",
+          "................................",
+          "................................",
+          "................................"
+        ],
+        [
+          "................................",
+          "................................",
+          "..............OOO...............",
+          ".............OYYYO..............",
+          "............OYYYYYOO............",
+          "...........OYYYYYYYYO...........",
+          ".........OOYYYYYYYYYYOO.........",
+          "........OYYYYYYYYYYYYYYO........",
+          ".......OYYYYYYYYYYYYYYYYO.......",
+          "......OYYYYYYYYYYYYYYYYYYO......",
+          "......OYYYYYYYYYYYYYYYYYYO......",
+          "......OYYYEEYYYYYYYYEEYYYO......",
+          "......OYYYEEYYBBBBYYEEYYYO......",
+          "......OYYYYCCBBBBBBCCYYYYO......",
+          "......OYYYYCCCCCCCCCCYYYYO......",
+          ".......OYYYYCCCCCCCCYYYYO.......",
+          "........OOYYYYCCCCYYYYOO........",
+          "..........OOOOOOOOOOOO..........",
+          "..OO.....OYYYYYYYYYYYYO.........",
+          ".OYYO...OYYYYCCCCCCYYYYO........",
+          "OYYYYO.OYYYYCCCCCCCCYYYO........",
+          "OYYYYYYYYYYYCCCCCCCCYYYYO.......",
+          ".OYYYYYYYYYYCCCCCCCCYYYYO.......",
+          "..OYYYYYYYYYYCCCCCCYYYYO........",
+          "...OYYYYYYYYYYCCCCYYYYO.........",
+          "....OOYYYYYYYYYYYYYYOO..........",
+          "......OOOOBBBBO..OBBBBO.........",
+          ".........OBBBBO..OBBBBO.........",
+          "..........OOOO....OOOO..........",
+          "................................",
+          "................................",
+          "................................"
+        ]
+      ],
+      corvo: [
+        [
+          "................................",
+          "................................",
+          "................................",
+          "................................",
+          "..............OOOOOO............",
+          "............OOMMMMMMOO..........",
+          "...........OMMMMMMMMMMO.........",
+          "..........OMMMMMMMMMMMMO........",
+          ".........OOMMMMMMEEMMMMMO.......",
+          ".........OMMMMMMMEEMMMMMOO......",
+          "........OOMMMMMMMMMMMMMLLLOO....",
+          "........OMMMMMMMMMMMMMLLHHHLO...",
+          ".......OOMMMMMMMMMMMMMLLLLLLLO..",
+          ".......OMMMMMMMMMMMMMMOOOOOOOO..",
+          "......OOMMMMMMMMMMMMMMO.........",
+          ".....OODDDDMMMMMMMMMMMO.........",
+          "...OODDDDDDDMMMMMMMMMMO.........",
+          "..ODDDDDDDDDDMMMMMMMMDO.........",
+          ".ODDDDDDDDDDDDMMMMMMDDO.........",
+          "OODDDDDDDDDDDDDMMMMDDDO.........",
+          ".OODDDDDDDDDDDDDDDDDDO..........",
+          "..OODDDDDDDDDDDDDDDDO...........",
+          ".OODDDDDDDDDDDDDDDDO............",
+          "..OOODDDDDDDDDDDDOO.............",
+          ".....OOOOOOOOOOOO...............",
+          ".........OO....OO...............",
+          "........OOOO..OOOO..............",
+          ".......OO..OOOO..OO.............",
+          "................................",
+          "................................",
+          "................................",
+          "................................"
+        ],
+        [
+          "................................",
+          "................................",
+          "................................",
+          "................................",
+          "..............OOOOOO............",
+          "............OOMMMMMMOO..........",
+          "...........OMMMMMMMMMMO.........",
+          "..........OMMMMMMMMMMMMO........",
+          ".........OOMMMMMMEEMMMMMO.......",
+          ".........OMMMMMMMEEMMMMMOO......",
+          "........OOMMMMMMMMMMMMMLLLOO....",
+          "........OMMMMMMMMMMMMMLLHHHLO...",
+          ".......OOMMMMMMMMMMMMMLLLLLLLO..",
+          ".......OMMMMMMMMMMMMMMOOOOOOOO..",
+          "......OOMMMMMMMMMMMMMMO.........",
+          ".....OODDDDMMMMMMMMMMMO.........",
+          "...OODDDDDDDMMMMMMMMMMO.........",
+          "..ODDDDDDDDDDMMMMMMMMDO.........",
+          ".ODDDDDDDDDDDDMMMMMMDDO.........",
+          "OODDDDDDDDDDDDDMMMMDDDO.........",
+          ".OODDDDDDDDDDDDDDDDDDO..........",
+          "..OODDDDDDDDDDDDDDDDO...........",
+          ".OODDDDDDDDDDDDDDDDO............",
+          "..OOODDDDDDDDDDDDOO.............",
+          ".....OOOOOOOOOOOO...............",
+          "........OO......OO..............",
+          ".......OOOO....OOOO.............",
+          "......OO..OO..OO..OO............",
+          "................................",
+          "................................",
+          "................................",
+          "................................"
+        ]
+      ],
+      dinossauro: [
+        [
+          "................................",
+          "................................",
+          ".............OOOO...............",
+          "...........OORRRRO..............",
+          ".........OODRRRRRRO.............",
+          "........ODDRRRRRRRROOO..........",
+          ".......ODDRRRRRRRRRBBBBO........",
+          "......ODDRRRRRRREERRBBBBO.......",
+          "......ODDRRRRRRREERRBBBBO.......",
+          ".......OORRRRRRRRRROOOOO........",
+          "..OO....OORRRRRRCCCCKKKO........",
+          ".ORRO....OORRRRRCCCCOOOO........",
+          "ORRRRO....OORRRRCCCCO...........",
+          "ODRRRRO....ORRRRCCCCO...........",
+          "ODDRRRRO..OORRRRRCCCO...........",
+          ".ODDRRRROORRRRRRRCCCO...........",
+          "..ODDRRRRRRRRRRRRRCCO...........",
+          "...ODDRRRRRRRRDDDDCCO...........",
+          "....ODDRRRRRRDDDDDDDO...........",
+          ".....ODDRRRRRDDDDDDDO...........",
+          "......OORRRRRDDDDDDO............",
+          "........ORRRRROOOOO.............",
+          ".........ORRRRO.................",
+          ".........OOBBOO.................",
+          "........OBBBBBO.................",
+          ".......OBBBOOBBO................",
+          ".......OOOO.OOOO................",
+          "................................",
+          "................................",
+          "................................",
+          "................................",
+          "................................"
+        ],
+        [
+          "................................",
+          "................................",
+          ".............OOOO...............",
+          "...........OORRRRO..............",
+          ".........OODRRRRRRO.............",
+          "........ODDRRRRRRRROOO..........",
+          ".......ODDRRRRRRRRRBBBBO........",
+          "......ODDRRRRRRREERRBBBBO.......",
+          "......ODDRRRRRRREERRBBBBO.......",
+          ".......OORRRRRRRRRROOOOO........",
+          "........OORRRRRRCCCCKKKO........",
+          "..OO.....OORRRRRCCCCOOOO........",
+          ".ORRO.....OORRRRCCCCO...........",
+          "ORRRRO.....ORRRRCCCCO...........",
+          "ODRRRRO...OORRRRRCCCO...........",
+          "ODDRRRRO.ORRRRRRRCCCO...........",
+          ".ODDRRRROORRRRRRRRCCO...........",
+          "..ODDRRRRRRRRRDDDDCCO...........",
+          "...ODDRRRRRRRDDDDDDDO...........",
+          "....ODDRRRRRRDDDDDDDO...........",
+          ".....OORRRRRRDDDDDDO............",
+          ".......ORRRRRROOOOO.............",
+          "........ORRRRRO.................",
+          "........OOBBBOO.................",
+          ".......OBBBOOBBO................",
+          "......OBBBO..OBBO...............",
+          "......OOOO....OOO...............",
+          "................................",
+          "................................",
+          "................................",
+          "................................",
+          "................................"
+        ]
+      ]
+    };
+
+    // =========================================================================
+    // 4. SINCRONIZAÇÃO DE DADOS E DECAIMENTO TEMPORAL
+    // =========================================================================
+    async function loadPetData() {
+      const localRaw = localStorage.getItem(PET_STORAGE_KEY);
+      if (localRaw) {
+        try {
+          petState = { ...petState, ...JSON.parse(localRaw) };
+        } catch (e) {}
+      }
+
+      if (pb.authStore.isValid && pb.authStore.model) {
+        try {
+          const userId = pb.authStore.model.id;
+          const res = await pb.collection('pets').getList(1, 1, {
+            filter: `user = "${userId}"`
+          });
+          if (res.items.length > 0) {
+            const rec = res.items[0];
+            petState.id = rec.id;
+            petState.tipo = rec.tipo || petState.tipo;
+            petState.nome = rec.nome || petState.nome;
+            petState.fome = rec.fome ?? petState.fome;
+            petState.carinho = rec.carinho ?? petState.carinho;
+            petState.energia = rec.energia ?? petState.energia;
+            petState.moedas = Math.max(rec.moedas ?? 0, petState.moedas);
+            if (rec.ultima_interacao) {
+              petState.ultimaInteracao = new Date(rec.ultima_interacao).getTime();
+            }
+          }
+        } catch (e) {
+          // Segue com localStorage se offline ou coleção ainda não criada
+        }
+      }
+
+      applyOfflineDecay();
+      savePetData();
+    }
+
+    async function savePetData() {
+      petState.ultimaInteracao = Date.now();
+      localStorage.setItem(PET_STORAGE_KEY, JSON.stringify(petState));
+
+      if (pb.authStore.isValid && pb.authStore.model && petState.tipo) {
+        const payload = {
+          user: pb.authStore.model.id,
+          nome: petState.nome,
+          tipo: petState.tipo,
+          fome: Math.round(petState.fome),
+          carinho: Math.round(petState.carinho),
+          energia: Math.round(petState.energia),
+          moedas: Math.round(petState.moedas),
+          ultima_interacao: new Date().toISOString()
+        };
+
+        try {
+          if (petState.id) {
+            await pb.collection('pets').update(petState.id, payload);
+          } else {
+            const created = await pb.collection('pets').create(payload);
+            petState.id = created.id;
+            localStorage.setItem(PET_STORAGE_KEY, JSON.stringify(petState));
+          }
+        } catch (e) {}
+      }
+    }
+
+    function applyOfflineDecay() {
+      const hours = (Date.now() - petState.ultimaInteracao) / (1000 * 60 * 60);
+      if (hours > 0.05) {
+        petState.fome = Math.max(5, petState.fome - hours * 4.5);
+        petState.carinho = Math.max(10, petState.carinho - hours * 3.5);
+        petState.energia = Math.max(10, petState.energia - hours * 3);
+      }
+    }
+
+    // Atualiza moedas ao vivo se outra aba (Calendário/Gerenciador) conceder recompensa
+    window.addEventListener('storage', (e) => {
+      if (e.key === PET_STORAGE_KEY && e.newValue) {
+        const updated = JSON.parse(e.newValue);
+        if (updated.moedas > petState.moedas) {
+          const ganho = updated.moedas - petState.moedas;
+          petState.moedas = updated.moedas;
+          updateUI();
+          spawnParticles('coin', '#FFD54F');
+          showSpeech(`+${ganho} moedas por concluir tarefa!`);
+        }
+      }
+    });
+
+    // =========================================================================
+    // 5. MOTOR DE RENDERIZAÇÃO PIXEL ART (CENÁRIO + PET ANIMADO)
+    // =========================================================================
+    const canvas = document.getElementById('roomCanvas');
+    const ctx = canvas.getContext('2d');
+
+    const actor = {
+      x: 155,
+      y: 138,
+      targetX: 155,
+      dir: 1, // 1 = direita, -1 = esquerda
+      state: 'idle', // 'idle' | 'walk' | 'eat' | 'love' | 'sleep'
+      stateTimer: 0,
+      tick: 0,
+      animFrame: 0,
+      blinkTimer: 0,
+      particles: []
+    };
+
+    function drawPetSprite(context, species, x, y, scale, flipX, frameIdx, moodMode) {
+      const frames = SPRITES[species] || SPRITES.gato;
+      const matrix = frames[frameIdx % frames.length];
+      const pal = PALETTES[species] || PALETTES.gato;
+
+      for (let r = 0; r < 32; r++) {
+        const row = matrix[r];
+        if (!row) continue;
+        for (let c = 0; c < 32; c++) {
+          const ch = row[c];
+          if (ch === '.') continue;
+
+          const drawC = flipX ? (31 - c) : c;
+          let color = pal[ch] || '#000';
+
+          // Expressões dinâmicas nos olhos ('E')
+          if (ch === 'E') {
+            if (moodMode === 'blink' || moodMode === 'sleep') {
+              color = pal.O;
+            } else if (moodMode === 'happy') {
+              color = '#FF4081';
+            }
+          }
+
+          context.fillStyle = color;
+          context.fillRect(
+            Math.round(x + drawC * scale),
+            Math.round(y + r * scale),
+            scale,
+            scale
+          );
+        }
+      }
+
+      // Bochechas rosadas extras quando recebe carinho ou come
+      if (moodMode === 'happy') {
+        context.fillStyle = '#FF80AB';
+        const cheekLeft = flipX ? x + 10 * scale : x + 12 * scale;
+        const cheekRight = flipX ? x + 21 * scale : x + 23 * scale;
+        context.fillRect(cheekLeft, y + 14 * scale, 2 * scale, scale);
+        context.fillRect(cheekRight, y + 14 * scale, 2 * scale, scale);
+      }
+    }
+
+    function drawRoom() {
+      const wall = SHOP_CATALOG.find(i => i.id === petState.equipados.parede) || SHOP_CATALOG[0];
+      const floor = SHOP_CATALOG.find(i => i.id === petState.equipados.chao) || SHOP_CATALOG[4];
+      const movel = SHOP_CATALOG.find(i => i.id === petState.equipados.movel) || SHOP_CATALOG[8];
+      const objeto = SHOP_CATALOG.find(i => i.id === petState.equipados.objeto) || SHOP_CATALOG[12];
+
+      // 1. Papel de Parede (y: 0..146)
+      ctx.fillStyle = wall.c1;
+      ctx.fillRect(0, 0, 360, 146);
+      ctx.fillStyle = wall.c2;
+      for (let x = 0; x < 360; x += 24) {
+        ctx.fillRect(x, 0, 6, 146);
+      }
+
+      // Estrelas se parede noturna
+      if (wall.id === 'parede_noite') {
+        ctx.fillStyle = '#FFF59D';
+        [[30, 22], [150, 30], [210, 18], [320, 42], [280, 24]].forEach(([sx, sy]) => {
+          ctx.fillRect(sx, sy, 2, 2);
+        });
+      }
+
+      // 2. Janela Fofa (esquerda)
+      const isNight = actor.state === 'sleep';
+      ctx.fillStyle = '#594B73';
+      ctx.fillRect(46, 26, 76, 68);
+      ctx.fillStyle = isNight ? '#1E2A5E' : '#B3E5FC';
+      ctx.fillRect(50, 30, 68, 60);
+
+      // Sol/Nuvem ou Lua/Estrelas na janela
+      if (isNight) {
+        ctx.fillStyle = '#FFF59D';
+        ctx.fillRect(62, 40, 8, 8);
+        ctx.fillRect(98, 44, 2, 2);
+        ctx.fillRect(92, 62, 2, 2);
+      } else {
+        ctx.fillStyle = '#FFF';
+        const cloudOffset = Math.floor((actor.tick / 20) % 24);
+        ctx.fillRect(56 + cloudOffset, 42, 16, 6);
+        ctx.fillRect(60 + cloudOffset, 38, 8, 4);
+      }
+
+      // Grade da janela + Cortinas
+      ctx.fillStyle = '#FFF';
+      ctx.fillRect(82, 30, 4, 60);
+      ctx.fillRect(50, 58, 68, 4);
+      ctx.fillStyle = '#9575CD';
+      ctx.fillRect(42, 24, 12, 74);
+      ctx.fillRect(114, 24, 12, 74);
+
+      // Quadro na parede (direita)
+      ctx.fillStyle = '#594B73';
+      ctx.fillRect(244, 34, 48, 40);
+      ctx.fillStyle = '#FFF9E6';
+      ctx.fillRect(248, 38, 40, 32);
+      ctx.fillStyle = '#F48FB1';
+      ctx.fillRect(262, 46, 4, 4);
+      ctx.fillRect(270, 46, 4, 4);
+      ctx.fillRect(260, 50, 16, 4);
+      ctx.fillRect(264, 54, 8, 4);
+      ctx.fillRect(266, 58, 4, 4);
+
+      // 3. Rodapé
+      ctx.fillStyle = '#594B73';
+      ctx.fillRect(0, 144, 360, 6);
+
+      // 4. Chão (y: 150..240)
+      ctx.fillStyle = floor.c1;
+      ctx.fillRect(0, 150, 360, 90);
+      ctx.fillStyle = floor.c2;
+
+      if (floor.id === 'chao_xadrez') {
+        for (let y = 150; y < 240; y += 18) {
+          for (let x = ((y - 150) / 18) % 2 === 0 ? 0 : 18; x < 360; x += 36) {
+            ctx.fillRect(x, y, 18, 18);
+          }
+        }
+      } else if (floor.id === 'chao_grama') {
+        for (let x = 12; x < 350; x += 28) {
+          ctx.fillRect(x, 166, 4, 4);
+          ctx.fillRect(x + 12, 196, 4, 4);
+        }
+      } else {
+        for (let y = 164; y < 240; y += 20) {
+          ctx.fillRect(0, y, 360, 2);
+        }
+      }
+
+      // 5. Renderiza Objeto (esquerda-centro) e Móvel (direita)
+      drawEquippedObject(objeto);
+      drawEquippedFurniture(movel);
+
+      // 6. Tigela de Ração (canto inferior esquerdo)
+      ctx.fillStyle = '#594B73';
+      ctx.fillRect(26, 196, 32, 14);
+      ctx.fillStyle = '#F48FB1';
+      ctx.fillRect(28, 198, 28, 10);
+      if (petState.fome > 25) {
+        ctx.fillStyle = '#8D6E63';
+        ctx.fillRect(32, 194, 20, 4);
+      }
+    }
+
+    function drawEquippedFurniture(item) {
+      if (item.id === 'movel_cama_rosa') {
+        ctx.fillStyle = '#594B73';
+        ctx.fillRect(256, 174, 78, 28);
+        ctx.fillStyle = item.c1;
+        ctx.fillRect(259, 177, 72, 22);
+        ctx.fillStyle = item.c2;
+        ctx.fillRect(267, 181, 56, 14);
+      } else if (item.id === 'movel_arranhador') {
+        ctx.fillStyle = '#594B73';
+        ctx.fillRect(266, 188, 60, 14);
+        ctx.fillRect(288, 122, 16, 68);
+        ctx.fillRect(268, 112, 56, 14);
+        ctx.fillStyle = item.c1;
+        ctx.fillRect(268, 190, 56, 10);
+        ctx.fillRect(270, 114, 52, 10);
+        ctx.fillStyle = item.c2;
+        ctx.fillRect(290, 126, 12, 62);
+      } else if (item.id === 'movel_estante') {
+        ctx.fillStyle = '#594B73';
+        ctx.fillRect(272, 114, 58, 86);
+        ctx.fillStyle = item.c1;
+        ctx.fillRect(275, 117, 52, 80);
+        ctx.fillStyle = '#4E342E';
+        ctx.fillRect(275, 142, 52, 4);
+        ctx.fillRect(275, 168, 52, 4);
+        // Livros coloridos
+        ctx.fillStyle = item.c2;
+        ctx.fillRect(280, 126, 8, 16);
+        ctx.fillStyle = '#F48FB1';
+        ctx.fillRect(290, 128, 8, 14);
+        ctx.fillStyle = '#FFD54F';
+        ctx.fillRect(306, 152, 10, 16);
+      } else if (item.id === 'movel_pc') {
+        ctx.fillStyle = '#594B73';
+        ctx.fillRect(260, 166, 72, 36);
+        ctx.fillStyle = '#D7CCC8';
+        ctx.fillRect(263, 169, 66, 8);
+        ctx.fillRect(266, 177, 8, 25);
+        ctx.fillRect(318, 177, 8, 25);
+        ctx.fillStyle = '#37474F';
+        ctx.fillRect(278, 138, 36, 26);
+        ctx.fillStyle = item.c2;
+        ctx.fillRect(281, 141, 30, 20);
+      }
+    }
+
+    function drawEquippedObject(item) {
+      if (item.id === 'obj_vasinho') {
+        ctx.fillStyle = '#594B73';
+        ctx.fillRect(88, 168, 26, 24);
+        ctx.fillStyle = item.c2;
+        ctx.fillRect(91, 171, 20, 18);
+        ctx.fillStyle = item.c1;
+        ctx.fillRect(96, 150, 10, 18);
+        ctx.fillRect(88, 156, 8, 8);
+        ctx.fillRect(106, 154, 8, 8);
+      } else if (item.id === 'obj_pelucia') {
+        ctx.fillStyle = '#594B73';
+        ctx.fillRect(88, 166, 24, 24);
+        ctx.fillRect(88, 160, 6, 6);
+        ctx.fillRect(106, 160, 6, 6);
+        ctx.fillStyle = item.c1;
+        ctx.fillRect(91, 169, 18, 18);
+        ctx.fillStyle = item.c2;
+        ctx.fillRect(98, 178, 4, 3);
+      } else if (item.id === 'obj_luminaria') {
+        ctx.fillStyle = '#594B73';
+        ctx.fillRect(96, 148, 8, 42);
+        ctx.fillRect(88, 186, 24, 6);
+        ctx.fillStyle = item.c1;
+        ctx.fillRect(88, 132, 24, 18);
+      } else if (item.id === 'obj_trofeu') {
+        ctx.fillStyle = '#594B73';
+        ctx.fillRect(92, 182, 18, 8);
+        ctx.fillRect(98, 172, 6, 10);
+        ctx.fillStyle = item.c1;
+        ctx.fillRect(90, 154, 22, 18);
+        ctx.fillStyle = item.c2;
+        ctx.fillRect(94, 158, 14, 10);
+      }
+    }
+
+    function spawnParticles(type, color) {
+      for (let i = 0; i < 6; i++) {
+        actor.particles.push({
+          x: actor.x + 24 + (Math.random() * 34 - 17),
+          y: actor.y + 4,
+          vy: -0.6 - Math.random() * 0.6,
+          life: 45,
+          type,
+          color
+        });
+      }
+    }
+
+    function updateParticles() {
+      for (let i = actor.particles.length - 1; i >= 0; i--) {
+        const p = actor.particles[i];
+        p.y += p.vy;
+        p.life--;
+        ctx.fillStyle = p.color;
+
+        if (p.type === 'heart') {
+          ctx.fillRect(p.x, p.y, 2, 2);
+          ctx.fillRect(p.x + 4, p.y, 2, 2);
+          ctx.fillRect(p.x - 1, p.y + 2, 8, 2);
+          ctx.fillRect(p.x + 1, p.y + 4, 4, 2);
+          ctx.fillRect(p.x + 2, p.y + 6, 2, 2);
+        } else if (p.type === 'zzz') {
+          ctx.font = 'bold 10px monospace';
+          ctx.fillText('Z', p.x, p.y);
+        } else {
+          ctx.fillRect(p.x, p.y, 3, 3);
+        }
+
+        if (p.life <= 0) actor.particles.splice(i, 1);
+      }
+    }
+
+    // Loop de animação principal
+    let lastRender = 0;
+    function loop(now) {
+      if (now - lastRender > 45) {
+        lastRender = now;
+        actor.tick++;
+
+        if (actor.tick % 8 === 0) {
+          actor.animFrame = (actor.animFrame + 1) % 2;
+        }
+
+        // Piscar natural
+        if (actor.blinkTimer > 0) {
+          actor.blinkTimer--;
+        } else if (Math.random() < 0.025) {
+          actor.blinkTimer = 4;
+        }
+
+        // Controle de estados e movimento autônomo
+        if (actor.stateTimer > 0) {
+          actor.stateTimer--;
+          if (actor.stateTimer === 0 && actor.state !== 'sleep') {
+            actor.state = 'idle';
+          }
+        } else if (actor.state !== 'sleep') {
+          if (actor.state === 'idle' && Math.random() < 0.035) {
+            actor.targetX = 64 + Math.floor(Math.random() * 195);
+            actor.state = 'walk';
+          } else if (actor.state === 'walk') {
+            const diff = actor.targetX - actor.x;
+            if (Math.abs(diff) <= 2) {
+              actor.state = 'idle';
+            } else {
+              actor.dir = diff > 0 ? 1 : -1;
+              actor.x += actor.dir * 1.6;
+            }
+          }
+        }
+
+        if (actor.state === 'sleep' && actor.tick % 20 === 0) {
+          spawnParticles('zzz', '#90CAF9');
+        }
+
+        // Desenha cena
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        drawRoom();
+
+        if (petState.tipo) {
+          // Sombra no chão
+          ctx.fillStyle = 'rgba(0, 0, 0, 0.25)';
+          ctx.fillRect(Math.round(actor.x + 14), Math.round(actor.y + 56), 36, 6);
+
+          let offsetY = 0;
+          if (actor.state === 'walk') {
+            offsetY = Math.sin(actor.tick * 0.65) * 2;
+          } else if (actor.state === 'love' || actor.state === 'eat') {
+            offsetY = -Math.abs(Math.sin(actor.tick * 0.55)) * 7;
+          }
+
+          let moodMode = 'normal';
+          if (actor.state === 'sleep') moodMode = 'sleep';
+          else if (actor.state === 'love' || actor.state === 'eat') moodMode = 'happy';
+          else if (actor.blinkTimer > 0) moodMode = 'blink';
+
+          drawPetSprite(
+            ctx,
+            petState.tipo,
+            actor.x,
+            actor.y + offsetY,
+            2,
+            actor.dir === -1,
+            actor.animFrame,
+            moodMode
+          );
+        }
+
+        if (actor.state === 'sleep') {
+          ctx.fillStyle = 'rgba(15, 20, 42, 0.36)';
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+        }
+
+        updateParticles();
+      }
+      requestAnimationFrame(loop);
+    }
+
+    // =========================================================================
+    // 6. INTERAÇÕES DO USUÁRIO E LOJA
+    // =========================================================================
+    let speechTimer;
+    function showSpeech(msg) {
+      const el = document.getElementById('speechBubble');
+      el.textContent = msg;
+      el.classList.add('visible');
+      clearTimeout(speechTimer);
+      speechTimer = setTimeout(() => el.classList.remove('visible'), 3200);
+    }
+
+    function updateUI() {
+      document.getElementById('coinBalance').textContent = Math.floor(petState.moedas);
+      document.getElementById('petNameDisplay').textContent = petState.nome.toUpperCase();
+
+      const f = Math.round(petState.fome);
+      const c = Math.round(petState.carinho);
+      const e = Math.round(petState.energia);
+
+      document.getElementById('txtFome').textContent = `${f}%`;
+      document.getElementById('barFome').style.width = `${f}%`;
+
+      document.getElementById('txtCarinho').textContent = `${c}%`;
+      document.getElementById('barCarinho').style.width = `${c}%`;
+
+      document.getElementById('txtEnergia').textContent = `${e}%`;
+      document.getElementById('barEnergia').style.width = `${e}%`;
+
+      const moodEl = document.getElementById('petMoodBadge');
+      if (actor.state === 'sleep') moodEl.textContent = 'Dormindo';
+      else if (f < 30) moodEl.textContent = 'Com Fome';
+      else if (e < 25) moodEl.textContent = 'Cansado';
+      else if (c > 75) moodEl.textContent = 'Radiante';
+      else moodEl.textContent = 'Tranquilo';
+
+      document.getElementById('btnFeed').disabled = petState.moedas < 10;
+      document.getElementById('btnSleepText').textContent =
+        actor.state === 'sleep' ? 'ACORDAR' : 'DORMIR';
+    }
+
+    function triggerPetLove() {
+      if (actor.state === 'sleep') actor.state = 'idle';
+      petState.carinho = Math.min(100, petState.carinho + 15);
+      actor.state = 'love';
+      actor.stateTimer = 32;
+      spawnParticles('heart', '#F48FB1');
+      showSpeech('Purrrr~ Amo receber carinho!');
+      updateUI();
+      savePetData();
+    }
+
+    document.getElementById('btnFeed').addEventListener('click', () => {
+      if (petState.moedas < 10) {
+        showSpeech('Preciso de 10 moedas para petiscos!');
+        return;
+      }
+      if (petState.fome >= 100) {
+        showSpeech('Minha barriguinha já está cheia!');
+        return;
+      }
+      petState.moedas -= 10;
+      petState.fome = Math.min(100, petState.fome + 25);
+      actor.state = 'eat';
+      actor.stateTimer = 36;
+      actor.x = 64;
+      actor.dir = -1;
+      spawnParticles('food', '#FFD54F');
+      showSpeech('Nham nham! Petisco delicioso!');
+      updateUI();
+      savePetData();
+    });
+
+    document.getElementById('btnPet').addEventListener('click', triggerPetLove);
+    document.getElementById('canvasClickArea').addEventListener('click', triggerPetLove);
+
+    document.getElementById('btnSleep').addEventListener('click', () => {
+      if (actor.state === 'sleep') {
+        actor.state = 'idle';
+        showSpeech('Bom dia! Estou pronto para outra!');
+      } else {
+        actor.state = 'sleep';
+        actor.x = 258;
+        showSpeech('Zzz... Hora de descansar...');
+      }
+      updateUI();
+    });
+
+    // Recuperação durante sono e decaimento suave em tempo real
+    setInterval(() => {
+      if (!petState.tipo) return;
+      if (actor.state === 'sleep') {
+        petState.energia = Math.min(100, petState.energia + 4);
+        if (petState.energia >= 100) {
+          actor.state = 'idle';
+          showSpeech('Energia 100%! Vamos brincar!');
+        }
+      } else {
+        petState.fome = Math.max(5, petState.fome - 0.4);
+        petState.carinho = Math.max(10, petState.carinho - 0.3);
+        petState.energia = Math.max(10, petState.energia - 0.25);
+      }
+      updateUI();
+      savePetData();
+    }, 5000);
+
+    // =========================================================================
+    // 7. LOJA DE PERSONALIZAÇÃO
+    // =========================================================================
+    let activeShopCat = 'parede';
+
+    function renderShop() {
+      const grid = document.getElementById('shopGrid');
+      grid.innerHTML = '';
+
+      SHOP_CATALOG.filter(item => item.cat === activeShopCat).forEach(item => {
+        const owned = petState.inventario.includes(item.id);
+        const equipped = petState.equipados[item.cat] === item.id;
+
+        const card = document.createElement('div');
+        card.className = `shop-card ${equipped ? 'equipped' : ''}`;
+
+        let btnLabel = `${item.preco} MOEDAS`;
+        let btnClass = 'item-action-btn';
+        if (equipped) {
+          btnLabel = 'EQUIPADO';
+          btnClass += ' equipped-btn';
+        } else if (owned) {
+          btnLabel = 'USAR';
+          btnClass += ' owned';
+        }
+
+        card.innerHTML = `
+          <div class="swatch-box" style="background: linear-gradient(135deg, ${item.c1} 50%, ${item.c2} 50%);"></div>
+          <div class="item-label">${item.nome}</div>
+          <button class="${btnClass}">${btnLabel}</button>
+        `;
+
+        card.querySelector('button').addEventListener('click', () => {
+          if (equipped) return;
+
+          if (owned) {
+            petState.equipados[item.cat] = item.id;
+            showSpeech(`Equipado: ${item.nome}!`);
+          } else {
+            if (petState.moedas < item.preco) {
+              showSpeech('Moedas insuficientes! Conclua tarefas!');
+              return;
+            }
+            petState.moedas -= item.preco;
+            petState.inventario.push(item.id);
+            petState.equipados[item.cat] = item.id;
+            spawnParticles('heart', '#FFD54F');
+            showSpeech(`Você comprou: ${item.nome}!`);
+          }
+
+          updateUI();
+          renderShop();
+          savePetData();
+        });
+
+        grid.appendChild(card);
+      });
+    }
+
+    document.querySelectorAll('.shop-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.shop-tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        activeShopCat = tab.dataset.cat;
+        renderShop();
+      });
+    });
+
+    // =========================================================================
+    // 8. MODAL DE ADOÇÃO E MODAL DE AJUDA
+    // =========================================================================
+    function initAdoption() {
+      ['gato', 'pato', 'corvo', 'dinossauro'].forEach(sp => {
+        const c = document.getElementById(`prev-${sp}`);
+        const pCtx = c.getContext('2d');
+        pCtx.clearRect(0, 0, 32, 32);
+        drawPetSprite(pCtx, sp, 0, 1, 1, false, 0, 'normal');
+      });
+
+      let selectedSpecies = 'gato';
+      const cards = document.querySelectorAll('.species-card');
+      cards.forEach(card => {
+        card.addEventListener('click', () => {
+          cards.forEach(x => x.classList.remove('selected'));
+          card.classList.add('selected');
+          selectedSpecies = card.dataset.species;
+        });
+      });
+
+      document.getElementById('btnConfirmAdopt').addEventListener('click', async () => {
+        const inputVal = document.getElementById('inputPetName').value.trim();
+        const defaults = { gato: 'Mochi', pato: 'Pipoca', corvo: 'Nyx', dinossauro: 'Rexy' };
+        petState.tipo = selectedSpecies;
+        petState.nome = inputVal || defaults[selectedSpecies];
+        petState.fome = 90;
+        petState.carinho = 90;
+        petState.energia = 90;
+
+        await savePetData();
+        document.getElementById('adoptionModal').classList.add('hidden');
+        updateUI();
+        showSpeech(`Oi! Eu sou ${petState.nome}!`);
+      });
+    }
+
+    document.getElementById('coinBadge').addEventListener('click', () => {
+      document.getElementById('coinHelpModal').classList.remove('hidden');
+    });
+    document.getElementById('btnCloseCoinHelp').addEventListener('click', () => {
+      document.getElementById('coinHelpModal').classList.add('hidden');
+    });
+
+    // =========================================================================
+    // 9. INICIALIZAÇÃO
+    // =========================================================================
+    (async function bootstrap() {
+      await loadPetData();
+
+      if (!petState.tipo) {
+        document.getElementById('adoptionModal').classList.remove('hidden');
+        initAdoption();
+      } else {
+        updateUI();
+      }
+
+      renderShop();
+      requestAnimationFrame(loop);
+    })();
+  </script>
+</body>
+</html>

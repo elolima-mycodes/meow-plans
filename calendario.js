@@ -351,6 +351,10 @@ async function handleSaveTask(e) {
       savedTask = await pb.collection('tarefas').create(taskPayload);
     }
 
+    if (!is_recurring && status === 'concluida') {
+      recompensarConclusaoTarefa(savedTask.id, 10);
+    }
+
     await saveSubtasks(savedTask.id);
     closeTaskModal();
     await loadAndProcessTasks();
@@ -761,11 +765,16 @@ async function toggleTaskStatus(event, taskId, currentStatus, targetDateStr = nu
           data: dateStr,
           user: currentUser.id
         });
+        recompensarConclusaoTarefa(`${taskId}_${dateStr}`, 10);
       }
     } else {
       // Para tarefas normais: altera o status direto na coleção tarefas
       const newStatus = currentStatus === 'concluida' ? 'a_fazer' : 'concluida';
       await pb.collection('tarefas').update(taskId, { status: newStatus });
+
+      if (newStatus === 'concluida') {
+        recompensarConclusaoTarefa(taskId, 10);
+      }
     }
 
     await loadAndProcessTasks();
@@ -1143,4 +1152,29 @@ if ('serviceWorker' in navigator) {
       .then(() => console.log('PWA: Service Worker registrado com sucesso!'))
       .catch((err) => console.error('PWA: Erro ao registrar Service Worker:', err));
   });
+}
+
+function recompensarConclusaoTarefa(taskUniqueKey, reward = 10) {
+  const REWARDED_KEY = 'meow_plans_rewarded_tasks_v1';
+  const PET_STORAGE_KEY = 'meow_plans_pet_data_v1';
+
+  let rewarded = [];
+  try {
+    rewarded = JSON.parse(localStorage.getItem(REWARDED_KEY)) || [];
+  } catch (e) {}
+
+  if (rewarded.includes(taskUniqueKey)) return false;
+
+  rewarded.push(taskUniqueKey);
+  localStorage.setItem(REWARDED_KEY, JSON.stringify(rewarded));
+
+  let petData = { moedas: 50 };
+  try {
+    const saved = localStorage.getItem(PET_STORAGE_KEY);
+    if (saved) petData = { ...petData, ...JSON.parse(saved) };
+  } catch (e) {}
+
+  petData.moedas = (petData.moedas || 0) + reward;
+  localStorage.setItem(PET_STORAGE_KEY, JSON.stringify(petData));
+  return true;
 }

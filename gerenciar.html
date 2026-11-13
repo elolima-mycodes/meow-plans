@@ -331,8 +331,15 @@
   <div class="app-container">
     <!-- Header Superior -->
     <header class="top-bar" style="display: flex; justify-content: flex-end; width: 100%; padding: 1rem 1.5rem;">
-      <div class="header-user-actions" style="display: flex; align-items: center; gap: 0.65rem;">
+      <div class="header-user-actions" style="display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 0.45rem; max-width: 100%;">
         
+
+        <!-- Botão Meu Pet -->
+        <a href="pet.html" class="btn btn-sm btn-primary pet-nav-btn" 
+          style="padding: 0.4rem 0.75rem; font-size: 0.8rem; font-weight: 700; border-radius: var(--radius-pill); white-space: nowrap; text-decoration: none; display: inline-flex; align-items: center; gap: 0.3rem;">
+          🐾 <span class="pet-btn-label">Meu Pet</span>
+        </a>
+
         <!-- Botão Calendário (Estilo Mint Accent da Imagem) -->
         <button class="btn btn-sm btn-accent" style="padding: 0.45rem 0.85rem; font-size: 0.85rem; font-weight: 700; border-radius: var(--radius-pill); white-space: nowrap;"
           onclick="window.location.href='calendario.html'">

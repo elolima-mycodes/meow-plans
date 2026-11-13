@@ -1,14 +1,25 @@
-const CACHE_NAME = 'meow-plans-v1';
+const CACHE_NAME = 'meow-plans-v2';
 const STATIC_ASSETS = [
   './',
+  './index.html',
   './login.html',
   './calendario.html',
   './gerenciar.html',
   './usuario.html',
+  './pet.html',
   './style.css',
+  './login.js',
   './calendario.js',
   './gerenciar.js',
-  './usuario.js'
+  './usuario.js',
+  './manifest.json',
+  './icons/icon-192.png',
+  './icons/icon-512.png',
+  './imgs/corvo.png',
+  './imgs/dinossauro.png',
+  './imgs/gato.png',
+  './imgs/pato.png',
+  './imgs/logo.png'
 ];
 
 // Instalação: salva os arquivos estáticos em cache
