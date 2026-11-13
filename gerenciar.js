@@ -6,6 +6,7 @@
 // 1. INICIALIZAÇÃO DO POCKETBASE SDK
 const POCKETBASE_URL = 'http://127.0.0.1:8090';
 const pb = new PocketBase(POCKETBASE_URL);
+pb.autoCancellation(false);
 
 // 2. ESTADO GLOBAL
 let currentUser = null;
@@ -1051,27 +1052,41 @@ if ('serviceWorker' in navigator) {
   });
 }
 
-function recompensarConclusaoTarefa(taskUniqueKey, reward = 10) {
-  const REWARDED_KEY = 'meow_plans_rewarded_tasks_v1';
-  const PET_STORAGE_KEY = 'meow_plans_pet_data_v1';
+async function recompensarConclusaoTarefa(taskRewardKey, valor = 10) {
+  if (!pb.authStore.isValid || !pb.authStore.model) return;
+  const userId = pb.authStore.model.id;
+  const storageKey = `meow_plans_pet_${userId}`;
 
-  let rewarded = [];
   try {
-    rewarded = JSON.parse(localStorage.getItem(REWARDED_KEY)) || [];
-  } catch (e) {}
+    const res = await pb.collection('pets').getList(1, 1, {
+      filter: `user = "${userId}"`
+    });
 
-  if (rewarded.includes(taskUniqueKey)) return false;
+    if (res.items.length === 0) return; // Usuário ainda não adotou um pet
 
-  rewarded.push(taskUniqueKey);
-  localStorage.setItem(REWARDED_KEY, JSON.stringify(rewarded));
+    const pet = res.items[0];
+    const jaPagas = Array.isArray(pet.tarefas_recompensadas) ? pet.tarefas_recompensadas : [];
 
-  let petData = { moedas: 50 };
-  try {
-    const saved = localStorage.getItem(PET_STORAGE_KEY);
-    if (saved) petData = { ...petData, ...JSON.parse(saved) };
-  } catch (e) {}
+    // Trava no banco: evita ganhar moedas duas vezes pela mesma tarefa em qualquer dispositivo
+    if (jaPagas.includes(taskRewardKey)) return;
 
-  petData.moedas = (petData.moedas || 0) + reward;
-  localStorage.setItem(PET_STORAGE_KEY, JSON.stringify(petData));
-  return true;
+    const novoSaldo = (pet.moedas || 0) + valor;
+    const novasPagas = [...jaPagas, taskRewardKey];
+
+    await pb.collection('pets').update(pet.id, {
+      moedas: novoSaldo,
+      tarefas_recompensadas: novasPagas
+    });
+
+    // Atualiza o cache local isolado do usuário (dispara atualização ao vivo se pet.html estiver aberto)
+    const localRaw = localStorage.getItem(storageKey);
+    if (localRaw) {
+      const parsed = JSON.parse(localRaw);
+      parsed.moedas = novoSaldo;
+      parsed.tarefas_recompensadas = novasPagas;
+      localStorage.setItem(storageKey, JSON.stringify(parsed));
+    }
+  } catch (err) {
+    console.error('Erro ao creditar moedas no PocketBase:', err);
+  }
 }

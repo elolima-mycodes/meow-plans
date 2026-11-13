@@ -731,15 +731,23 @@
 
   <script>
     // =========================================================================
-    // 1. PERSISTÊNCIA (POCKETBASE + LOCALSTORAGE SINCRONIZADOS)
+    // 1. PERSISTÊNCIA (POCKETBASE COMO FONTE PRINCIPAL + CACHE ISOLADO POR USER)
     // =========================================================================
     const POCKETBASE_URL = 'http://127.0.0.1:8090';
     const pb = new PocketBase(POCKETBASE_URL);
-    const PET_STORAGE_KEY = 'meow_plans_pet_data_v1';
+
+    // Redireciona se não estiver autenticado
+    if (!pb.authStore.isValid || !pb.authStore.model) {
+      window.location.href = 'login.html';
+    }
+
+    const currentUserId = pb.authStore.model.id;
+    // Chave dinâmica por usuário: impede que outra conta no mesmo PC veja dados anteriores
+    const PET_STORAGE_KEY = `meow_plans_pet_${currentUserId}`;
 
     let petState = {
       id: null,
-      tipo: null, // 'gato' | 'pato' | 'corvo' | 'dinossauro'
+      tipo: null,
       nome: '',
       fome: 85,
       carinho: 85,
@@ -752,7 +760,8 @@
         chao: 'chao_pinho',
         movel: 'movel_cama_rosa',
         objeto: 'obj_vasinho'
-      }
+      },
+      tarefas_recompensadas: []
     };
 
     // =========================================================================
@@ -1109,66 +1118,82 @@
     // 4. SINCRONIZAÇÃO DE DADOS E DECAIMENTO TEMPORAL
     // =========================================================================
     async function loadPetData() {
-      const localRaw = localStorage.getItem(PET_STORAGE_KEY);
-      if (localRaw) {
-        try {
-          petState = { ...petState, ...JSON.parse(localRaw) };
-        } catch (e) {}
-      }
+      // Remove chave legada global (caso exista) para não contaminar outras contas
+      localStorage.removeItem('meow_plans_pet_data_v1');
 
-      if (pb.authStore.isValid && pb.authStore.model) {
-        try {
-          const userId = pb.authStore.model.id;
-          const res = await pb.collection('pets').getList(1, 1, {
-            filter: `user = "${userId}"`
-          });
-          if (res.items.length > 0) {
-            const rec = res.items[0];
-            petState.id = rec.id;
-            petState.tipo = rec.tipo || petState.tipo;
-            petState.nome = rec.nome || petState.nome;
-            petState.fome = rec.fome ?? petState.fome;
-            petState.carinho = rec.carinho ?? petState.carinho;
-            petState.energia = rec.energia ?? petState.energia;
-            petState.moedas = Math.max(rec.moedas ?? 0, petState.moedas);
-            if (rec.ultima_interacao) {
-              petState.ultimaInteracao = new Date(rec.ultima_interacao).getTime();
-            }
+      try {
+        const res = await pb.collection('pets').getList(1, 1, {
+          filter: `user = "${currentUserId}"`
+        });
+
+        if (res.items.length > 0) {
+          const rec = res.items[0];
+          petState.id = rec.id;
+          petState.tipo = rec.tipo || null;
+          petState.nome = rec.nome || '';
+          petState.fome = rec.fome ?? 85;
+          petState.carinho = rec.carinho ?? 85;
+          petState.energia = rec.energia ?? 85;
+          petState.moedas = rec.moedas ?? 50;
+          if (Array.isArray(rec.inventario) && rec.inventario.length > 0) {
+            petState.inventario = rec.inventario;
           }
-        } catch (e) {
-          // Segue com localStorage se offline ou coleção ainda não criada
+          if (rec.equipados && typeof rec.equipados === 'object') {
+            petState.equipados = { ...petState.equipados, ...rec.equipados };
+          }
+          if (Array.isArray(rec.tarefas_recompensadas)) {
+            petState.tarefas_recompensadas = rec.tarefas_recompensadas;
+          }
+          if (rec.ultima_interacao) {
+            petState.ultimaInteracao = new Date(rec.ultima_interacao).getTime();
+          }
+
+          applyOfflineDecay();
+          await savePetData();
+          return;
+        }
+      } catch (err) {
+        console.warn('Falha ao buscar pet no PocketBase, usando cache local do usuário:', err);
+        const localRaw = localStorage.getItem(PET_STORAGE_KEY);
+        if (localRaw) {
+          try {
+            petState = { ...petState, ...JSON.parse(localRaw) };
+            applyOfflineDecay();
+          } catch (e) {}
         }
       }
-
-      applyOfflineDecay();
-      savePetData();
     }
 
     async function savePetData() {
       petState.ultimaInteracao = Date.now();
       localStorage.setItem(PET_STORAGE_KEY, JSON.stringify(petState));
 
-      if (pb.authStore.isValid && pb.authStore.model && petState.tipo) {
-        const payload = {
-          user: pb.authStore.model.id,
-          nome: petState.nome,
-          tipo: petState.tipo,
-          fome: Math.round(petState.fome),
-          carinho: Math.round(petState.carinho),
-          energia: Math.round(petState.energia),
-          moedas: Math.round(petState.moedas),
-          ultima_interacao: new Date().toISOString()
-        };
+      if (!pb.authStore.isValid || !petState.tipo) return;
 
-        try {
-          if (petState.id) {
-            await pb.collection('pets').update(petState.id, payload);
-          } else {
-            const created = await pb.collection('pets').create(payload);
-            petState.id = created.id;
-            localStorage.setItem(PET_STORAGE_KEY, JSON.stringify(petState));
-          }
-        } catch (e) {}
+      const payload = {
+        user: currentUserId,
+        nome: petState.nome,
+        tipo: petState.tipo,
+        fome: Math.round(petState.fome),
+        carinho: Math.round(petState.carinho),
+        energia: Math.round(petState.energia),
+        moedas: Math.round(petState.moedas),
+        inventario: petState.inventario,
+        equipados: petState.equipados,
+        tarefas_recompensadas: petState.tarefas_recompensadas,
+        ultima_interacao: new Date().toISOString()
+      };
+
+      try {
+        if (petState.id) {
+          await pb.collection('pets').update(petState.id, payload);
+        } else {
+          const created = await pb.collection('pets').create(payload);
+          petState.id = created.id;
+          localStorage.setItem(PET_STORAGE_KEY, JSON.stringify(petState));
+        }
+      } catch (err) {
+        console.error('Erro ao salvar progresso do pet no PocketBase:', err);
       }
     }
 

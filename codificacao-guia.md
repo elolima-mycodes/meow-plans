@@ -2,7 +2,7 @@ Forneça apenas as alterações necessárias com total clareza para que eu possa
 
 Meow Plans codificação
 
-- vincular progresso pet e compras ao usuário
+OK - vincular progresso pet e compras ao usuário
 
 - carinho deve funcionar se tocar apenas no pet
 
