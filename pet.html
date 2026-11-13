@@ -520,11 +520,13 @@
       box-shadow: 0 0 0 3px var(--accent-purple);
     }
 
-    .species-card canvas {
+    .species-card img {
       width: 96px;
       height: 96px;
+      object-fit: contain;
       margin: 0 auto 8px;
       display: block;
+      image-rendering: auto;
     }
 
     .pixel-input {
@@ -684,28 +686,27 @@
     <div class="modal-box pixel-box">
       <h2 style="font-size: 15px; color: var(--accent-gold); margin-top: 0;">ESCOLHA SEU COMPANHEIRO!</h2>
       <p style="font-size: 21px; color: var(--text-muted); margin: 8px 0 14px;">
-        Você cuidará exclusivamente do pet escolhido ao completar suas tarefas.
+        Você cuidará exclusivamente do pet escolhido.
       </p>
 
       <div class="species-grid" id="speciesGrid">
         <div class="species-card selected" data-species="gato">
-          <canvas id="prev-gato" width="32" height="32"></canvas>
-          <div class="pixel-font" style="font-size: 10px; color: #C7B8FF;">GATINHO</div>
+          <img src="imgs/gato.png" alt="Gatinho" />
+          <div class="pixel-font" style="font-size: 10px; color: #C7B8FF;">GATO</div>
         </div>
         <div class="species-card" data-species="pato">
-          <canvas id="prev-pato" width="32" height="32"></canvas>
-          <div class="pixel-font" style="font-size: 10px; color: #FFF176;">PATINHO</div>
+          <img src="imgs/pato.png" alt="Patinho" />
+          <div class="pixel-font" style="font-size: 10px; color: #FFF176;">PATO</div>
         </div>
         <div class="species-card" data-species="corvo">
-          <canvas id="prev-corvo" width="32" height="32"></canvas>
-          <div class="pixel-font" style="font-size: 10px; color: #B39DDB;">CORVINHO</div>
+          <img src="imgs/corvo.png" alt="Corvinho" />
+          <div class="pixel-font" style="font-size: 10px; color: #B39DDB;">CORVO</div>
         </div>
         <div class="species-card" data-species="dinossauro">
-          <canvas id="prev-dinossauro" width="32" height="32"></canvas>
-          <div class="pixel-font" style="font-size: 10px; color: #EF9A9A;">RAPTOR</div>
+          <img src="imgs/dinossauro.png" alt="Dinossauro" />
+          <div class="pixel-font" style="font-size: 10px; color: #EF9A9A;">DINOSSAURO</div>
         </div>
       </div>
-
       <div>
         <input type="text" id="inputPetName" class="pixel-input" maxlength="16" placeholder="Digite um nome..." />
       </div>
@@ -1744,13 +1745,6 @@
     // 8. MODAL DE ADOÇÃO E MODAL DE AJUDA
     // =========================================================================
     function initAdoption() {
-      ['gato', 'pato', 'corvo', 'dinossauro'].forEach(sp => {
-        const c = document.getElementById(`prev-${sp}`);
-        const pCtx = c.getContext('2d');
-        pCtx.clearRect(0, 0, 32, 32);
-        drawPetSprite(pCtx, sp, 0, 1, 1, false, 0, 'normal');
-      });
-
       let selectedSpecies = 'gato';
       const cards = document.querySelectorAll('.species-card');
       cards.forEach(card => {
