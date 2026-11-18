@@ -754,11 +754,11 @@
       energia: 85,
       moedas: 50,
       ultimaInteracao: Date.now(),
-      inventario: ['parede_lavanda', 'chao_pinho', 'movel_cama_rosa', 'obj_vasinho'],
+      inventario: ['parede_lavanda', 'chao_pinho', 'movel_bau_fofo', 'obj_vasinho'],
       equipados: {
         parede: 'parede_lavanda',
         chao: 'chao_pinho',
-        movel: 'movel_cama_rosa',
+        movel: 'movel_bau_fofo',
         objeto: 'obj_vasinho'
       },
       tarefas_recompensadas: []
@@ -781,7 +781,7 @@
       { id: 'chao_grama', cat: 'chao', nome: 'Jardim Macio', preco: 60, c1: '#81C784', c2: '#66BB6A' },
 
       // Móveis
-      { id: 'movel_cama_rosa', cat: 'movel', nome: 'Almofada Rosa', preco: 0, c1: '#F06292', c2: '#FCE4EC' },
+      { id: 'movel_bau_fofo', cat: 'movel', nome: 'Baú Decorativo', preco: 0, c1: '#B8A5F2', c2: '#FCE4EC' },
       { id: 'movel_arranhador', cat: 'movel', nome: 'Torre Gato', preco: 45, c1: '#D7CCC8', c2: '#8D6E63' },
       { id: 'movel_estante', cat: 'movel', nome: 'Estante Livros', preco: 60, c1: '#A1887F', c2: '#8C82F2' },
       { id: 'movel_pc', cat: 'movel', nome: 'Setup Gamer', preco: 90, c1: '#7E57C2', c2: '#4FC3F7' },
@@ -798,35 +798,35 @@
     // =========================================================================
     const PALETTES = {
       gato: {
-        O: '#594B73', // Contorno roxo-acinzentado
-        P: '#B8A5F2', // Lilás principal
-        W: '#FAF8FF', // Branco cremoso
-        K: '#F59BB9', // Rosa orelhas e patinha
-        E: '#3E3254'  // Olhos e focinho
+        O: '#493957', // Contorno
+        P: '#B8A5F2', // Cor principal
+        W: '#FAF8FF', // Pelagem clara
+        K: '#F59BB9', // Orelhas e patas
+        E: '#30243D'  // Olhos
       },
       pato: {
-        O: '#594B73', // Contorno roxo-acinzentado
-        Y: '#FDE892', // Amarelo pastel
-        C: '#FFF9E6', // Creme rosto e barriga
-        B: '#F6A552', // Laranja bico e patas
-        E: '#3E3254'  // Olhos
+        O: '#60452F',
+        Y: '#FDE892',
+        C: '#FFF9E6',
+        B: '#F6A552',
+        E: '#493326'
       },
       corvo: {
-        O: '#3D344E', // Contorno escuro
-        M: '#6B5F82', // Plumagem roxo-ardósia
-        D: '#534868', // Asas e cauda escuras
-        L: '#9B8FB3', // Bico cinza-lavanda
-        H: '#C5BCD9', // Brilho do bico
-        E: '#241E30'  // Olho
+        O: '#29243D',
+        M: '#6B5F82',
+        D: '#453C5B',
+        L: '#9B8FB3',
+        H: '#D4CBE5',
+        E: '#211B30'
       },
       dinossauro: {
-        O: '#48354A', // Contorno escuro
-        R: '#C94355', // Penas vermelho-carmesim
-        D: '#6D344C', // Pontas das penas ameixa escuro
-        C: '#F5E2DB', // Garganta e barriga creme
-        B: '#5B4C61', // Focinho cinza-arroxeado
-        K: '#EE96AF', // Língua rosa
-        E: '#2B202E'  // Olho
+        O: '#483044',
+        R: '#C94355',
+        D: '#6D344C',
+        C: '#F5E2DB',
+        B: '#5B4C61',
+        K: '#EE96AF',
+        E: '#2B202E'
       }
     };
 
@@ -1239,22 +1239,83 @@
       particles: []
     };
 
+    // Clareia ou escurece uma cor hexadecimal.
+    function adjustColor(hex, amount) {
+      const value = parseInt(hex.replace('#', ''), 16);
+
+      let r = (value >> 16) & 255;
+      let g = (value >> 8) & 255;
+      let b = value & 255;
+
+      r = Math.max(0, Math.min(255, r + amount));
+      g = Math.max(0, Math.min(255, g + amount));
+      b = Math.max(0, Math.min(255, b + amount));
+
+      return `rgb(${r}, ${g}, ${b})`;
+    }
+
+
+    // Verifica se uma posição da matriz está vazia.
+    function isEmptyPixel(matrix, row, col) {
+      if (row < 0 || row >= 32 || col < 0 || col >= 32) {
+        return true;
+      }
+
+      return !matrix[row] || matrix[row][col] === '.';
+    }
+
     function drawPetSprite(context, species, x, y, scale, flipX, frameIdx, moodMode) {
       const frames = SPRITES[species] || SPRITES.gato;
       const matrix = frames[frameIdx % frames.length];
       const pal = PALETTES[species] || PALETTES.gato;
 
+      // ==========================================
+      // 1. CONTORNO EXTERNO
+      // ==========================================
+
       for (let r = 0; r < 32; r++) {
-        const row = matrix[r];
-        if (!row) continue;
         for (let c = 0; c < 32; c++) {
-          const ch = row[c];
+          const ch = matrix[r][c];
+
+          if (ch === '.' || ch === 'O') continue;
+
+          const drawC = flipX ? 31 - c : c;
+
+          // Verifica os oito pixels ao redor.
+          for (let nr = -1; nr <= 1; nr++) {
+            for (let nc = -1; nc <= 1; nc++) {
+              if (nr === 0 && nc === 0) continue;
+
+              if (isEmptyPixel(matrix, r + nr, c + nc)) {
+                const outlineC = flipX ? 31 - (c + nc) : c + nc;
+
+                context.fillStyle = pal.O;
+                context.fillRect(
+                  x + outlineC * scale,
+                  y + (r + nr) * scale,
+                  scale,
+                  scale
+                );
+              }
+            }
+          }
+        }
+      }
+
+      // ==========================================
+      // 2. CORPO E SOMBREAMENTO
+      // ==========================================
+
+      for (let r = 0; r < 32; r++) {
+        for (let c = 0; c < 32; c++) {
+          const ch = matrix[r][c];
+
           if (ch === '.') continue;
 
-          const drawC = flipX ? (31 - c) : c;
-          let color = pal[ch] || '#000';
+          const drawC = flipX ? 31 - c : c;
+          let color = pal[ch] || pal.O;
 
-          // Expressões dinâmicas nos olhos ('E')
+          // Expressões dos olhos.
           if (ch === 'E') {
             if (moodMode === 'blink' || moodMode === 'sleep') {
               color = pal.O;
@@ -1263,21 +1324,49 @@
             }
           }
 
+          // Variações de tonalidade para dar volume.
+          if (ch !== 'O' && ch !== 'E') {
+            if (r <= 8) {
+              // Região superior iluminada.
+              color = adjustColor(color, 24);
+            } else if (r >= 21) {
+              // Região inferior sombreada.
+              color = adjustColor(color, -28);
+            } else if (r >= 15) {
+              // Sombra intermediária.
+              color = adjustColor(color, -12);
+            }
+
+            // Pequenos brilhos pontuais.
+            if (r < 15 && (r * 3 + c * 7) % 23 === 0) {
+              color = adjustColor(color, 35);
+            }
+          }
+
+          const px = Math.round(x + drawC * scale);
+          const py = Math.round(y + r * scale);
+
           context.fillStyle = color;
-          context.fillRect(
-            Math.round(x + drawC * scale),
-            Math.round(y + r * scale),
-            scale,
-            scale
-          );
+          context.fillRect(px, py, scale, scale);
+
+          // Brilho branco nos olhos.
+          if (ch === 'E' && moodMode !== 'blink' && moodMode !== 'sleep') {
+            context.fillStyle = '#FFFFFF';
+            context.fillRect(px, py, Math.max(1, scale / 2), Math.max(1, scale / 2));
+          }
         }
       }
 
-      // Bochechas rosadas extras quando recebe carinho ou come
+      // ==========================================
+      // 3. EXPRESSÕES E BOCHECHAS
+      // ==========================================
+
       if (moodMode === 'happy') {
-        context.fillStyle = '#FF80AB';
+        context.fillStyle = '#F27FA9';
+
         const cheekLeft = flipX ? x + 10 * scale : x + 12 * scale;
         const cheekRight = flipX ? x + 21 * scale : x + 23 * scale;
+
         context.fillRect(cheekLeft, y + 14 * scale, 2 * scale, scale);
         context.fillRect(cheekRight, y + 14 * scale, 2 * scale, scale);
       }
@@ -1285,115 +1374,332 @@
 
     function drawRoom() {
       const wall = SHOP_CATALOG.find(i => i.id === petState.equipados.parede) || SHOP_CATALOG[0];
-      const floor = SHOP_CATALOG.find(i => i.id === petState.equipados.chao) || SHOP_CATALOG[4];
-      const movel = SHOP_CATALOG.find(i => i.id === petState.equipados.movel) || SHOP_CATALOG[8];
-      const objeto = SHOP_CATALOG.find(i => i.id === petState.equipados.objeto) || SHOP_CATALOG[12];
+    const floor = SHOP_CATALOG.find(i => i.id === petState.equipados.chao) || SHOP_CATALOG[4];
+    const movel = SHOP_CATALOG.find(i => i.id === petState.equipados.movel) ||
+              SHOP_CATALOG.find(i => i.id === 'movel_bau_fofo');
 
-      // 1. Papel de Parede (y: 0..146)
-      ctx.fillStyle = wall.c1;
-      ctx.fillRect(0, 0, 360, 146);
-      ctx.fillStyle = wall.c2;
-      for (let x = 0; x < 360; x += 24) {
-        ctx.fillRect(x, 0, 6, 146);
-      }
+    const objeto = SHOP_CATALOG.find(i => i.id === petState.equipados.objeto) ||
+                  SHOP_CATALOG[12];
+        const isNight = actor.state === 'sleep';
 
-      // Estrelas se parede noturna
-      if (wall.id === 'parede_noite') {
+    // ==========================================
+    // 1. PAREDE
+    // ==========================================
+
+    ctx.fillStyle = wall.c1;
+    ctx.fillRect(0, 0, 360, 146);
+
+    // Textura vertical
+    ctx.fillStyle = wall.c2;
+
+    for (let x = 0; x < 360; x += 24) {
+        ctx.fillRect(x, 0, 6, 144);
+    }
+
+    // Pequenos detalhes decorativos na parede
+    ctx.fillStyle = 'rgba(255,255,255,0.18)';
+
+    for (let x = 12; x < 360; x += 48) {
+        ctx.fillRect(x, 112, 3, 3);
+        ctx.fillRect(x + 12, 124, 2, 2);
+    }
+
+    // Estrelas para papel de parede noturno
+    if (wall.id === 'parede_noite') {
         ctx.fillStyle = '#FFF59D';
-        [[30, 22], [150, 30], [210, 18], [320, 42], [280, 24]].forEach(([sx, sy]) => {
-          ctx.fillRect(sx, sy, 2, 2);
-        });
-      }
 
-      // 2. Janela Fofa (esquerda)
-      const isNight = actor.state === 'sleep';
-      ctx.fillStyle = '#594B73';
-      ctx.fillRect(46, 26, 76, 68);
-      ctx.fillStyle = isNight ? '#1E2A5E' : '#B3E5FC';
-      ctx.fillRect(50, 30, 68, 60);
+        [[30, 22], [150, 30], [210, 18], [320, 42], [280, 24]]
+            .forEach(([x, y]) => ctx.fillRect(x, y, 3, 3));
+    }
 
-      // Sol/Nuvem ou Lua/Estrelas na janela
-      if (isNight) {
+    // ==========================================
+    // 2. JANELA
+    // ==========================================
+
+    // Sombra
+    ctx.fillStyle = 'rgba(41,31,56,0.25)';
+    ctx.fillRect(49, 30, 76, 68);
+
+    // Moldura
+    ctx.fillStyle = '#594B73';
+    ctx.fillRect(46, 26, 76, 68);
+
+    // Paisagem
+    ctx.fillStyle = isNight ? '#1E2A5E' : '#B3E5FC';
+    ctx.fillRect(50, 30, 68, 60);
+
+    if (isNight) {
+        // Lua
         ctx.fillStyle = '#FFF59D';
-        ctx.fillRect(62, 40, 8, 8);
-        ctx.fillRect(98, 44, 2, 2);
-        ctx.fillRect(92, 62, 2, 2);
-      } else {
-        ctx.fillStyle = '#FFF';
+        ctx.fillRect(62, 40, 10, 10);
+        ctx.fillRect(66, 36, 6, 4);
+
+        // Estrelas
+        ctx.fillStyle = '#FFFFFF';
+        [[95, 42], [104, 60], [83, 72], [108, 35]]
+            .forEach(([x, y]) => ctx.fillRect(x, y, 2, 2));
+
+    } else {
+        // Sol
+        ctx.fillStyle = '#FFD54F';
+        ctx.fillRect(91, 39, 12, 12);
+        ctx.fillRect(95, 35, 4, 4);
+
+        // Nuvens
         const cloudOffset = Math.floor((actor.tick / 20) % 24);
-        ctx.fillRect(56 + cloudOffset, 42, 16, 6);
-        ctx.fillRect(60 + cloudOffset, 38, 8, 4);
-      }
 
-      // Grade da janela + Cortinas
-      ctx.fillStyle = '#FFF';
-      ctx.fillRect(82, 30, 4, 60);
-      ctx.fillRect(50, 58, 68, 4);
-      ctx.fillStyle = '#9575CD';
-      ctx.fillRect(42, 24, 12, 74);
-      ctx.fillRect(114, 24, 12, 74);
+        ctx.fillStyle = '#FFFFFF';
 
-      // Quadro na parede (direita)
-      ctx.fillStyle = '#594B73';
-      ctx.fillRect(244, 34, 48, 40);
-      ctx.fillStyle = '#FFF9E6';
-      ctx.fillRect(248, 38, 40, 32);
-      ctx.fillStyle = '#F48FB1';
-      ctx.fillRect(262, 46, 4, 4);
-      ctx.fillRect(270, 46, 4, 4);
-      ctx.fillRect(260, 50, 16, 4);
-      ctx.fillRect(264, 54, 8, 4);
-      ctx.fillRect(266, 58, 4, 4);
+        ctx.fillRect(54 + cloudOffset, 53, 18, 7);
+        ctx.fillRect(59 + cloudOffset, 47, 10, 6);
 
-      // 3. Rodapé
-      ctx.fillStyle = '#594B73';
-      ctx.fillRect(0, 144, 360, 6);
+        ctx.fillRect(85 - cloudOffset / 2, 67, 17, 6);
+        ctx.fillRect(89 - cloudOffset / 2, 62, 9, 5);
 
-      // 4. Chão (y: 150..240)
-      ctx.fillStyle = floor.c1;
-      ctx.fillRect(0, 150, 360, 90);
-      ctx.fillStyle = floor.c2;
+        // Paisagem distante
+        ctx.fillStyle = '#A5D6A7';
+        ctx.fillRect(50, 78, 68, 12);
 
-      if (floor.id === 'chao_xadrez') {
-        for (let y = 150; y < 240; y += 18) {
-          for (let x = ((y - 150) / 18) % 2 === 0 ? 0 : 18; x < 360; x += 36) {
-            ctx.fillRect(x, y, 18, 18);
-          }
+        ctx.fillStyle = '#81C784';
+        ctx.fillRect(50, 84, 68, 6);
+    }
+
+    // Divisórias da janela
+    ctx.fillStyle = '#FFF9E6';
+    ctx.fillRect(82, 30, 4, 60);
+    ctx.fillRect(50, 58, 68, 4);
+
+    // Cortinas
+    ctx.fillStyle = '#9575CD';
+    ctx.fillRect(42, 24, 12, 74);
+    ctx.fillRect(114, 24, 12, 74);
+
+    // Detalhes das cortinas
+    ctx.fillStyle = '#B39DDB';
+    ctx.fillRect(45, 28, 4, 66);
+    ctx.fillRect(117, 28, 4, 66);
+
+    // ==========================================
+    // 3. QUADRO DECORATIVO
+    // ==========================================
+
+    // Sombra
+    ctx.fillStyle = 'rgba(41,31,56,0.25)';
+    ctx.fillRect(248, 38, 48, 40);
+
+    // Moldura
+    ctx.fillStyle = '#594B73';
+    ctx.fillRect(244, 34, 48, 40);
+
+    // Interior
+    ctx.fillStyle = '#FFF9E6';
+    ctx.fillRect(248, 38, 40, 32);
+
+    // Desenho de gatinho
+    ctx.fillStyle = '#F48FB1';
+    ctx.fillRect(262, 46, 4, 4);
+    ctx.fillRect(270, 46, 4, 4);
+    ctx.fillRect(260, 50, 16, 4);
+    ctx.fillRect(264, 54, 8, 4);
+    ctx.fillRect(266, 58, 4, 4);
+
+    // ==========================================
+    // 4. RODAPÉ
+    // ==========================================
+
+    ctx.fillStyle = '#594B73';
+    ctx.fillRect(0, 144, 360, 7);
+
+    ctx.fillStyle = '#B39DDB';
+    ctx.fillRect(0, 144, 360, 2);
+
+    // ==========================================
+    // 5. CHÃO
+    // ==========================================
+
+    ctx.fillStyle = floor.c1;
+    ctx.fillRect(0, 151, 360, 89);
+
+    ctx.fillStyle = floor.c2;
+
+    if (floor.id === 'chao_xadrez') {
+
+        for (let y = 151; y < 240; y += 18) {
+            for (
+                let x = ((y - 151) / 18) % 2 === 0 ? 0 : 18;
+                x < 360;
+                x += 36
+            ) {
+                ctx.fillRect(x, y, 18, 18);
+            }
         }
-      } else if (floor.id === 'chao_grama') {
+
+    } else if (floor.id === 'chao_grama') {
+
         for (let x = 12; x < 350; x += 28) {
-          ctx.fillRect(x, 166, 4, 4);
-          ctx.fillRect(x + 12, 196, 4, 4);
+            ctx.fillRect(x, 166, 4, 4);
+            ctx.fillRect(x + 12, 196, 4, 4);
         }
-      } else {
+
+    } else {
+
+        // Tábuas do piso
         for (let y = 164; y < 240; y += 20) {
-          ctx.fillRect(0, y, 360, 2);
+            ctx.fillRect(0, y, 360, 2);
+
+            for (let x = (y % 40 === 4 ? 30 : 90); x < 360; x += 120) {
+                ctx.fillRect(x, y - 18, 2, 20);
+            }
         }
-      }
 
-      // 5. Renderiza Objeto (esquerda-centro) e Móvel (direita)
-      drawEquippedObject(objeto);
-      drawEquippedFurniture(movel);
+        // Brilho das tábuas
+        ctx.fillStyle = 'rgba(255,255,255,0.13)';
 
-      // 6. Tigela de Ração (canto inferior esquerdo)
-      ctx.fillStyle = '#594B73';
-      ctx.fillRect(26, 196, 32, 14);
-      ctx.fillStyle = '#F48FB1';
-      ctx.fillRect(28, 198, 28, 10);
-      if (petState.fome > 25) {
-        ctx.fillStyle = '#8D6E63';
-        ctx.fillRect(32, 194, 20, 4);
+        for (let y = 168; y < 240; y += 20) {
+            ctx.fillRect(0, y, 360, 1);
+        }
+    }
+
+    // Pequenos veios da madeira.
+    for (let y = 169; y < 240; y += 20) {
+      for (let x = 12; x < 350; x += 46) {
+        ctx.fillStyle = 'rgba(75, 43, 35, 0.18)';
+        ctx.fillRect(x, y + 5, 8, 1);
+
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.16)';
+        ctx.fillRect(x + 3, y + 6, 5, 1);
       }
     }
 
+    // Pequenos nós da madeira.
+    for (let y = 180; y < 240; y += 40) {
+      ctx.fillStyle = 'rgba(75, 43, 35, 0.20)';
+      ctx.fillRect(112, y, 4, 2);
+      ctx.fillRect(114, y - 1, 2, 4);
+    }
+
+    // ==========================================
+    // 6. SOMBRAS DOS MÓVEIS
+    // ==========================================
+
+    ctx.fillStyle = 'rgba(41,31,56,0.22)';
+    ctx.fillRect(20, 214, 80, 7);
+    ctx.fillRect(245, 207, 95, 7);
+
+    // ==========================================
+    // 7. OBJETOS E MÓVEIS
+    // ==========================================
+
+    drawFixedBed();
+
+    drawEquippedFurniture(movel);
+    drawEquippedObject(objeto);
+    
+
+    // ==========================================
+    // 8. POTE DE COMIDA
+    // ==========================================
+
+    drawFoodBowl();
+    }
+
+    // Desenha uma superfície pixel art com contorno e camadas de luz.
+    function drawPixelPanel(x, y, width, height, colors) {
+      // Sombra externa
+      ctx.fillStyle = colors.outline;
+      ctx.fillRect(x, y, width, height);
+
+      // Superfície principal
+      ctx.fillStyle = colors.base;
+      ctx.fillRect(x + 2, y + 2, width - 4, height - 4);
+
+      // Iluminação superior
+      ctx.fillStyle = colors.light;
+      ctx.fillRect(x + 2, y + 2, width - 4, 2);
+
+      // Sombra inferior
+      ctx.fillStyle = colors.shadow;
+      ctx.fillRect(x + 2, y + height - 4, width - 4, 2);
+
+      // Reflexo lateral
+      ctx.fillStyle = colors.light;
+      ctx.fillRect(x + 2, y + 4, 2, height - 8);
+    }
+
+    function drawFixedBed() {
+      // Sombra da cama
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.25)';
+      ctx.fillRect(12, 179, 94, 7);
+
+      // Estrutura externa
+      ctx.fillStyle = '#594B73';
+      ctx.fillRect(12, 147, 94, 34);
+
+      // Base de madeira
+      ctx.fillStyle = '#B887A7';
+      ctx.fillRect(16, 151, 86, 26);
+
+      drawPixelPanel(18, 150, 82, 28, {
+        outline: '#594052',
+        base: '#F4B6CC',
+        light: '#FFE8F0',
+        shadow: '#C76F96'
+      });
+
+      // Cobertor
+      ctx.fillStyle = '#F06292';
+      ctx.fillRect(20, 163, 78, 11);
+      ctx.fillRect(24, 159, 70, 4);
+
+      // Detalhes do cobertor
+      ctx.fillStyle = '#F8BBD0';
+      ctx.fillRect(28, 166, 5, 3);
+      ctx.fillRect(42, 166, 5, 3);
+      ctx.fillRect(56, 166, 5, 3);
+      ctx.fillRect(70, 166, 5, 3);
+
+      // Travesseiro
+      ctx.fillStyle = '#FFF9E6';
+      ctx.fillRect(23, 153, 23, 9);
+
+      ctx.fillStyle = '#F8BBD0';
+      ctx.fillRect(27, 155, 14, 2);
+
+      // Contorno frontal
+      ctx.fillStyle = '#AD668A';
+      ctx.fillRect(16, 177, 86, 4);
+    }
+
     function drawEquippedFurniture(item) {
-      if (item.id === 'movel_cama_rosa') {
+      if (item.id === 'movel_bau_fofo') {
+        // Sombra
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.25)';
+        ctx.fillRect(264, 201, 64, 5);
+
+        // Contorno
         ctx.fillStyle = '#594B73';
-        ctx.fillRect(256, 174, 78, 28);
+        ctx.fillRect(260, 174, 72, 28);
+
+        // Corpo do baú
         ctx.fillStyle = item.c1;
-        ctx.fillRect(259, 177, 72, 22);
+        ctx.fillRect(264, 178, 64, 20);
+
+        // Tampa
         ctx.fillStyle = item.c2;
-        ctx.fillRect(267, 181, 56, 14);
+        ctx.fillRect(260, 170, 72, 9);
+        ctx.fillRect(264, 167, 64, 3);
+
+        // Detalhes frontais
+        ctx.fillStyle = '#8C82F2';
+        ctx.fillRect(290, 183, 12, 8);
+
+        ctx.fillStyle = '#FFD54F';
+        ctx.fillRect(294, 185, 4, 4);
+
+        // Pés
+        ctx.fillStyle = '#594B73';
+        ctx.fillRect(266, 199, 7, 4);
+        ctx.fillRect(319, 199, 7, 4);
       } else if (item.id === 'movel_arranhador') {
         ctx.fillStyle = '#594B73';
         ctx.fillRect(266, 188, 60, 14);
@@ -1433,40 +1739,131 @@
       }
     }
 
+
+function drawFoodBowl() {
+
+    // Considera cheio quando o pet está alimentado
+  const isFull = petState.fome > 25;
+
+  // Sombra
+  ctx.fillStyle = 'rgba(41,31,56,0.30)';
+  ctx.fillRect(36, 229, 42, 5);
+
+  // Base externa
+  ctx.fillStyle = '#594B73';
+  ctx.fillRect(36, 211, 42, 17);
+
+  // Corpo do pote
+  ctx.fillStyle = '#F48FB1';
+  ctx.fillRect(39, 214, 36, 11);
+
+  // Parte frontal
+  ctx.fillStyle = '#EC407A';
+  ctx.fillRect(42, 223, 30, 3);
+
+  // Borda superior
+  ctx.fillStyle = '#FCE4EC';
+  ctx.fillRect(39, 211, 36, 4);
+
+  // Interior do pote
+  ctx.fillStyle = '#594B73';
+  ctx.fillRect(42, 214, 30, 5);
+
+  if (isFull) {
+    // Ração
+    ctx.fillStyle = '#8D6E63';
+    ctx.fillRect(44, 211, 26, 4);
+
+    ctx.fillStyle = '#BCAAA4';
+    ctx.fillRect(47, 209, 5, 3);
+    ctx.fillRect(55, 209, 5, 3);
+    ctx.fillRect(64, 210, 4, 2);
+
+    // Brilho
+    ctx.fillStyle = '#FFFFFF';
+    ctx.fillRect(40, 212, 3, 2);
+  } else {
+    // Interior vazio
+    ctx.fillStyle = '#3E3254';
+    ctx.fillRect(44, 215, 26, 3);
+
+    // Brilho interno
+    ctx.fillStyle = '#9575CD';
+    ctx.fillRect(46, 215, 5, 1);
+  }
+}
+
+
     function drawEquippedObject(item) {
-      if (item.id === 'obj_vasinho') {
-        ctx.fillStyle = '#594B73';
-        ctx.fillRect(88, 168, 26, 24);
-        ctx.fillStyle = item.c2;
-        ctx.fillRect(91, 171, 20, 18);
-        ctx.fillStyle = item.c1;
-        ctx.fillRect(96, 150, 10, 18);
-        ctx.fillRect(88, 156, 8, 8);
-        ctx.fillRect(106, 154, 8, 8);
-      } else if (item.id === 'obj_pelucia') {
-        ctx.fillStyle = '#594B73';
-        ctx.fillRect(88, 166, 24, 24);
-        ctx.fillRect(88, 160, 6, 6);
-        ctx.fillRect(106, 160, 6, 6);
-        ctx.fillStyle = item.c1;
-        ctx.fillRect(91, 169, 18, 18);
-        ctx.fillStyle = item.c2;
-        ctx.fillRect(98, 178, 4, 3);
-      } else if (item.id === 'obj_luminaria') {
-        ctx.fillStyle = '#594B73';
-        ctx.fillRect(96, 148, 8, 42);
-        ctx.fillRect(88, 186, 24, 6);
-        ctx.fillStyle = item.c1;
-        ctx.fillRect(88, 132, 24, 18);
-      } else if (item.id === 'obj_trofeu') {
-        ctx.fillStyle = '#594B73';
-        ctx.fillRect(92, 182, 18, 8);
-        ctx.fillRect(98, 172, 6, 10);
-        ctx.fillStyle = item.c1;
-        ctx.fillRect(90, 154, 22, 18);
-        ctx.fillStyle = item.c2;
-        ctx.fillRect(94, 158, 14, 10);
-      }
+        // Os objetos ficam próximos à parede, longe do caminho do pet.
+  // Posição-base: região central superior do cenário.
+
+  if (item.id === 'obj_vasinho') {
+    // Vaso
+    ctx.fillStyle = '#594B73';
+    ctx.fillRect(155, 132, 26, 16);
+
+    ctx.fillStyle = item.c2;
+    ctx.fillRect(158, 135, 20, 12);
+
+    // Planta
+    ctx.fillStyle = item.c1;
+    ctx.fillRect(163, 119, 10, 15);
+    ctx.fillRect(154, 124, 9, 7);
+    ctx.fillRect(173, 122, 9, 7);
+
+  } else if (item.id === 'obj_pelucia') {
+    // Sombra e corpo da pelúcia
+    ctx.fillStyle = '#594B73';
+    ctx.fillRect(155, 126, 26, 22);
+    ctx.fillRect(155, 121, 7, 7);
+    ctx.fillRect(174, 121, 7, 7);
+
+    ctx.fillStyle = item.c1;
+    ctx.fillRect(158, 129, 20, 16);
+
+    ctx.fillStyle = item.c2;
+    ctx.fillRect(164, 136, 5, 4);
+
+    // Olhos
+    ctx.fillStyle = '#594B73';
+    ctx.fillRect(161, 132, 2, 2);
+    ctx.fillRect(173, 132, 2, 2);
+
+  } else if (item.id === 'obj_luminaria') {
+    // Base
+    ctx.fillStyle = '#594B73';
+    ctx.fillRect(155, 144, 28, 4);
+
+    // Haste
+    ctx.fillRect(166, 128, 7, 16);
+
+    // Cúpula
+    ctx.fillStyle = item.c1;
+    ctx.fillRect(157, 119, 25, 11);
+    ctx.fillRect(161, 115, 17, 4);
+
+    // Luz
+    ctx.fillStyle = '#FFF9C4';
+    ctx.fillRect(164, 122, 11, 4);
+
+  } else if (item.id === 'obj_trofeu') {
+    // Base
+    ctx.fillStyle = '#594B73';
+    ctx.fillRect(155, 143, 28, 5);
+
+    // Haste
+    ctx.fillRect(166, 134, 7, 9);
+
+    // Taça
+    ctx.fillStyle = item.c1;
+    ctx.fillRect(158, 120, 23, 14);
+    ctx.fillRect(154, 123, 4, 8);
+    ctx.fillRect(181, 123, 4, 8);
+
+    ctx.fillStyle = item.c2;
+    ctx.fillRect(162, 123, 15, 7);
+  }
     }
 
     function spawnParticles(type, color) {
@@ -1529,15 +1926,26 @@
           actor.stateTimer--;
           if (actor.stateTimer === 0 && actor.state !== 'sleep') {
             actor.state = 'idle';
+            actor.y = 138;
           }
         } else if (actor.state !== 'sleep') {
           if (actor.state === 'idle' && Math.random() < 0.035) {
-            actor.targetX = 64 + Math.floor(Math.random() * 195);
+            // Mantém a movimentação autônoma na área livre do quarto.
+            actor.targetX = 115 + Math.floor(Math.random() * 140);
             actor.state = 'walk';
           } else if (actor.state === 'walk') {
             const diff = actor.targetX - actor.x;
             if (Math.abs(diff) <= 2) {
-              actor.state = 'idle';
+               if (actor.sleepPending) {
+                // Chegou à cama: posiciona o pet e inicia o sono.
+                actor.x = 32;
+                actor.y = 112;
+                actor.state = 'sleep';
+                actor.sleepPending = false;
+                actor.dir = 1;
+              } else {
+                actor.state = 'idle';
+              }
             } else {
               actor.dir = diff > 0 ? 1 : -1;
               actor.x += actor.dir * 1.6;
@@ -1570,16 +1978,37 @@
           else if (actor.state === 'love' || actor.state === 'eat') moodMode = 'happy';
           else if (actor.blinkTimer > 0) moodMode = 'blink';
 
-          drawPetSprite(
-            ctx,
-            petState.tipo,
-            actor.x,
-            actor.y + offsetY,
-            2,
-            actor.dir === -1,
-            actor.animFrame,
-            moodMode
-          );
+          if (actor.state === 'sleep') {
+  // Deita o sprite horizontalmente sobre a cama.
+  ctx.save();
+
+  ctx.translate(actor.x + 32, actor.y + 32);
+  ctx.rotate(Math.PI / 2);
+
+            drawPetSprite(
+              ctx,
+              petState.tipo,
+              -32,
+              -32,
+              2,
+              actor.dir === -1,
+              actor.animFrame,
+              'sleep'
+            );
+
+            ctx.restore();
+          } else {
+            drawPetSprite(
+              ctx,
+              petState.tipo,
+              actor.x,
+              actor.y + offsetY,
+              2,
+              actor.dir === -1,
+              actor.animFrame,
+              moodMode
+            );
+          }
         }
 
         if (actor.state === 'sleep') {
@@ -1657,7 +2086,8 @@
       petState.fome = Math.min(100, petState.fome + 25);
       actor.state = 'eat';
       actor.stateTimer = 36;
-      actor.x = 64;
+      actor.x = 74;
+      actor.y = 162;
       actor.dir = -1;
       spawnParticles('food', '#FFD54F');
       showSpeech('Nham nham! Petisco delicioso!');
@@ -1670,13 +2100,24 @@
 
     document.getElementById('btnSleep').addEventListener('click', () => {
       if (actor.state === 'sleep') {
+        // Acorda o pet.
         actor.state = 'idle';
+        actor.y = 138;
+        actor.sleepPending = false;
+        actor.stateTimer = 0;
+
         showSpeech('Bom dia! Estou pronto para outra!');
       } else {
-        actor.state = 'sleep';
-        actor.x = 258;
-        showSpeech('Zzz... Hora de descansar...');
+        // Caminha até a cama antes de dormir.
+        actor.state = 'walk';
+        actor.targetX = 32;
+        actor.dir = actor.x > 32 ? -1 : 1;
+        actor.sleepPending = true;
+        actor.stateTimer = 0;
+
+        showSpeech('Indo tirar uma sonequinha...');
       }
+
       updateUI();
     });
 
