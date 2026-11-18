@@ -246,7 +246,7 @@
       border: 4px solid var(--border-pixel);
       background: #141821;
       box-shadow: inset 0 0 0 4px #2B3344;
-      cursor: pointer;
+      cursor: default;
     }
 
     #roomCanvas {
@@ -753,6 +753,7 @@
       carinho: 85,
       energia: 85,
       moedas: 50,
+      dormindo: false,
       ultimaInteracao: Date.now(),
       inventario: ['parede_lavanda', 'chao_pinho', 'movel_bau_fofo', 'obj_vasinho'],
       equipados: {
@@ -1136,6 +1137,24 @@
     // =========================================================================
     // 4. SINCRONIZAÇÃO DE DADOS E DECAIMENTO TEMPORAL
     // =========================================================================
+
+
+    const canvas = document.getElementById('roomCanvas');
+    const ctx = canvas.getContext('2d');
+
+    const actor = {
+      x: 155,
+      y: 138,
+      targetX: 155,
+      dir: 1, // 1 = direita, -1 = esquerda
+      state: 'idle', // 'idle' | 'walk' | 'eat' | 'love' | 'sleep'
+      stateTimer: 0,
+      tick: 0,
+      animFrame: 0,
+      blinkTimer: 0,
+      particles: []
+    };
+
     async function loadPetData() {
       // Remove chave legada global (caso exista) para não contaminar outras contas
       localStorage.removeItem('meow_plans_pet_data_v1');
@@ -1154,6 +1173,8 @@
           petState.carinho = rec.carinho ?? 85;
           petState.energia = rec.energia ?? 85;
           petState.moedas = rec.moedas ?? 50;
+          petState.dormindo = Boolean(rec.dormindo);
+
           if (Array.isArray(rec.inventario) && rec.inventario.length > 0) {
             petState.inventario = rec.inventario;
           }
@@ -1167,7 +1188,20 @@
             petState.ultimaInteracao = new Date(rec.ultima_interacao).getTime();
           }
 
-          applyOfflineDecay();
+          if (petState.dormindo) {
+            const hoursAsleep = (Date.now() - petState.ultimaInteracao) / (1000 * 60 * 60);
+            if (hoursAsleep > 0.01) {
+              petState.energia = Math.min(100, petState.energia + hoursAsleep * 25);
+            }
+            actor.x = 32;
+            actor.y = 112;
+            actor.dir = 1;
+            actor.state = 'sleep';
+            actor.sleepPending = false;
+          } else {
+            applyOfflineDecay();
+          }
+
           await savePetData();
           return;
         }
@@ -1177,7 +1211,15 @@
         if (localRaw) {
           try {
             petState = { ...petState, ...JSON.parse(localRaw) };
-            applyOfflineDecay();
+            if (petState.dormindo) {
+              actor.x = 32;
+              actor.y = 112;
+              actor.dir = 1;
+              actor.state = 'sleep';
+              actor.sleepPending = false;
+            } else {
+              applyOfflineDecay();
+            }
           } catch (e) {}
         }
       }
@@ -1197,6 +1239,7 @@
         carinho: Math.round(petState.carinho),
         energia: Math.round(petState.energia),
         moedas: Math.round(petState.moedas),
+        dormindo: Boolean(petState.dormindo),
         inventario: petState.inventario,
         equipados: petState.equipados,
         tarefas_recompensadas: petState.tarefas_recompensadas,
@@ -1242,21 +1285,6 @@
     // =========================================================================
     // 5. MOTOR DE RENDERIZAÇÃO PIXEL ART (CENÁRIO + PET ANIMADO)
     // =========================================================================
-    const canvas = document.getElementById('roomCanvas');
-    const ctx = canvas.getContext('2d');
-
-    const actor = {
-      x: 155,
-      y: 138,
-      targetX: 155,
-      dir: 1, // 1 = direita, -1 = esquerda
-      state: 'idle', // 'idle' | 'walk' | 'eat' | 'love' | 'sleep'
-      stateTimer: 0,
-      tick: 0,
-      animFrame: 0,
-      blinkTimer: 0,
-      particles: []
-    };
 
     // Clareia ou escurece uma cor hexadecimal.
     function adjustColor(hex, amount) {
@@ -2061,30 +2089,81 @@ function drawFoodBowl() {
       document.getElementById('txtEnergia').textContent = `${e}%`;
       document.getElementById('barEnergia').style.width = `${e}%`;
 
+      const isSleeping = actor.state === 'sleep' || petState.dormindo;
+
       const moodEl = document.getElementById('petMoodBadge');
-      if (actor.state === 'sleep') moodEl.textContent = 'Dormindo';
+      if (isSleeping) moodEl.textContent = 'Dormindo';
       else if (f < 30) moodEl.textContent = 'Com Fome';
       else if (e < 25) moodEl.textContent = 'Cansado';
       else if (c > 75) moodEl.textContent = 'Radiante';
       else moodEl.textContent = 'Tranquilo';
 
-      document.getElementById('btnFeed').disabled = petState.moedas < 10;
+      document.getElementById('btnFeed').disabled = petState.moedas < 10 || isSleeping;
       document.getElementById('btnSleepText').textContent =
-        actor.state === 'sleep' ? 'ACORDAR' : 'DORMIR';
+        isSleeping ? 'ACORDAR' : 'DORMIR';
+    }
+
+    // Converte coordenadas de tela (mouse ou touch) para coordenadas internas do canvas (360x240)
+    function getCanvasCoords(clientX, clientY) {
+      const rect = canvas.getBoundingClientRect();
+      return {
+        x: ((clientX - rect.left) / rect.width) * canvas.width,
+        y: ((clientY - rect.top) / rect.height) * canvas.height
+      };
+    }
+
+    // Verifica se o ponto (px, py) está estritamente dentro da área do sprite 32x32 (scale 2 = 64x64)
+    function isPointInsidePet(px, py) {
+      if (!petState.tipo) return false;
+      // Margem interna de 6px para ignorar bordas transparentes da matriz 32x32
+      const pad = 6;
+      const left = actor.x + pad;
+      const right = actor.x + 64 - pad;
+      const top = actor.y + pad;
+      const bottom = actor.y + 64 - pad;
+      return px >= left && px <= right && py >= top && py <= bottom;
     }
 
     function triggerPetLove() {
-      if (actor.state === 'sleep') actor.state = 'idle';
+      // Se estiver dormindo, não acorda com carinho; apenas reage com carinho suave na cama
       petState.carinho = Math.min(100, petState.carinho + 15);
-      actor.state = 'love';
-      actor.stateTimer = 32;
       spawnParticles('heart', '#F48FB1');
-      showSpeech('Purrrr~ Amo receber carinho!');
+
+      if (actor.state === 'sleep' || petState.dormindo) {
+        showSpeech('Zzz... purrrr... (sonhando feliz)');
+      } else {
+        actor.state = 'love';
+        actor.stateTimer = 32;
+        showSpeech('Purrrr~ Amo receber carinho!');
+      }
+
       updateUI();
       savePetData();
     }
 
+    // Feedback visual de cursor (pointer somente sobre o pet)
+    canvas.addEventListener('mousemove', (e) => {
+      const pos = getCanvasCoords(e.clientX, e.clientY);
+      canvas.style.cursor = isPointInsidePet(pos.x, pos.y) ? 'pointer' : 'default';
+    });
+
+    canvas.addEventListener('mouseleave', () => {
+      canvas.style.cursor = 'default';
+    });
+
+    // Dispara carinho SOMENTE se o clique ocorrer dentro da hitbox do pet
+    canvas.addEventListener('click', (e) => {
+      const pos = getCanvasCoords(e.clientX, e.clientY);
+      if (isPointInsidePet(pos.x, pos.y)) {
+        triggerPetLove();
+      }
+    });
+
     document.getElementById('btnFeed').addEventListener('click', () => {
+      if (actor.state === 'sleep' || petState.dormindo) {
+        showSpeech('Zzz... Acorde-me antes de me alimentar!');
+        return;
+      }
       if (petState.moedas < 10) {
         showSpeech('Preciso de 10 moedas para petiscos!');
         return;
@@ -2107,40 +2186,36 @@ function drawFoodBowl() {
     });
 
     document.getElementById('btnPet').addEventListener('click', triggerPetLove);
-    document.getElementById('canvasClickArea').addEventListener('click', triggerPetLove);
 
     document.getElementById('btnSleep').addEventListener('click', () => {
-      if (actor.state === 'sleep') {
-        // Acorda o pet.
+      if (actor.state === 'sleep' || petState.dormindo) {
+        // Acorda explicitamente pelo usuário
+        petState.dormindo = false;
         actor.state = 'idle';
         actor.y = 138;
         actor.sleepPending = false;
         actor.stateTimer = 0;
-
         showSpeech('Bom dia! Estou pronto para outra!');
       } else {
-        // Caminha até a cama antes de dormir.
+        // Marca sono persistente imediatamente (mesmo se fechar antes de chegar na cama)
+        petState.dormindo = true;
         actor.state = 'walk';
         actor.targetX = 32;
         actor.dir = actor.x > 32 ? -1 : 1;
         actor.sleepPending = true;
         actor.stateTimer = 0;
-
         showSpeech('Indo tirar uma sonequinha...');
       }
 
       updateUI();
+      savePetData();
     });
 
-    // Recuperação durante sono e decaimento suave em tempo real
+    // Recuperação durante sono (permanece dormindo mesmo com energia 100% até clicar em ACORDAR)
     setInterval(() => {
       if (!petState.tipo) return;
-      if (actor.state === 'sleep') {
+      if (actor.state === 'sleep' || petState.dormindo) {
         petState.energia = Math.min(100, petState.energia + 4);
-        if (petState.energia >= 100) {
-          actor.state = 'idle';
-          showSpeech('Energia 100%! Vamos brincar!');
-        }
       } else {
         petState.fome = Math.max(5, petState.fome - 0.4);
         petState.carinho = Math.max(10, petState.carinho - 0.3);
