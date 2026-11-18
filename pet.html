@@ -1134,6 +1134,7 @@
       ]
     };
 
+
     // =========================================================================
     // 4. SINCRONIZAÇÃO DE DADOS E DECAIMENTO TEMPORAL
     // =========================================================================
@@ -1310,6 +1311,264 @@
 
       return !matrix[row] || matrix[row][col] === '.';
     }
+
+    function drawDinoPose(context, x, y, flipX, state, tick) {
+
+      // ==========================================
+      // 1. REGIÕES DOS SPRITES NA IMAGEM ORIGINAL
+      // ==========================================
+
+      const poses = {
+        idle: {
+          sx: 31,
+          sy: 185,
+          sw: 478,
+          sh: 348,
+          width: 82,
+          height: 60
+        },
+
+        walk: {
+          sx: 31,
+          sy: 185,
+          sw: 478,
+          sh: 348,
+          width: 82,
+          height: 60
+        },
+
+        eat: {
+          sx: 551,
+          sy: 239,
+          sw: 449,
+          sh: 287,
+          width: 90,
+          height: 58
+        },
+
+        sleep: {
+          sx: 1060,
+          sy: 311,
+          sw: 430,
+          sh: 207,
+          width: 96,
+          height: 46
+        },
+
+        love: {
+          sx: 1560,
+          sy: 190,
+          sw: 418,
+          sh: 350,
+          width: 82,
+          height: 69
+        }
+      };
+
+      // ==========================================
+      // 2. ESCOLHE A POSE
+      // ==========================================
+
+      const pose = poses[state] || poses.idle;
+
+
+      // ==========================================
+      // 3. ANIMAÇÃO DE MOVIMENTO
+      // ==========================================
+
+      let offsetY = 0;
+
+      if (state === 'walk') {
+        offsetY = Math.sin(tick * 0.65) * 2;
+      }
+
+      if (state === 'idle') {
+        offsetY = Math.sin(tick * 0.08);
+      }
+
+      // ==========================================
+      // 4. POSICIONAMENTO NO QUARTO
+      // ==========================================
+
+      let drawX = x;
+      let drawY = y + offsetY;
+
+      if (state === 'sleep') {
+        drawX = 12;
+        drawY = 150;
+      }
+
+      if (state === 'eat') {
+        drawX = 4;
+        drawY = 165;
+      }
+
+      // ==========================================
+      // 5. DESENHO DO SPRITE
+      // ==========================================
+
+      context.save();
+
+      // Evita suavização dos pixels.
+      context.imageSmoothingEnabled = false;
+
+      // Inverte o personagem quando necessário.
+      if (flipX) {
+        context.translate(drawX + pose.width, 0);
+        context.scale(-1, 1);
+        drawX = 0;
+      }
+
+      context.restore();
+
+      return true;
+    }
+
+
+    // =========================================================================
+    // MOTOR DE SPRITE SHEETS (4 POSES HORIZONTAIS: IDLE, EAT, SLEEP, LOVE)
+    // =========================================================================
+    const PET_SHEETS = {};
+
+    // Carrega a imagem, remove fundo branco (se houver) e detecta automaticamente
+    // a caixa exata de cada uma das 4 poses para nunca cortar rabo, crista ou corações.
+    function registerPetSheet(species, src, targetHeights) {
+      const sheet = { ready: false, canvas: null, boxes: [], targetHeights };
+      PET_SHEETS[species] = sheet;
+
+      const img = new Image();
+      img.onload = () => {
+        const w = img.naturalWidth;
+        const h = img.naturalHeight;
+        const off = document.createElement('canvas');
+        off.width = w;
+        off.height = h;
+        const octx = off.getContext('2d');
+        octx.drawImage(img, 0, 0);
+
+        const imgData = octx.getImageData(0, 0, w, h);
+        const d = imgData.data;
+
+        // 1. Torna pixels brancos/quase brancos transparentes
+        for (let i = 0; i < d.length; i += 4) {
+          if (d[i] > 242 && d[i + 1] > 242 && d[i + 2] > 242) {
+            d[i + 3] = 0;
+          }
+        }
+        octx.putImageData(imgData, 0, 0);
+
+        // 2. Detecta automaticamente as 4 colunas/poses separadas por espaços vazios
+        const colHasPixel = new Uint8Array(w);
+        for (let x = 0; x < w; x++) {
+          for (let y = 0; y < h; y++) {
+            if (d[(y * w + x) * 4 + 3] > 20) {
+              colHasPixel[x] = 1;
+              break;
+            }
+          }
+        }
+
+        const segments = [];
+        let inSeg = false, startX = 0;
+        for (let x = 0; x < w; x++) {
+          if (colHasPixel[x] && !inSeg) {
+            inSeg = true;
+            startX = x;
+          } else if (!colHasPixel[x] && inSeg) {
+            inSeg = false;
+            if (x - startX > 20) segments.push([startX, x - 1]);
+          }
+        }
+        if (inSeg && w - startX > 20) segments.push([startX, w - 1]);
+
+        // Calcula o bounding box exato (sx, sy, sw, sh) de cada pose
+        sheet.boxes = segments.map(([x0, x1]) => {
+          let minY = h, maxY = 0;
+          for (let y = 0; y < h; y++) {
+            for (let x = x0; x <= x1; x++) {
+              if (d[(y * w + x) * 4 + 3] > 20) {
+                if (y < minY) minY = y;
+                if (y > maxY) maxY = y;
+              }
+            }
+          }
+          return {
+            sx: Math.max(0, x0 - 2),
+            sy: Math.max(0, minY - 2),
+            sw: Math.min(w - x0, x1 - x0 + 5),
+            sh: Math.min(h - minY, maxY - minY + 5)
+          };
+        });
+
+        sheet.canvas = off;
+        sheet.ready = sheet.boxes.length >= 4;
+      };
+      img.src = src;
+    }
+
+    // Registra o Dino (para adicionar os outros 3 no futuro, basta repetir esta linha!)
+    registerPetSheet('dinossauro', 'dino-sprites.png', {
+      idle: 62,
+      walk: 62,
+      eat: 56,
+      sleep: 42,
+      love: 72
+    });
+
+    function drawSheetPet(context, species, x, y, flipX, state, tick) {
+      const sheet = PET_SHEETS[species];
+      if (!sheet || !sheet.ready) return false;
+
+      // Ordem das 4 poses na imagem: [0]=idle/walk, [1]=eat, [2]=sleep, [3]=love
+      const poseIndexMap = { idle: 0, walk: 0, eat: 1, sleep: 2, love: 3 };
+      const box = sheet.boxes[poseIndexMap[state] ?? 0];
+      if (!box) return false;
+
+      const targetH = sheet.targetHeights[state] || 62;
+      const targetW = Math.round(targetH * (box.sw / box.sh));
+
+      // Animação procedural de passos e respiração
+      let offsetY = 0;
+      let angle = 0;
+      if (state === 'walk') {
+        offsetY = -Math.abs(Math.sin(tick * 0.55)) * 4;
+        angle = Math.sin(tick * 0.55) * 0.07; // Balanço de passada
+      } else if (state === 'idle') {
+        offsetY = Math.sin(tick * 0.12) * 1.2;
+      } else if (state === 'love') {
+        offsetY = -Math.abs(Math.sin(tick * 0.45)) * 5;
+      }
+
+      // Alinha os pés do pet na mesma linha do chão (y + 62)
+      let drawX = x + (64 - targetW) / 2;
+      let drawY = (y + 62 - targetH) + offsetY;
+
+      if (state === 'sleep') {
+        drawX = 16;
+        drawY = 148;
+      } else if (state === 'eat') {
+        drawX = 34;
+        drawY = 166;
+      }
+
+      context.save();
+      context.imageSmoothingEnabled = true;
+
+      // Pivô no centro do sprite para espelhar e inclinar sem sair do lugar
+      context.translate(Math.round(drawX + targetW / 2), Math.round(drawY + targetH / 2));
+      if (flipX) context.scale(-1, 1);
+      if (angle !== 0) context.rotate(angle);
+
+      context.drawImage(
+        sheet.canvas,
+        box.sx, box.sy, box.sw, box.sh,
+        Math.round(-targetW / 2), Math.round(-targetH / 2), targetW, targetH
+      );
+
+      context.restore();
+      return true;
+    }
+
 
     function drawPetSprite(context, species, x, y, scale, flipX, frameIdx, moodMode) {
       const frames = SPRITES[species] || SPRITES.gato;
@@ -1974,7 +2233,8 @@ function drawFoodBowl() {
             actor.state = 'walk';
           } else if (actor.state === 'walk') {
             const diff = actor.targetX - actor.x;
-            if (Math.abs(diff) <= 2) {
+            const speed = actor.sleepPending ? 4.2 : 1.6;
+            if (Math.abs(diff) <= speed) {
                if (actor.sleepPending) {
                 // Chegou à cama: posiciona o pet e inicia o sono.
                 actor.x = 32;
@@ -1987,18 +2247,23 @@ function drawFoodBowl() {
               }
             } else {
               actor.dir = diff > 0 ? 1 : -1;
-              actor.x += actor.dir * 1.6;
+              actor.x += actor.dir * speed;
             }
           }
         }
 
         if (actor.state === 'sleep' && actor.tick % 20 === 0) {
-          spawnParticles('zzz', '#90CAF9');
+          spawnParticles('zzz', '#B8A5F2');
         }
 
         // Desenha cena
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         drawRoom();
+
+        if (actor.state === 'sleep') {
+          ctx.fillStyle = 'rgba(15, 20, 42, 0.36)';
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+        }
 
         if (petState.tipo) {
           // Sombra no chão
@@ -2017,43 +2282,56 @@ function drawFoodBowl() {
           else if (actor.state === 'love' || actor.state === 'eat') moodMode = 'happy';
           else if (actor.blinkTimer > 0) moodMode = 'blink';
 
-          if (actor.state === 'sleep') {
-  // Deita o sprite horizontalmente sobre a cama.
-  ctx.save();
+          // ==========================================
+// DESENHO DO PERSONAGEM
+// ==========================================
 
-  ctx.translate(actor.x + 32, actor.y + 32);
-  ctx.rotate(Math.PI / 2);
-
-            drawPetSprite(
-              ctx,
-              petState.tipo,
-              -32,
-              -32,
-              2,
-              actor.dir === -1,
-              actor.animFrame,
-              'sleep'
-            );
-
-            ctx.restore();
-          } else {
-            drawPetSprite(
-              ctx,
-              petState.tipo,
-              actor.x,
-              actor.y + offsetY,
-              2,
-              actor.dir === -1,
-              actor.animFrame,
-              moodMode
-            );
+if (petState.tipo) {
+          // Sombra no chão (oculta quando dormindo na cama para não vazar)
+          if (actor.state !== 'sleep') {
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.25)';
+            ctx.fillRect(Math.round(actor.x + 14), Math.round(actor.y + 56), 36, 6);
           }
+
+          let offsetY = 0;
+          if (actor.state === 'walk') {
+            offsetY = Math.sin(actor.tick * 0.65) * 2;
+          } else if (actor.state === 'love' || actor.state === 'eat') {
+            offsetY = -Math.abs(Math.sin(actor.tick * 0.55)) * 7;
+          }
+
+          let moodMode = 'normal';
+          if (actor.state === 'sleep') moodMode = 'sleep';
+          else if (actor.state === 'love' || actor.state === 'eat') moodMode = 'happy';
+          else if (actor.blinkTimer > 0) moodMode = 'blink';
+
+          // Usa a folha de sprites se o pet já tiver uma registrada; senão usa a matriz 32x32
+          const usedSheet = PET_SHEETS[petState.tipo] && drawSheetPet(
+            ctx,
+            petState.tipo,
+            actor.x,
+            actor.y,
+            actor.dir === -1,
+            actor.state,
+            actor.tick
+          );
+
+          if (!usedSheet) {
+            if (actor.state === 'sleep') {
+              ctx.save();
+              ctx.translate(actor.x + 32, actor.y + 32);
+              ctx.rotate(Math.PI / 2);
+              drawPetSprite(ctx, petState.tipo, -32, -32, 2, actor.dir === -1, actor.animFrame, 'sleep');
+              ctx.restore();
+            } else {
+              drawPetSprite(ctx, petState.tipo, actor.x, actor.y + offsetY, 2, actor.dir === -1, actor.animFrame, moodMode);
+            }
+          }
+        } else {
+
+}
         }
 
-        if (actor.state === 'sleep') {
-          ctx.fillStyle = 'rgba(15, 20, 42, 0.36)';
-          ctx.fillRect(0, 0, canvas.width, canvas.height);
-        }
 
         updateParticles();
       }
