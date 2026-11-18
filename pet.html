@@ -798,35 +798,51 @@
     // =========================================================================
     const PALETTES = {
       gato: {
-        O: '#493957', // Contorno
-        P: '#B8A5F2', // Cor principal
-        W: '#FAF8FF', // Pelagem clara
-        K: '#F59BB9', // Orelhas e patas
-        E: '#30243D'  // Olhos
+        O: '#493957', // Contorno escuro
+        S: '#7962A2', // Sombra profunda
+        B: '#A58ADD', // Sombra intermediária
+        M: '#C4B2F2', // Cor principal
+        H: '#E8DFFF', // Brilho
+        A: '#F59BB9', // Orelhas e detalhes rosados
+        W: '#FFF9FF', // Partes claras
+        E: '#30243D', // Olhos
+        P: '#E982AC'  // Bochechas
       },
+
       pato: {
         O: '#60452F',
-        Y: '#FDE892',
-        C: '#FFF9E6',
-        B: '#F6A552',
-        E: '#493326'
+        S: '#D99A3E',
+        B: '#F4C85E',
+        M: '#F9DD83',
+        H: '#FFF1B8',
+        A: '#F18A3B',
+        W: '#FFFFFF',
+        E: '#493326',
+        P: '#EFA0A0'
       },
+
       corvo: {
         O: '#29243D',
-        M: '#6B5F82',
-        D: '#453C5B',
-        L: '#9B8FB3',
-        H: '#D4CBE5',
-        E: '#211B30'
+        S: '#453C5B',
+        B: '#625879',
+        M: '#81769B',
+        H: '#B8ACD0',
+        A: '#D6A75E',
+        W: '#FFF8E8',
+        E: '#211B30',
+        P: '#9C8AB8'
       },
+
       dinossauro: {
         O: '#483044',
-        R: '#C94355',
-        D: '#6D344C',
-        C: '#F5E2DB',
-        B: '#5B4C61',
-        K: '#EE96AF',
-        E: '#2B202E'
+        S: '#71394F',
+        B: '#B94C61',
+        M: '#D96B78',
+        H: '#F29AA0',
+        A: '#F2C7A9',
+        W: '#FFF1E5',
+        E: '#2B202E',
+        P: '#EE96AF'
       }
     };
 
@@ -836,279 +852,282 @@
         [
           "................................",
           "................................",
-          "...........OO..........OO.......",
-          "..........OPPO........OPPO......",
-          ".........OPKPPOOOOOOOOPKPPO.....",
-          "........OOPKKPPPPPPPPPPKKPOO....",
-          "........OPPPPPPPPPPPPPPPPPPO....",
-          ".......OOPPPPPPPPPWWPPPPPPPOO...",
-          ".......OPPPPPPPPPWWWWPPPPPPPO...",
-          "......OOPPPPPPPPWWWWWWPPPPPPOO..",
-          "......OPPPEEPPPWWWWWWWWPPEEPPO..",
-          "..OOO.OPPPEEPPWWWWEEWWWWPPEEPO..",
-          ".OPPPOOPPPPPPWWWWEEEEWWWWPPPPO..",
-          ".OWWWO.OOPPPPPWWWWWWWWWWPPPOO...",
-          ".OPPPO..OOPPPPPPPPPPPPPPPPOO....",
-          "..OPPP..OPWWWWWWWWWWWWWWWWPO....",
-          "...OPPOOOPWWWWWWWWWWWWWWWWPO....",
-          "....OOOOPPPWWWWWWWWWWWWWWWPO....",
-          ".....OOPPPPPWWWWWWWWWWWWWWPO....",
-          ".....OPPPPPPPWWWWWWWWWWWWPPO....",
-          ".....OPPPPPPPWWWWWWWWWWWPPO.....",
-          ".....OOPPPPPWWWWWWWWWOOOOO......",
-          "......OOPPPWWWWWWWWWOPWWWO......",
-          ".......OOOWWWOOOOOWWOPWWWO......",
-          "........OWWWOPKKKPOOWOOOO.......",
-          "........OWWWOPKPKPO.............",
-          ".........OOOOOPKKPO.............",
-          "..............OOOO..............",
-          "................................",
-          "................................",
-          "................................",
+          "........O...............O.......",
+          "........OO.............OO.......",
+          "........OOO...........OOO.......",
+          "........OOBOO.......OOOBO.......",
+          ".......OOOBAOO.....OOOBAO.......",
+          ".......OOBBAAOOOOOOOOBAAOO......",
+          ".......OOBAAOOOOOOOOOOAAOO......",
+          ".......OOOOOOOBBBBBBOOOAOO......",
+          "..........OOOBMMMMMMBOOO.O......",
+          "......O.OHHHBMMMMMMMMHHHO.......",
+          "...OOOOSOHHHMMMMMMMMMHHHOO......",
+          "..OSSSSSOOBMMMMMMMMMMMMBOO......",
+          "..OSSOOOOBBMWEMMMMMWEMMBBOO.....",
+          "..OSO..OOBBMEEMMMMMEEMMBBOO.....",
+          ".OSSO..OOBBBEEMMMMMEEMBBBOO.....",
+          ".OSSO..OOBBBBMHHHHMMMBBBBOO.....",
+          ".OSSOHHHOBBBHWWAAAWWBBBBBHHH....",
+          "..OSOO.OHHBHWWWWAWWWWBBHHOO.....",
+          "..OSSOO.OOBHWOOOOOOOWBBBOO......",
+          "..OSSSOOHHOOOOBBBBBOOOBHHO......",
+          "...OOHHH.OOOBSSSSSSSBOOOOHHH....",
+          ".....OSO.OOBSSSSSSSSSBOO........",
+          "......O.OOBSSSSSSSSSSSBOO.......",
+          "........OOBBSSSSSSSSSBBOO.......",
+          "........OOOBBSSSSSSSBBOOO.......",
+          ".........OMMMMMBBBMMMMMO........",
+          "..........HHHHHBBBHHHHH.........",
+          "..........HHHHHOOOHHHHH.........",
+          ".............OOOOOOO............",
           "................................"
         ],
         [
           "................................",
           "................................",
-          "...........OO..........OO.......",
-          "..........OPPO........OPPO......",
-          ".........OPKPPOOOOOOOOPKPPO.....",
-          "........OOPKKPPPPPPPPPPKKPOO....",
-          "........OPPPPPPPPPPPPPPPPPPO....",
-          ".......OOPPPPPPPPPWWPPPPPPPOO...",
-          ".......OPPPPPPPPPWWWWPPPPPPPO...",
-          "......OOPPPPPPPPWWWWWWPPPPPPOO..",
-          "......OPPPEEPPPWWWWWWWWPPEEPPO..",
-          "...OOO.OPPPEEPPWWWWEEWWWWPPEEPO.",
-          "..OPPPOOPPPPPPWWWWEEEEWWWWPPPPO.",
-          "..OWWWO.OOPPPPPWWWWWWWWWWPPPOO..",
-          "..OPPPO..OOPPPPPPPPPPPPPPPPOO...",
-          "...OPPP..OPWWWWWWWWWWWWWWWWPO...",
-          "....OPPOOOPWWWWWWWWWWWWWWWWPO...",
-          ".....OOOOPPPWWWWWWWWWWWWWWWPO...",
-          ".....OOPPPPPWWWWWWWWWWWWWWPO....",
-          ".....OPPPPPPPWWWWWWWWWWWWPPO....",
-          ".....OPPPPPPPWWWWWWWWWWWPPO.....",
-          ".....OOPPPPPWWWWWWWWWOOOOO......",
-          "......OOPPPWWWWWWWWWOPWWWO......",
-          ".......OOOWWWOOOOOWWOPWWWO......",
-          ".........OWWWOPKKKPOOOOOO.......",
-          ".........OWWWOPKPKPO............",
-          "..........OOOOOPKKPO............",
-          "...............OOOO.............",
-          "................................",
-          "................................",
-          "................................",
+          "........O...............O.......",
+          "........OO.............OO.......",
+          "........OOO...........OOO.......",
+          "........OOBOO.......OOOBO.......",
+          ".......OOOBAOO.....OOOBAO.......",
+          ".......OOBBAAOOOOOOOOBAAOO......",
+          ".......OOBAAOOOOOOOOOOAAOO......",
+          ".......OOOOOOOBBBBBBOOOAOO......",
+          "..........OOOBMMMMMMBOOO.O......",
+          "......O.OHHHBMMMMMMMMHHHO.......",
+          "...OOOOSOHHHMMMMMMMMMHHHOO......",
+          "..OSSSSSOOBMMMMMMMMMMMMBOO......",
+          "..OSSOOOOBBMWEMMMMMWEMMBBOO.....",
+          "..OSO..OOBBMEEMMMMMEEMMBBOO.....",
+          ".OSSO..OOBBBEEMMMMMEEMBBBOO.....",
+          ".OSSO..OOBBBBMHHHHMMMBBBBOO.....",
+          ".OSSOHHHOBBBHWWAAAWWBBBBBHHH....",
+          "..OSOO.OHHBHWWWWAWWWWBBHHOO.....",
+          "..OSSOO.OOBHWOOOOOOOWBBBOO......",
+          "..OSSSOOHHOOOOBBBBBOOOBHHO......",
+          "...OOHHH.OOOBSSSSSSSBOOOOHHH....",
+          ".....OSO.OOBSSSSSSSSSBOO........",
+          "......O.OOBSSSSSSSSSSSBOO.......",
+          "........OOBBSSSSSSSSSBBOO.......",
+          "........OOOBBSSSSSSSBBOOO.......",
+          ".........OMMMMMBBBMMMMMO........",
+          "..........HHHHHBBBAAAAH.........",
+          "..........HAAAAOOOAAAAH.........",
+          "...........AAAAOOOAAAA..........",
           "................................"
         ]
       ],
+
       pato: [
         [
           "................................",
           "................................",
-          "..............OOO...............",
-          ".............OYYYO..............",
-          "............OYYYYYOO............",
-          "...........OYYYYYYYYO...........",
-          ".........OOYYYYYYYYYYOO.........",
-          "........OYYYYYYYYYYYYYYO........",
-          ".......OYYYYYYYYYYYYYYYYO.......",
-          "......OYYYYYYYYYYYYYYYYYYO......",
-          "......OYYYYYYYYYYYYYYYYYYO......",
-          "......OYYYEEYYYYYYYYEEYYYO......",
-          "......OYYYEEYYBBBBYYEEYYYO......",
-          "......OYYYYCCBBBBBBCCYYYYO......",
-          "......OYYYYCCCCCCCCCCYYYYO......",
-          ".......OYYYYCCCCCCCCYYYYO.......",
-          "........OOYYYYCCCCYYYYOO........",
-          "...OO.....OOOOOOOOOOOO..........",
-          "..OYYO...OYYYYYYYYYYYYO.........",
-          ".OYYYYO.OYYYYCCCCCCYYYYO........",
-          "OYYYYYYOOYYYCCCCCCCCYYYO........",
-          "OYYYYYYYYYYYCCCCCCCCYYYYO.......",
-          ".OYYYYYYYYYYCCCCCCCCYYYYO.......",
-          "..OYYYYYYYYYYCCCCCCYYYYO........",
-          "...OYYYYYYYYYYCCCCYYYYO.........",
-          "....OOYYYYYYYYYYYYYYOO..........",
-          "......OOOOOBBBBOOBBBBO..........",
-          "..........OBBBBOOBBBBO..........",
-          "...........OOOO..OOOO...........",
           "................................",
-          "................................",
+          "..............OOOOOO............",
+          "............OOOOOOOOOO..........",
+          "...........OOOBBBBBBOOO.........",
+          "..........OOOBHHHMMBBOOO........",
+          ".........OOBHHHHHHHMBBBOO.......",
+          "........OOOBHHHHHHHMMBBOOO......",
+          "........OOBMHHHHHHHMMMBBOO......",
+          ".......OOBBMMMHHHMWEMMBBBOO.....",
+          ".......OOBBMMMMMMMEEEMBBBOO.....",
+          ".......OOBBBMMMMMMEEEBBBBOO.....",
+          ".......OOBBBBMMMMMMEBOBBBOO.....",
+          ".......OOBBBBBMMMMMBBOAOOOO.....",
+          ".......OOBBBBBBBPPBBBOAAAAAAAOO.",
+          ".......OOOBBBBBPPPPBOAAAAAOOO...",
+          "......OOOOOBBBBBPPBBOOOAOOO.....",
+          "......OOBOOBBBBBBBBBBBOOOOO.....",
+          ".....OOOSSOOOBBBBBBBBOOOBOOO....",
+          ".....OOSSMMOOOBBBBBBOOOBBBOO....",
+          ".....OOSSMHMOOOOOOOOOOBBBBOO....",
+          ".....OOSSSMHHMOOOOOOMBBBBBOO....",
+          ".....OOSSSSMMHHSSSMBBBBBBOOO....",
+          "......OOSSSSSSSSSBBBBBBBBOO.....",
+          "......OOOSSSSSSSBBBBBBBBOOO.....",
+          ".......OOOSSSSSBBBBBBBOOOO......",
+          ".........OOOOBBBBBBBOOOO........",
+          ".........OOOOOOOOOOOOOOAO.......",
+          "........AAAAAOOOOOOOAAAAAO......",
+          ".......OOOOOOOOOOOOOOOOOOOO.....",
           "................................"
         ],
         [
           "................................",
           "................................",
-          "..............OOO...............",
-          ".............OYYYO..............",
-          "............OYYYYYOO............",
-          "...........OYYYYYYYYO...........",
-          ".........OOYYYYYYYYYYOO.........",
-          "........OYYYYYYYYYYYYYYO........",
-          ".......OYYYYYYYYYYYYYYYYO.......",
-          "......OYYYYYYYYYYYYYYYYYYO......",
-          "......OYYYYYYYYYYYYYYYYYYO......",
-          "......OYYYEEYYYYYYYYEEYYYO......",
-          "......OYYYEEYYBBBBYYEEYYYO......",
-          "......OYYYYCCBBBBBBCCYYYYO......",
-          "......OYYYYCCCCCCCCCCYYYYO......",
-          ".......OYYYYCCCCCCCCYYYYO.......",
-          "........OOYYYYCCCCYYYYOO........",
-          "..........OOOOOOOOOOOO..........",
-          "..OO.....OYYYYYYYYYYYYO.........",
-          ".OYYO...OYYYYCCCCCCYYYYO........",
-          "OYYYYO.OYYYYCCCCCCCCYYYO........",
-          "OYYYYYYYYYYYCCCCCCCCYYYYO.......",
-          ".OYYYYYYYYYYCCCCCCCCYYYYO.......",
-          "..OYYYYYYYYYYCCCCCCYYYYO........",
-          "...OYYYYYYYYYYCCCCYYYYO.........",
-          "....OOYYYYYYYYYYYYYYOO..........",
-          "......OOOOBBBBO..OBBBBO.........",
-          ".........OBBBBO..OBBBBO.........",
-          "..........OOOO....OOOO..........",
           "................................",
-          "................................",
+          "..............OOOOOO............",
+          "............OOOOOOOOOO..........",
+          "...........OOOBBBBBBOOO.........",
+          "..........OOOBHHHMMBBOOO........",
+          ".........OOBHHHHHHHMBBBOO.......",
+          "........OOOBHHHHHHHMMBBOOO......",
+          "........OOBMHHHHHHHMMMBBOO......",
+          ".......OOBBMMMHHHMWEMMBBBOO.....",
+          ".......OOBBMMMMMMMEEEMBBBOO.....",
+          ".......OOBBBMMMMMMEEEBBBBOO.....",
+          ".......OOBBBBMMMMMMEBOBBBOO.....",
+          ".......OOBBBBBMMMMMBBOAOOOO.....",
+          ".......OOBBBBBBBPPBBBOAAAAAAAOO.",
+          ".......OOOBBBBBPPPPBOAAAAAOOO...",
+          "......OOOOOBBBBBPPBBOOOAOOO.....",
+          "......OOBOOBBBBBBBBBBBOOOOO.....",
+          ".....OOOSSOOOBBBBBBBBOOOBOOO....",
+          ".....OOSSMMOOOBBBBBBOOOBBBOO....",
+          ".....OOSSMHMOOOOOOOOOOBBBBOO....",
+          ".....OOSSSMHHMOOOOOOMBBBBBOO....",
+          ".....OOSSSSMMHHSSSMBBBBBBOOO....",
+          "......OOSSSSSSSSSBBBBBBBBOO.....",
+          "......OOOSSSSSSSBBBBBBBBOOO.....",
+          ".......OOOSSSSSBBBBBBBOOOO......",
+          ".........OOOOBBBBBBBOOOO........",
+          ".........OOOOOOOOOOOOOOAO.......",
+          "........AAAAAAOOOOOAAAAAAO......",
+          ".......OAAAAAAOOOOOAAAAAAOO.....",
           "................................"
         ]
       ],
+
       corvo: [
         [
           "................................",
           "................................",
           "................................",
           "................................",
-          "..............OOOOOO............",
-          "............OOMMMMMMOO..........",
-          "...........OMMMMMMMMMMO.........",
-          "..........OMMMMMMMMMMMMO........",
-          ".........OOMMMMMMEEMMMMMO.......",
-          ".........OMMMMMMMEEMMMMMOO......",
-          "........OOMMMMMMMMMMMMMLLLOO....",
-          "........OMMMMMMMMMMMMMLLHHHLO...",
-          ".......OOMMMMMMMMMMMMMLLLLLLLO..",
-          ".......OMMMMMMMMMMMMMMOOOOOOOO..",
-          "......OOMMMMMMMMMMMMMMO.........",
-          ".....OODDDDMMMMMMMMMMMO.........",
-          "...OODDDDDDDMMMMMMMMMMO.........",
-          "..ODDDDDDDDDDMMMMMMMMDO.........",
-          ".ODDDDDDDDDDDDMMMMMMDDO.........",
-          "OODDDDDDDDDDDDDMMMMDDDO.........",
-          ".OODDDDDDDDDDDDDDDDDDO..........",
-          "..OODDDDDDDDDDDDDDDDO...........",
-          ".OODDDDDDDDDDDDDDDDO............",
-          "..OOODDDDDDDDDDDDOO.............",
-          ".....OOOOOOOOOOOO...............",
-          ".........OO....OO...............",
-          "........OOOO..OOOO..............",
-          ".......OO..OOOO..OO.............",
-          "................................",
-          "................................",
-          "................................",
-          "................................"
+          "...............OOOOOO...........",
+          "..............OOOOOOOO..........",
+          "............OOOHHHHHOOOO........",
+          "............OOBHHHHHMBOO........",
+          "...........OOBMHHHHHMMBOO.......",
+          "..........OOOBMMMMMMWEBOOO......",
+          "..........OOBBBMMMMMEEEBOO......",
+          "..........OOBBBBMMMMEEEBOO......",
+          "..........OOBBBBBBBBBEOAOOO.....",
+          "..........OOBBBBBBBBBBOAAAAAAAOO",
+          "..........OOOBBBBBBBBBBAOOOOO...",
+          "..........OOOBBBBBBBBBBOOOO.....",
+          ".........OOOOOBBBBBBBBOO........",
+          "........SSHHHOOOBBBBOOOOO.......",
+          "........OSHHHSOOOOOOOOBOO.......",
+          ".......OOSSMMMMMOOOOOSBBOO......",
+          ".......OOBSSSMMMSSSSSSSSOO......",
+          "......OOOBSSSSSSMMMMMSSBOO......",
+          ".....OSOOBBSSSSSSSSSSSBBOO......",
+          "....OSSSOOBSSSSSSSSSSSBOO.......",
+          "....SOOOOOOBBBBSSSSSSBOOO.......",
+          "...OOOOOOOOOBOOBBBBOOOOO........",
+          "..O.......OOOOOBBBBOOOO.........",
+          "...........OOOOOOOOOOO..........",
+          "............OOOOOOOOOO..........",
+          ".........OOOOO.O....OO..........",
+          ".........O..........OOOO........",
+          ".......................O........"
         ],
         [
           "................................",
           "................................",
           "................................",
           "................................",
-          "..............OOOOOO............",
-          "............OOMMMMMMOO..........",
-          "...........OMMMMMMMMMMO.........",
-          "..........OMMMMMMMMMMMMO........",
-          ".........OOMMMMMMEEMMMMMO.......",
-          ".........OMMMMMMMEEMMMMMOO......",
-          "........OOMMMMMMMMMMMMMLLLOO....",
-          "........OMMMMMMMMMMMMMLLHHHLO...",
-          ".......OOMMMMMMMMMMMMMLLLLLLLO..",
-          ".......OMMMMMMMMMMMMMMOOOOOOOO..",
-          "......OOMMMMMMMMMMMMMMO.........",
-          ".....OODDDDMMMMMMMMMMMO.........",
-          "...OODDDDDDDMMMMMMMMMMO.........",
-          "..ODDDDDDDDDDMMMMMMMMDO.........",
-          ".ODDDDDDDDDDDDMMMMMMDDO.........",
-          "OODDDDDDDDDDDDDMMMMDDDO.........",
-          ".OODDDDDDDDDDDDDDDDDDO..........",
-          "..OODDDDDDDDDDDDDDDDO...........",
-          ".OODDDDDDDDDDDDDDDDO............",
-          "..OOODDDDDDDDDDDDOO.............",
-          ".....OOOOOOOOOOOO...............",
-          "........OO......OO..............",
-          ".......OOOO....OOOO.............",
-          "......OO..OO..OO..OO............",
-          "................................",
-          "................................",
-          "................................",
-          "................................"
+          "...............OOOOOO...........",
+          "..............OOOOOOOO..........",
+          "............OOOHHHHHOOOO........",
+          "............OOBHHHHHMBOO........",
+          "...........OOBMHHHHHMMBOO.......",
+          "..........OOOBMMMMMMWEBOOO......",
+          "..........OOBBBMMMMMEEEBOO......",
+          "..........OOBBBBMMMMEEEBOO......",
+          "..........OOBBBBBBBBBEOAOOO.....",
+          "..........OOBBBBBBBBBBOAAAAAAAOO",
+          "..........OOOBBBBBBBBBBAOOOOO...",
+          "..........OOOBBBBBBBBBBOOOO.....",
+          ".........OOOOOBBBBBBBBOO........",
+          "........SSHHHOOOBBBBOOOOO.......",
+          "........OSHHHSOOOOOOOOBOO.......",
+          ".......OOSSMMMMMOOOOOSBBOO......",
+          ".......OOBSSSMMMSSSSSSSSOO......",
+          "......OOOBSSSSSSMMMMMSSBOO......",
+          ".....OSOOBBSSSSSSSSSSSBBOO......",
+          "....OSSSOOBSSSSSSSSSSSBOO.......",
+          "....SOOOOOOBBBBSSSSSSBOOO.......",
+          "...OOOOOOOOOBOOBBBBOOOOO........",
+          "..O.......OOOOOBBBBOOOO.........",
+          "...........OOOOOOOOOOO..........",
+          "............OOOOOOOOOO..........",
+          "........AAAAAO.O....AAAAA.......",
+          ".........O..........OOOO........",
+          ".......................O........"
         ]
       ],
+
       dinossauro: [
         [
-          "................................",
-          "................................",
-          ".............OOOO...............",
-          "...........OORRRRO..............",
-          ".........OODRRRRRRO.............",
-          "........ODDRRRRRRRROOO..........",
-          ".......ODDRRRRRRRRRBBBBO........",
-          "......ODDRRRRRRREERRBBBBO.......",
-          "......ODDRRRRRRREERRBBBBO.......",
-          ".......OORRRRRRRRRROOOOO........",
-          "..OO....OORRRRRRCCCCKKKO........",
-          ".ORRO....OORRRRRCCCCOOOO........",
-          "ORRRRO....OORRRRCCCCO...........",
-          "ODRRRRO....ORRRRCCCCO...........",
-          "ODDRRRRO..OORRRRRCCCO...........",
-          ".ODDRRRROORRRRRRRCCCO...........",
-          "..ODDRRRRRRRRRRRRRCCO...........",
-          "...ODDRRRRRRRRDDDDCCO...........",
-          "....ODDRRRRRRDDDDDDDO...........",
-          ".....ODDRRRRRDDDDDDDO...........",
-          "......OORRRRRDDDDDDO............",
-          "........ORRRRROOOOO.............",
-          ".........ORRRRO.................",
-          ".........OOBBOO.................",
-          "........OBBBBBO.................",
-          ".......OBBBOOBBO................",
-          ".......OOOO.OOOO................",
-          "................................",
-          "................................",
-          "................................",
-          "................................",
+          "...................O............",
+          "............O.....OO............",
+          ".............OM...OMO...O.......",
+          "..............OMMOOMMO.OO.......",
+          "..............OOMMMMMOOMO.......",
+          "...............OOOOMMMMOO.......",
+          "...............OOHHOOOMOO.......",
+          "..............OOOHHHHHMOOO......",
+          "..............OOMHHHWEMMOO......",
+          ".............OOOMMHHEEMMOO......",
+          ".............OOOMMMMEEMMOO......",
+          ".......A.....OOOOMMMMOBOOO......",
+          "........A...OOBOOMMMMOBBBBBBBOO.",
+          ".........A..OOBOOOMMMMBBBBBBOO..",
+          ".....A....A.OOOBOOOOOOBBBBBOO...",
+          "......A....AOOOBBBOOOOOOOOOOO...",
+          ".......A..OOOMOBBBBBBBBOO..O....",
+          "....A...A.OOMMOOOOBBBBBOO.......",
+          ".....A...AOBMMAOOOOOOBOOO.......",
+          "......A.OOOBMMAAAAAOOOOOO.......",
+          "......OASOOBBMAAAAAAAAOOO.......",
+          "....OOSSAOOBBBAHHHHHHABOO.......",
+          "..OOSSSSSOOBBAAAAAAAAAAOO.......",
+          "...OOSSSSOOBBAAAAAAAAAAOO.......",
+          "...OOOSOOOOOBAAHHHHHHAAO........",
+          "....OOOO..OOOBAAAAAAAAAO........",
+          "....O......OOOOOOOAOOOOO........",
+          "...........OOOOOOOBOOOOOO.......",
+          "...........OAAAAAOOOAAAAO.......",
+          "..........AAAAAAAAAAAAAAAO......",
+          ".........OOOOOOOOOOOOOOOOOO.....",
           "................................"
         ],
         [
-          "................................",
-          "................................",
-          ".............OOOO...............",
-          "...........OORRRRO..............",
-          ".........OODRRRRRRO.............",
-          "........ODDRRRRRRRROOO..........",
-          ".......ODDRRRRRRRRRBBBBO........",
-          "......ODDRRRRRRREERRBBBBO.......",
-          "......ODDRRRRRRREERRBBBBO.......",
-          ".......OORRRRRRRRRROOOOO........",
-          "........OORRRRRRCCCCKKKO........",
-          "..OO.....OORRRRRCCCCOOOO........",
-          ".ORRO.....OORRRRCCCCO...........",
-          "ORRRRO.....ORRRRCCCCO...........",
-          "ODRRRRO...OORRRRRCCCO...........",
-          "ODDRRRRO.ORRRRRRRCCCO...........",
-          ".ODDRRRROORRRRRRRRCCO...........",
-          "..ODDRRRRRRRRRDDDDCCO...........",
-          "...ODDRRRRRRRDDDDDDDO...........",
-          "....ODDRRRRRRDDDDDDDO...........",
-          ".....OORRRRRRDDDDDDO............",
-          ".......ORRRRRROOOOO.............",
-          "........ORRRRRO.................",
-          "........OOBBBOO.................",
-          ".......OBBBOOBBO................",
-          "......OBBBO..OBBO...............",
-          "......OOOO....OOO...............",
-          "................................",
-          "................................",
-          "................................",
-          "................................",
+          "...................O............",
+          "............O.....OO............",
+          ".............OM...OMO...O.......",
+          "..............OMMOOMMO.OO.......",
+          "..............OOMMMMMOOMO.......",
+          "...............OOOOMMMMOO.......",
+          "...............OOHHOOOMOO.......",
+          "..............OOOHHHHHMOOO......",
+          "..............OOMHHHWEMMOO......",
+          ".............OOOMMHHEEMMOO......",
+          ".............OOOMMMMEEMMOO......",
+          ".......A.....OOOOMMMMOBOOO......",
+          "........A...OOBOOMMMMOBBBBBBBOO.",
+          ".........A..OOBOOOMMMMBBBBBBOO..",
+          ".....A....A.OOOBOOOOOOBBBBBOO...",
+          "......A....AOOOBBBOOOOOOOOOOO...",
+          ".......A..OOOMOBBBBBBBBOO..O....",
+          "....A...A.OOMMOOOOBBBBBOO.......",
+          ".....A...AOBMMAOOOOOOBOOO.......",
+          "......A.OOOBMMAAAAAOOOOOO.......",
+          "......OASOOBBMAAAAAAAAOOO.......",
+          "....OOSSAOOBBBAHHHHHHABOO.......",
+          "..OOSSSSSOOBBAAAAAAAAAAOO.......",
+          "...OOSSSSOOBBAAAAAAAAAAOO.......",
+          "...OOOSOOOOOBAAHHHHHHAAO........",
+          "....OOOO..OOOBAAAAAAAAAO........",
+          "....O......OOOOOOOAOOOOO........",
+          "...........OOOOOOOBOOOOOO.......",
+          "...........OAAAAAOOOAAAAO.......",
+          "..........AAHHHHHAAAHHHHHO......",
+          ".........OOOHHHHHOOOHHHHHOO.....",
           "................................"
         ]
       ]
@@ -1270,105 +1289,97 @@
       const pal = PALETTES[species] || PALETTES.gato;
 
       // ==========================================
-      // 1. CONTORNO EXTERNO
+      // 1. SOMBRA PROJETADA
       // ==========================================
 
+      // Desenha uma sombra discreta atrás dos pixels
+      // que formam o contorno externo do personagem.
       for (let r = 0; r < 32; r++) {
         for (let c = 0; c < 32; c++) {
-          const ch = matrix[r][c];
-
-          if (ch === '.' || ch === 'O') continue;
+          if (matrix[r][c] !== 'O') continue;
 
           const drawC = flipX ? 31 - c : c;
 
-          // Verifica os oito pixels ao redor.
-          for (let nr = -1; nr <= 1; nr++) {
-            for (let nc = -1; nc <= 1; nc++) {
-              if (nr === 0 && nc === 0) continue;
+          context.fillStyle = 'rgba(31, 24, 43, 0.22)';
 
-              if (isEmptyPixel(matrix, r + nr, c + nc)) {
-                const outlineC = flipX ? 31 - (c + nc) : c + nc;
-
-                context.fillStyle = pal.O;
-                context.fillRect(
-                  x + outlineC * scale,
-                  y + (r + nr) * scale,
-                  scale,
-                  scale
-                );
-              }
-            }
-          }
+          context.fillRect(
+            Math.round(x + drawC * scale + 1),
+            Math.round(y + r * scale + 2),
+            scale,
+            scale
+          );
         }
       }
 
       // ==========================================
-      // 2. CORPO E SOMBREAMENTO
+      // 2. DESENHO DA MATRIZ 32x32
       // ==========================================
 
       for (let r = 0; r < 32; r++) {
         for (let c = 0; c < 32; c++) {
           const ch = matrix[r][c];
 
+          // Ponto representa transparência.
           if (ch === '.') continue;
 
+          // Inverte horizontalmente quando o pet
+          // precisa olhar para o lado contrário.
           const drawC = flipX ? 31 - c : c;
+
+          // Busca a cor correspondente à letra.
           let color = pal[ch] || pal.O;
 
-          // Expressões dos olhos.
-          if (ch === 'E') {
-            if (moodMode === 'blink' || moodMode === 'sleep') {
-              color = pal.O;
-            } else if (moodMode === 'happy') {
-              color = '#FF4081';
-            }
+          // ========================================
+          // 3. EXPRESSÕES DOS OLHOS
+          // ========================================
+
+          // Olhos fechados ao dormir ou piscar.
+          if (ch === 'E' && (moodMode === 'blink' || moodMode === 'sleep')) {
+            color = pal.O;
           }
 
-          // Variações de tonalidade para dar volume.
-          if (ch !== 'O' && ch !== 'E') {
-            if (r <= 8) {
-              // Região superior iluminada.
-              color = adjustColor(color, 24);
-            } else if (r >= 21) {
-              // Região inferior sombreada.
-              color = adjustColor(color, -28);
-            } else if (r >= 15) {
-              // Sombra intermediária.
-              color = adjustColor(color, -12);
-            }
-
-            // Pequenos brilhos pontuais.
-            if (r < 15 && (r * 3 + c * 7) % 23 === 0) {
-              color = adjustColor(color, 35);
-            }
+          // Olhos com tonalidade rosada quando feliz.
+          if (ch === 'E' && moodMode === 'happy') {
+            color = pal.P || pal.A || pal.E;
           }
 
-          const px = Math.round(x + drawC * scale);
-          const py = Math.round(y + r * scale);
-
+          // Desenha o pixel.
           context.fillStyle = color;
-          context.fillRect(px, py, scale, scale);
 
-          // Brilho branco nos olhos.
-          if (ch === 'E' && moodMode !== 'blink' && moodMode !== 'sleep') {
-            context.fillStyle = '#FFFFFF';
-            context.fillRect(px, py, Math.max(1, scale / 2), Math.max(1, scale / 2));
-          }
+          context.fillRect(
+            Math.round(x + drawC * scale),
+            Math.round(y + r * scale),
+            scale,
+            scale
+          );
         }
       }
 
       // ==========================================
-      // 3. EXPRESSÕES E BOCHECHAS
+      // 4. BOCHECHAS
       // ==========================================
 
+      // Adiciona bochechas quando o pet recebe carinho
+      // ou está comendo.
       if (moodMode === 'happy') {
-        context.fillStyle = '#F27FA9';
+        context.fillStyle = pal.P || '#F28EAD';
 
-        const cheekLeft = flipX ? x + 10 * scale : x + 12 * scale;
-        const cheekRight = flipX ? x + 21 * scale : x + 23 * scale;
+        const cheekLeft = flipX ? x + 20 * scale : x + 9 * scale;
+        const cheekRight = flipX ? x + 9 * scale : x + 20 * scale;
 
-        context.fillRect(cheekLeft, y + 14 * scale, 2 * scale, scale);
-        context.fillRect(cheekRight, y + 14 * scale, 2 * scale, scale);
+        context.fillRect(
+          cheekLeft,
+          y + 15 * scale,
+          2 * scale,
+          scale
+        );
+
+        context.fillRect(
+          cheekRight,
+          y + 15 * scale,
+          2 * scale,
+          scale
+        );
       }
     }
 
