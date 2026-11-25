@@ -1,33 +1,6 @@
 Forneça apenas as alterações necessárias com total clareza para que eu possa alterar.
 
-Desenvolvendo também com o GPT
-
 Meow Plans codificação
-
-- Fazer o pet dormir encima da cama
-
-Fazendo - Atualização do visual dos pets, dos itens e do cenário
-
-Fazendo - Melhorar animações dos pets
-
-
-Prompt para refazer os pets:
-Ordem das 4 poses da esquerda para a direita:
-
-Normal / Andando (idle / walk)
-
-Comendo (eat)
-
-Dormindo (sleep)
-
-Feliz / Carinho (love)
-
-Espaço vazio entre uma pose e outra: Deixe uma coluna em branco (transparente ou branca) separando os 4 desenhos para que o detector não junte duas poses numa só (nem encoste os coraçõezinhos da 4ª pose na 3ª).
-
-Direção padrão: Desenhe todos olhando para o mesmo lado que o dinossauro (para a direita), assim o espelhamento automático (flipX) funciona corretamente quando eles andarem para a esquerda.
-
-Imagens sendo feitas no Gemini, chat 'Novo Patinho com Calendário'.
-Codificação sendo feita no Gemini, chat de sempre
 
 
 

@@ -794,346 +794,6 @@
       { id: 'obj_trofeu', cat: 'objeto', nome: 'Troféu Foco', preco: 75, c1: '#FFD54F', c2: '#FFA000' }
     ];
 
-    // =========================================================================
-    // 3. SPRITES 32x32 PIXEL ART FIÉIS ÀS ARTES OFICIAIS
-    // =========================================================================
-    const PALETTES = {
-      gato: {
-        O: '#493957', // Contorno escuro
-        S: '#7962A2', // Sombra profunda
-        B: '#A58ADD', // Sombra intermediária
-        M: '#C4B2F2', // Cor principal
-        H: '#E8DFFF', // Brilho
-        A: '#F59BB9', // Orelhas e detalhes rosados
-        W: '#FFF9FF', // Partes claras
-        E: '#30243D', // Olhos
-        P: '#E982AC'  // Bochechas
-      },
-
-      pato: {
-        O: '#60452F',
-        S: '#D99A3E',
-        B: '#F4C85E',
-        M: '#F9DD83',
-        H: '#FFF1B8',
-        A: '#F18A3B',
-        W: '#FFFFFF',
-        E: '#493326',
-        P: '#EFA0A0'
-      },
-
-      corvo: {
-        O: '#29243D',
-        S: '#453C5B',
-        B: '#625879',
-        M: '#81769B',
-        H: '#B8ACD0',
-        A: '#D6A75E',
-        W: '#FFF8E8',
-        E: '#211B30',
-        P: '#9C8AB8'
-      },
-
-      dinossauro: {
-        O: '#483044',
-        S: '#71394F',
-        B: '#B94C61',
-        M: '#D96B78',
-        H: '#F29AA0',
-        A: '#F2C7A9',
-        W: '#FFF1E5',
-        E: '#2B202E',
-        P: '#EE96AF'
-      }
-    };
-
-    // Matrizes 32x32 (2 frames cada: idle/walk A e B)
-    const SPRITES = {
-      gato: [
-        [
-          "................................",
-          "................................",
-          "........O...............O.......",
-          "........OO.............OO.......",
-          "........OOO...........OOO.......",
-          "........OOBOO.......OOOBO.......",
-          ".......OOOBAOO.....OOOBAO.......",
-          ".......OOBBAAOOOOOOOOBAAOO......",
-          ".......OOBAAOOOOOOOOOOAAOO......",
-          ".......OOOOOOOBBBBBBOOOAOO......",
-          "..........OOOBMMMMMMBOOO.O......",
-          "......O.OHHHBMMMMMMMMHHHO.......",
-          "...OOOOSOHHHMMMMMMMMMHHHOO......",
-          "..OSSSSSOOBMMMMMMMMMMMMBOO......",
-          "..OSSOOOOBBMWEMMMMMWEMMBBOO.....",
-          "..OSO..OOBBMEEMMMMMEEMMBBOO.....",
-          ".OSSO..OOBBBEEMMMMMEEMBBBOO.....",
-          ".OSSO..OOBBBBMHHHHMMMBBBBOO.....",
-          ".OSSOHHHOBBBHWWAAAWWBBBBBHHH....",
-          "..OSOO.OHHBHWWWWAWWWWBBHHOO.....",
-          "..OSSOO.OOBHWOOOOOOOWBBBOO......",
-          "..OSSSOOHHOOOOBBBBBOOOBHHO......",
-          "...OOHHH.OOOBSSSSSSSBOOOOHHH....",
-          ".....OSO.OOBSSSSSSSSSBOO........",
-          "......O.OOBSSSSSSSSSSSBOO.......",
-          "........OOBBSSSSSSSSSBBOO.......",
-          "........OOOBBSSSSSSSBBOOO.......",
-          ".........OMMMMMBBBMMMMMO........",
-          "..........HHHHHBBBHHHHH.........",
-          "..........HHHHHOOOHHHHH.........",
-          ".............OOOOOOO............",
-          "................................"
-        ],
-        [
-          "................................",
-          "................................",
-          "........O...............O.......",
-          "........OO.............OO.......",
-          "........OOO...........OOO.......",
-          "........OOBOO.......OOOBO.......",
-          ".......OOOBAOO.....OOOBAO.......",
-          ".......OOBBAAOOOOOOOOBAAOO......",
-          ".......OOBAAOOOOOOOOOOAAOO......",
-          ".......OOOOOOOBBBBBBOOOAOO......",
-          "..........OOOBMMMMMMBOOO.O......",
-          "......O.OHHHBMMMMMMMMHHHO.......",
-          "...OOOOSOHHHMMMMMMMMMHHHOO......",
-          "..OSSSSSOOBMMMMMMMMMMMMBOO......",
-          "..OSSOOOOBBMWEMMMMMWEMMBBOO.....",
-          "..OSO..OOBBMEEMMMMMEEMMBBOO.....",
-          ".OSSO..OOBBBEEMMMMMEEMBBBOO.....",
-          ".OSSO..OOBBBBMHHHHMMMBBBBOO.....",
-          ".OSSOHHHOBBBHWWAAAWWBBBBBHHH....",
-          "..OSOO.OHHBHWWWWAWWWWBBHHOO.....",
-          "..OSSOO.OOBHWOOOOOOOWBBBOO......",
-          "..OSSSOOHHOOOOBBBBBOOOBHHO......",
-          "...OOHHH.OOOBSSSSSSSBOOOOHHH....",
-          ".....OSO.OOBSSSSSSSSSBOO........",
-          "......O.OOBSSSSSSSSSSSBOO.......",
-          "........OOBBSSSSSSSSSBBOO.......",
-          "........OOOBBSSSSSSSBBOOO.......",
-          ".........OMMMMMBBBMMMMMO........",
-          "..........HHHHHBBBAAAAH.........",
-          "..........HAAAAOOOAAAAH.........",
-          "...........AAAAOOOAAAA..........",
-          "................................"
-        ]
-      ],
-
-      pato: [
-        [
-          "................................",
-          "................................",
-          "................................",
-          "..............OOOOOO............",
-          "............OOOOOOOOOO..........",
-          "...........OOOBBBBBBOOO.........",
-          "..........OOOBHHHMMBBOOO........",
-          ".........OOBHHHHHHHMBBBOO.......",
-          "........OOOBHHHHHHHMMBBOOO......",
-          "........OOBMHHHHHHHMMMBBOO......",
-          ".......OOBBMMMHHHMWEMMBBBOO.....",
-          ".......OOBBMMMMMMMEEEMBBBOO.....",
-          ".......OOBBBMMMMMMEEEBBBBOO.....",
-          ".......OOBBBBMMMMMMEBOBBBOO.....",
-          ".......OOBBBBBMMMMMBBOAOOOO.....",
-          ".......OOBBBBBBBPPBBBOAAAAAAAOO.",
-          ".......OOOBBBBBPPPPBOAAAAAOOO...",
-          "......OOOOOBBBBBPPBBOOOAOOO.....",
-          "......OOBOOBBBBBBBBBBBOOOOO.....",
-          ".....OOOSSOOOBBBBBBBBOOOBOOO....",
-          ".....OOSSMMOOOBBBBBBOOOBBBOO....",
-          ".....OOSSMHMOOOOOOOOOOBBBBOO....",
-          ".....OOSSSMHHMOOOOOOMBBBBBOO....",
-          ".....OOSSSSMMHHSSSMBBBBBBOOO....",
-          "......OOSSSSSSSSSBBBBBBBBOO.....",
-          "......OOOSSSSSSSBBBBBBBBOOO.....",
-          ".......OOOSSSSSBBBBBBBOOOO......",
-          ".........OOOOBBBBBBBOOOO........",
-          ".........OOOOOOOOOOOOOOAO.......",
-          "........AAAAAOOOOOOOAAAAAO......",
-          ".......OOOOOOOOOOOOOOOOOOOO.....",
-          "................................"
-        ],
-        [
-          "................................",
-          "................................",
-          "................................",
-          "..............OOOOOO............",
-          "............OOOOOOOOOO..........",
-          "...........OOOBBBBBBOOO.........",
-          "..........OOOBHHHMMBBOOO........",
-          ".........OOBHHHHHHHMBBBOO.......",
-          "........OOOBHHHHHHHMMBBOOO......",
-          "........OOBMHHHHHHHMMMBBOO......",
-          ".......OOBBMMMHHHMWEMMBBBOO.....",
-          ".......OOBBMMMMMMMEEEMBBBOO.....",
-          ".......OOBBBMMMMMMEEEBBBBOO.....",
-          ".......OOBBBBMMMMMMEBOBBBOO.....",
-          ".......OOBBBBBMMMMMBBOAOOOO.....",
-          ".......OOBBBBBBBPPBBBOAAAAAAAOO.",
-          ".......OOOBBBBBPPPPBOAAAAAOOO...",
-          "......OOOOOBBBBBPPBBOOOAOOO.....",
-          "......OOBOOBBBBBBBBBBBOOOOO.....",
-          ".....OOOSSOOOBBBBBBBBOOOBOOO....",
-          ".....OOSSMMOOOBBBBBBOOOBBBOO....",
-          ".....OOSSMHMOOOOOOOOOOBBBBOO....",
-          ".....OOSSSMHHMOOOOOOMBBBBBOO....",
-          ".....OOSSSSMMHHSSSMBBBBBBOOO....",
-          "......OOSSSSSSSSSBBBBBBBBOO.....",
-          "......OOOSSSSSSSBBBBBBBBOOO.....",
-          ".......OOOSSSSSBBBBBBBOOOO......",
-          ".........OOOOBBBBBBBOOOO........",
-          ".........OOOOOOOOOOOOOOAO.......",
-          "........AAAAAAOOOOOAAAAAAO......",
-          ".......OAAAAAAOOOOOAAAAAAOO.....",
-          "................................"
-        ]
-      ],
-
-      corvo: [
-        [
-          "................................",
-          "................................",
-          "................................",
-          "................................",
-          "...............OOOOOO...........",
-          "..............OOOOOOOO..........",
-          "............OOOHHHHHOOOO........",
-          "............OOBHHHHHMBOO........",
-          "...........OOBMHHHHHMMBOO.......",
-          "..........OOOBMMMMMMWEBOOO......",
-          "..........OOBBBMMMMMEEEBOO......",
-          "..........OOBBBBMMMMEEEBOO......",
-          "..........OOBBBBBBBBBEOAOOO.....",
-          "..........OOBBBBBBBBBBOAAAAAAAOO",
-          "..........OOOBBBBBBBBBBAOOOOO...",
-          "..........OOOBBBBBBBBBBOOOO.....",
-          ".........OOOOOBBBBBBBBOO........",
-          "........SSHHHOOOBBBBOOOOO.......",
-          "........OSHHHSOOOOOOOOBOO.......",
-          ".......OOSSMMMMMOOOOOSBBOO......",
-          ".......OOBSSSMMMSSSSSSSSOO......",
-          "......OOOBSSSSSSMMMMMSSBOO......",
-          ".....OSOOBBSSSSSSSSSSSBBOO......",
-          "....OSSSOOBSSSSSSSSSSSBOO.......",
-          "....SOOOOOOBBBBSSSSSSBOOO.......",
-          "...OOOOOOOOOBOOBBBBOOOOO........",
-          "..O.......OOOOOBBBBOOOO.........",
-          "...........OOOOOOOOOOO..........",
-          "............OOOOOOOOOO..........",
-          ".........OOOOO.O....OO..........",
-          ".........O..........OOOO........",
-          ".......................O........"
-        ],
-        [
-          "................................",
-          "................................",
-          "................................",
-          "................................",
-          "...............OOOOOO...........",
-          "..............OOOOOOOO..........",
-          "............OOOHHHHHOOOO........",
-          "............OOBHHHHHMBOO........",
-          "...........OOBMHHHHHMMBOO.......",
-          "..........OOOBMMMMMMWEBOOO......",
-          "..........OOBBBMMMMMEEEBOO......",
-          "..........OOBBBBMMMMEEEBOO......",
-          "..........OOBBBBBBBBBEOAOOO.....",
-          "..........OOBBBBBBBBBBOAAAAAAAOO",
-          "..........OOOBBBBBBBBBBAOOOOO...",
-          "..........OOOBBBBBBBBBBOOOO.....",
-          ".........OOOOOBBBBBBBBOO........",
-          "........SSHHHOOOBBBBOOOOO.......",
-          "........OSHHHSOOOOOOOOBOO.......",
-          ".......OOSSMMMMMOOOOOSBBOO......",
-          ".......OOBSSSMMMSSSSSSSSOO......",
-          "......OOOBSSSSSSMMMMMSSBOO......",
-          ".....OSOOBBSSSSSSSSSSSBBOO......",
-          "....OSSSOOBSSSSSSSSSSSBOO.......",
-          "....SOOOOOOBBBBSSSSSSBOOO.......",
-          "...OOOOOOOOOBOOBBBBOOOOO........",
-          "..O.......OOOOOBBBBOOOO.........",
-          "...........OOOOOOOOOOO..........",
-          "............OOOOOOOOOO..........",
-          "........AAAAAO.O....AAAAA.......",
-          ".........O..........OOOO........",
-          ".......................O........"
-        ]
-      ],
-
-      dinossauro: [
-        [
-          "...................O............",
-          "............O.....OO............",
-          ".............OM...OMO...O.......",
-          "..............OMMOOMMO.OO.......",
-          "..............OOMMMMMOOMO.......",
-          "...............OOOOMMMMOO.......",
-          "...............OOHHOOOMOO.......",
-          "..............OOOHHHHHMOOO......",
-          "..............OOMHHHWEMMOO......",
-          ".............OOOMMHHEEMMOO......",
-          ".............OOOMMMMEEMMOO......",
-          ".......A.....OOOOMMMMOBOOO......",
-          "........A...OOBOOMMMMOBBBBBBBOO.",
-          ".........A..OOBOOOMMMMBBBBBBOO..",
-          ".....A....A.OOOBOOOOOOBBBBBOO...",
-          "......A....AOOOBBBOOOOOOOOOOO...",
-          ".......A..OOOMOBBBBBBBBOO..O....",
-          "....A...A.OOMMOOOOBBBBBOO.......",
-          ".....A...AOBMMAOOOOOOBOOO.......",
-          "......A.OOOBMMAAAAAOOOOOO.......",
-          "......OASOOBBMAAAAAAAAOOO.......",
-          "....OOSSAOOBBBAHHHHHHABOO.......",
-          "..OOSSSSSOOBBAAAAAAAAAAOO.......",
-          "...OOSSSSOOBBAAAAAAAAAAOO.......",
-          "...OOOSOOOOOBAAHHHHHHAAO........",
-          "....OOOO..OOOBAAAAAAAAAO........",
-          "....O......OOOOOOOAOOOOO........",
-          "...........OOOOOOOBOOOOOO.......",
-          "...........OAAAAAOOOAAAAO.......",
-          "..........AAAAAAAAAAAAAAAO......",
-          ".........OOOOOOOOOOOOOOOOOO.....",
-          "................................"
-        ],
-        [
-          "...................O............",
-          "............O.....OO............",
-          ".............OM...OMO...O.......",
-          "..............OMMOOMMO.OO.......",
-          "..............OOMMMMMOOMO.......",
-          "...............OOOOMMMMOO.......",
-          "...............OOHHOOOMOO.......",
-          "..............OOOHHHHHMOOO......",
-          "..............OOMHHHWEMMOO......",
-          ".............OOOMMHHEEMMOO......",
-          ".............OOOMMMMEEMMOO......",
-          ".......A.....OOOOMMMMOBOOO......",
-          "........A...OOBOOMMMMOBBBBBBBOO.",
-          ".........A..OOBOOOMMMMBBBBBBOO..",
-          ".....A....A.OOOBOOOOOOBBBBBOO...",
-          "......A....AOOOBBBOOOOOOOOOOO...",
-          ".......A..OOOMOBBBBBBBBOO..O....",
-          "....A...A.OOMMOOOOBBBBBOO.......",
-          ".....A...AOBMMAOOOOOOBOOO.......",
-          "......A.OOOBMMAAAAAOOOOOO.......",
-          "......OASOOBBMAAAAAAAAOOO.......",
-          "....OOSSAOOBBBAHHHHHHABOO.......",
-          "..OOSSSSSOOBBAAAAAAAAAAOO.......",
-          "...OOSSSSOOBBAAAAAAAAAAOO.......",
-          "...OOOSOOOOOBAAHHHHHHAAO........",
-          "....OOOO..OOOBAAAAAAAAAO........",
-          "....O......OOOOOOOAOOOOO........",
-          "...........OOOOOOOBOOOOOO.......",
-          "...........OAAAAAOOOAAAAO.......",
-          "..........AAHHHHHAAAHHHHHO......",
-          ".........OOOHHHHHOOOHHHHHOO.....",
-          "................................"
-        ]
-      ]
-    };
-
 
     // =========================================================================
     // 4. SINCRONIZAÇÃO DE DADOS E DECAIMENTO TEMPORAL
@@ -1284,156 +944,14 @@
     });
 
     // =========================================================================
-    // 5. MOTOR DE RENDERIZAÇÃO PIXEL ART (CENÁRIO + PET ANIMADO)
-    // =========================================================================
-
-    // Clareia ou escurece uma cor hexadecimal.
-    function adjustColor(hex, amount) {
-      const value = parseInt(hex.replace('#', ''), 16);
-
-      let r = (value >> 16) & 255;
-      let g = (value >> 8) & 255;
-      let b = value & 255;
-
-      r = Math.max(0, Math.min(255, r + amount));
-      g = Math.max(0, Math.min(255, g + amount));
-      b = Math.max(0, Math.min(255, b + amount));
-
-      return `rgb(${r}, ${g}, ${b})`;
-    }
-
-
-    // Verifica se uma posição da matriz está vazia.
-    function isEmptyPixel(matrix, row, col) {
-      if (row < 0 || row >= 32 || col < 0 || col >= 32) {
-        return true;
-      }
-
-      return !matrix[row] || matrix[row][col] === '.';
-    }
-
-    function drawDinoPose(context, x, y, flipX, state, tick) {
-
-      // ==========================================
-      // 1. REGIÕES DOS SPRITES NA IMAGEM ORIGINAL
-      // ==========================================
-
-      const poses = {
-        idle: {
-          sx: 31,
-          sy: 185,
-          sw: 478,
-          sh: 348,
-          width: 82,
-          height: 60
-        },
-
-        walk: {
-          sx: 31,
-          sy: 185,
-          sw: 478,
-          sh: 348,
-          width: 82,
-          height: 60
-        },
-
-        eat: {
-          sx: 551,
-          sy: 239,
-          sw: 449,
-          sh: 287,
-          width: 90,
-          height: 58
-        },
-
-        sleep: {
-          sx: 1060,
-          sy: 311,
-          sw: 430,
-          sh: 207,
-          width: 96,
-          height: 46
-        },
-
-        love: {
-          sx: 1560,
-          sy: 190,
-          sw: 418,
-          sh: 350,
-          width: 82,
-          height: 69
-        }
-      };
-
-      // ==========================================
-      // 2. ESCOLHE A POSE
-      // ==========================================
-
-      const pose = poses[state] || poses.idle;
-
-
-      // ==========================================
-      // 3. ANIMAÇÃO DE MOVIMENTO
-      // ==========================================
-
-      let offsetY = 0;
-
-      if (state === 'walk') {
-        offsetY = Math.sin(tick * 0.65) * 2;
-      }
-
-      if (state === 'idle') {
-        offsetY = Math.sin(tick * 0.08);
-      }
-
-      // ==========================================
-      // 4. POSICIONAMENTO NO QUARTO
-      // ==========================================
-
-      let drawX = x;
-      let drawY = y + offsetY;
-
-      if (state === 'sleep') {
-        drawX = 12;
-        drawY = 150;
-      }
-
-      if (state === 'eat') {
-        drawX = 4;
-        drawY = 165;
-      }
-
-      // ==========================================
-      // 5. DESENHO DO SPRITE
-      // ==========================================
-
-      context.save();
-
-      // Evita suavização dos pixels.
-      context.imageSmoothingEnabled = false;
-
-      // Inverte o personagem quando necessário.
-      if (flipX) {
-        context.translate(drawX + pose.width, 0);
-        context.scale(-1, 1);
-        drawX = 0;
-      }
-
-      context.restore();
-
-      return true;
-    }
-
-
-    // =========================================================================
-    // MOTOR DE SPRITE SHEETS (4 POSES HORIZONTAIS: IDLE, EAT, SLEEP, LOVE)
+    //  5. MOTOR DE SPRITE SHEETS (4 POSES HORIZONTAIS: IDLE, EAT, SLEEP, LOVE)
     // =========================================================================
     const PET_SHEETS = {};
 
     // Carrega a imagem, remove fundo branco (se houver) e detecta automaticamente
     // a caixa exata de cada uma das 4 poses para nunca cortar rabo, crista ou corações.
     function registerPetSheet(species, src, targetHeights) {
-      const sheet = { ready: false, canvas: null, boxes: [], targetHeights };
+      const sheet = { ready: false, canvas: null, boxes: [] };
       PET_SHEETS[species] = sheet;
 
       const img = new Image();
@@ -1506,14 +1024,11 @@
       img.src = src;
     }
 
-    // Registra o Dino (para adicionar os outros 3 no futuro, basta repetir esta linha!)
-    registerPetSheet('dinossauro', 'dino-sprites.png', {
-      idle: 62,
-      walk: 62,
-      eat: 56,
-      sleep: 42,
-      love: 72
-    });
+    // Registra Pets. Todos usam a mesma escala padronizada
+    registerPetSheet('dinossauro', 'dino-sprites.png');
+    registerPetSheet('gato', 'gato-sprites.png');
+    registerPetSheet('pato', 'pato-sprites.png');
+    registerPetSheet('corvo', 'corvo-sprites.png');
 
     function drawSheetPet(context, species, x, y, flipX, state, tick) {
       const sheet = PET_SHEETS[species];
@@ -1524,37 +1039,56 @@
       const box = sheet.boxes[poseIndexMap[state] ?? 0];
       if (!box) return false;
 
-      const targetH = sheet.targetHeights[state] || 62;
-      const targetW = Math.round(targetH * (box.sw / box.sh));
+      // 1. Escala uniforme: usa a maior dimensão entre as 4 poses do pet para caber
+      // dentro de uma caixa padrão de 66px, mantendo todas as poses proporcionais entre si
+      const MAX_STAGE_SIZE = 66;
+      const maxSpriteDim = Math.max(...sheet.boxes.map(b => Math.max(b.sw, b.sh)));
+      const scale = MAX_STAGE_SIZE / maxSpriteDim;
 
-      // Animação procedural de passos e respiração
+      const targetW = Math.round(box.sw * scale);
+      const targetH = Math.round(box.sh * scale);
+
+      // 2. Animação procedural de passos e respiração
       let offsetY = 0;
       let angle = 0;
       if (state === 'walk') {
         offsetY = -Math.abs(Math.sin(tick * 0.55)) * 4;
-        angle = Math.sin(tick * 0.55) * 0.07; // Balanço de passada
+        angle = Math.sin(tick * 0.55) * 0.07;
       } else if (state === 'idle') {
         offsetY = Math.sin(tick * 0.12) * 1.2;
       } else if (state === 'love') {
         offsetY = -Math.abs(Math.sin(tick * 0.45)) * 5;
       }
 
-      // Alinha os pés do pet na mesma linha do chão (y + 62)
-      let drawX = x + (64 - targetW) / 2;
-      let drawY = (y + 62 - targetH) + offsetY;
+      // 3. Posições fixas universais (iguais para gato, pato, corvo e dino)
+      let centerX = x + 32;
+      let groundY = y + 62;
 
       if (state === 'sleep') {
-        drawX = 16;
-        drawY = 148;
+        centerX = 60;
+        groundY = 171;
       } else if (state === 'eat') {
-        drawX = 34;
-        drawY = 166;
+        centerX = 96;
+        groundY = 224;
       }
 
+      const drawX = Math.round(centerX - targetW / 2);
+      const drawY = Math.round(groundY - targetH + offsetY);
+
+      // 4. Sombra dinâmica alinhada à base do pet (oculta ao dormir na cama)
+      if (state !== 'sleep') {
+        const jumpShrink = Math.max(0, -offsetY * 1.2);
+        const shadowW = Math.max(16, Math.round(targetW * 0.68 - jumpShrink));
+        const shadowX = Math.round(centerX - shadowW / 2);
+
+        context.fillStyle = 'rgba(31, 24, 43, 0.25)';
+        context.fillRect(shadowX, Math.round(groundY - 4), shadowW, 5);
+      }
+
+      // 5. Desenho do sprite
       context.save();
       context.imageSmoothingEnabled = true;
 
-      // Pivô no centro do sprite para espelhar e inclinar sem sair do lugar
       context.translate(Math.round(drawX + targetW / 2), Math.round(drawY + targetH / 2));
       if (flipX) context.scale(-1, 1);
       if (angle !== 0) context.rotate(angle);
@@ -1567,107 +1101,6 @@
 
       context.restore();
       return true;
-    }
-
-
-    function drawPetSprite(context, species, x, y, scale, flipX, frameIdx, moodMode) {
-      const frames = SPRITES[species] || SPRITES.gato;
-      const matrix = frames[frameIdx % frames.length];
-      const pal = PALETTES[species] || PALETTES.gato;
-
-      // ==========================================
-      // 1. SOMBRA PROJETADA
-      // ==========================================
-
-      // Desenha uma sombra discreta atrás dos pixels
-      // que formam o contorno externo do personagem.
-      for (let r = 0; r < 32; r++) {
-        for (let c = 0; c < 32; c++) {
-          if (matrix[r][c] !== 'O') continue;
-
-          const drawC = flipX ? 31 - c : c;
-
-          context.fillStyle = 'rgba(31, 24, 43, 0.22)';
-
-          context.fillRect(
-            Math.round(x + drawC * scale + 1),
-            Math.round(y + r * scale + 2),
-            scale,
-            scale
-          );
-        }
-      }
-
-      // ==========================================
-      // 2. DESENHO DA MATRIZ 32x32
-      // ==========================================
-
-      for (let r = 0; r < 32; r++) {
-        for (let c = 0; c < 32; c++) {
-          const ch = matrix[r][c];
-
-          // Ponto representa transparência.
-          if (ch === '.') continue;
-
-          // Inverte horizontalmente quando o pet
-          // precisa olhar para o lado contrário.
-          const drawC = flipX ? 31 - c : c;
-
-          // Busca a cor correspondente à letra.
-          let color = pal[ch] || pal.O;
-
-          // ========================================
-          // 3. EXPRESSÕES DOS OLHOS
-          // ========================================
-
-          // Olhos fechados ao dormir ou piscar.
-          if (ch === 'E' && (moodMode === 'blink' || moodMode === 'sleep')) {
-            color = pal.O;
-          }
-
-          // Olhos com tonalidade rosada quando feliz.
-          if (ch === 'E' && moodMode === 'happy') {
-            color = pal.P || pal.A || pal.E;
-          }
-
-          // Desenha o pixel.
-          context.fillStyle = color;
-
-          context.fillRect(
-            Math.round(x + drawC * scale),
-            Math.round(y + r * scale),
-            scale,
-            scale
-          );
-        }
-      }
-
-      // ==========================================
-      // 4. BOCHECHAS
-      // ==========================================
-
-      // Adiciona bochechas quando o pet recebe carinho
-      // ou está comendo.
-      if (moodMode === 'happy') {
-        context.fillStyle = pal.P || '#F28EAD';
-
-        const cheekLeft = flipX ? x + 20 * scale : x + 9 * scale;
-        const cheekRight = flipX ? x + 9 * scale : x + 20 * scale;
-
-        context.fillRect(
-          cheekLeft,
-          y + 15 * scale,
-          2 * scale,
-          scale
-        );
-
-        context.fillRect(
-          cheekRight,
-          y + 15 * scale,
-          2 * scale,
-          scale
-        );
-      }
     }
 
     function drawRoom() {
@@ -1881,7 +1314,6 @@
     // ==========================================
 
     ctx.fillStyle = 'rgba(41,31,56,0.22)';
-    ctx.fillRect(20, 214, 80, 7);
     ctx.fillRect(245, 207, 95, 7);
 
     // ==========================================
@@ -1924,246 +1356,6 @@
       ctx.fillRect(x + 2, y + 4, 2, height - 8);
     }
 
-    function drawFixedBed() {
-      // Sombra da cama
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.25)';
-      ctx.fillRect(12, 179, 94, 7);
-
-      // Estrutura externa
-      ctx.fillStyle = '#594B73';
-      ctx.fillRect(12, 147, 94, 34);
-
-      // Base de madeira
-      ctx.fillStyle = '#B887A7';
-      ctx.fillRect(16, 151, 86, 26);
-
-      drawPixelPanel(18, 150, 82, 28, {
-        outline: '#594052',
-        base: '#F4B6CC',
-        light: '#FFE8F0',
-        shadow: '#C76F96'
-      });
-
-      // Cobertor
-      ctx.fillStyle = '#F06292';
-      ctx.fillRect(20, 163, 78, 11);
-      ctx.fillRect(24, 159, 70, 4);
-
-      // Detalhes do cobertor
-      ctx.fillStyle = '#F8BBD0';
-      ctx.fillRect(28, 166, 5, 3);
-      ctx.fillRect(42, 166, 5, 3);
-      ctx.fillRect(56, 166, 5, 3);
-      ctx.fillRect(70, 166, 5, 3);
-
-      // Travesseiro
-      ctx.fillStyle = '#FFF9E6';
-      ctx.fillRect(23, 153, 23, 9);
-
-      ctx.fillStyle = '#F8BBD0';
-      ctx.fillRect(27, 155, 14, 2);
-
-      // Contorno frontal
-      ctx.fillStyle = '#AD668A';
-      ctx.fillRect(16, 177, 86, 4);
-    }
-
-    function drawEquippedFurniture(item) {
-      if (item.id === 'movel_bau_fofo') {
-        // Sombra
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.25)';
-        ctx.fillRect(264, 201, 64, 5);
-
-        // Contorno
-        ctx.fillStyle = '#594B73';
-        ctx.fillRect(260, 174, 72, 28);
-
-        // Corpo do baú
-        ctx.fillStyle = item.c1;
-        ctx.fillRect(264, 178, 64, 20);
-
-        // Tampa
-        ctx.fillStyle = item.c2;
-        ctx.fillRect(260, 170, 72, 9);
-        ctx.fillRect(264, 167, 64, 3);
-
-        // Detalhes frontais
-        ctx.fillStyle = '#8C82F2';
-        ctx.fillRect(290, 183, 12, 8);
-
-        ctx.fillStyle = '#FFD54F';
-        ctx.fillRect(294, 185, 4, 4);
-
-        // Pés
-        ctx.fillStyle = '#594B73';
-        ctx.fillRect(266, 199, 7, 4);
-        ctx.fillRect(319, 199, 7, 4);
-      } else if (item.id === 'movel_arranhador') {
-        ctx.fillStyle = '#594B73';
-        ctx.fillRect(266, 188, 60, 14);
-        ctx.fillRect(288, 122, 16, 68);
-        ctx.fillRect(268, 112, 56, 14);
-        ctx.fillStyle = item.c1;
-        ctx.fillRect(268, 190, 56, 10);
-        ctx.fillRect(270, 114, 52, 10);
-        ctx.fillStyle = item.c2;
-        ctx.fillRect(290, 126, 12, 62);
-      } else if (item.id === 'movel_estante') {
-        ctx.fillStyle = '#594B73';
-        ctx.fillRect(272, 114, 58, 86);
-        ctx.fillStyle = item.c1;
-        ctx.fillRect(275, 117, 52, 80);
-        ctx.fillStyle = '#4E342E';
-        ctx.fillRect(275, 142, 52, 4);
-        ctx.fillRect(275, 168, 52, 4);
-        // Livros coloridos
-        ctx.fillStyle = item.c2;
-        ctx.fillRect(280, 126, 8, 16);
-        ctx.fillStyle = '#F48FB1';
-        ctx.fillRect(290, 128, 8, 14);
-        ctx.fillStyle = '#FFD54F';
-        ctx.fillRect(306, 152, 10, 16);
-      } else if (item.id === 'movel_pc') {
-        ctx.fillStyle = '#594B73';
-        ctx.fillRect(260, 166, 72, 36);
-        ctx.fillStyle = '#D7CCC8';
-        ctx.fillRect(263, 169, 66, 8);
-        ctx.fillRect(266, 177, 8, 25);
-        ctx.fillRect(318, 177, 8, 25);
-        ctx.fillStyle = '#37474F';
-        ctx.fillRect(278, 138, 36, 26);
-        ctx.fillStyle = item.c2;
-        ctx.fillRect(281, 141, 30, 20);
-      }
-    }
-
-
-function drawFoodBowl() {
-
-    // Considera cheio quando o pet está alimentado
-  const isFull = petState.fome > 25;
-
-  // Sombra
-  ctx.fillStyle = 'rgba(41,31,56,0.30)';
-  ctx.fillRect(36, 229, 42, 5);
-
-  // Base externa
-  ctx.fillStyle = '#594B73';
-  ctx.fillRect(36, 211, 42, 17);
-
-  // Corpo do pote
-  ctx.fillStyle = '#F48FB1';
-  ctx.fillRect(39, 214, 36, 11);
-
-  // Parte frontal
-  ctx.fillStyle = '#EC407A';
-  ctx.fillRect(42, 223, 30, 3);
-
-  // Borda superior
-  ctx.fillStyle = '#FCE4EC';
-  ctx.fillRect(39, 211, 36, 4);
-
-  // Interior do pote
-  ctx.fillStyle = '#594B73';
-  ctx.fillRect(42, 214, 30, 5);
-
-  if (isFull) {
-    // Ração
-    ctx.fillStyle = '#8D6E63';
-    ctx.fillRect(44, 211, 26, 4);
-
-    ctx.fillStyle = '#BCAAA4';
-    ctx.fillRect(47, 209, 5, 3);
-    ctx.fillRect(55, 209, 5, 3);
-    ctx.fillRect(64, 210, 4, 2);
-
-    // Brilho
-    ctx.fillStyle = '#FFFFFF';
-    ctx.fillRect(40, 212, 3, 2);
-  } else {
-    // Interior vazio
-    ctx.fillStyle = '#3E3254';
-    ctx.fillRect(44, 215, 26, 3);
-
-    // Brilho interno
-    ctx.fillStyle = '#9575CD';
-    ctx.fillRect(46, 215, 5, 1);
-  }
-}
-
-
-    function drawEquippedObject(item) {
-        // Os objetos ficam próximos à parede, longe do caminho do pet.
-  // Posição-base: região central superior do cenário.
-
-  if (item.id === 'obj_vasinho') {
-    // Vaso
-    ctx.fillStyle = '#594B73';
-    ctx.fillRect(155, 132, 26, 16);
-
-    ctx.fillStyle = item.c2;
-    ctx.fillRect(158, 135, 20, 12);
-
-    // Planta
-    ctx.fillStyle = item.c1;
-    ctx.fillRect(163, 119, 10, 15);
-    ctx.fillRect(154, 124, 9, 7);
-    ctx.fillRect(173, 122, 9, 7);
-
-  } else if (item.id === 'obj_pelucia') {
-    // Sombra e corpo da pelúcia
-    ctx.fillStyle = '#594B73';
-    ctx.fillRect(155, 126, 26, 22);
-    ctx.fillRect(155, 121, 7, 7);
-    ctx.fillRect(174, 121, 7, 7);
-
-    ctx.fillStyle = item.c1;
-    ctx.fillRect(158, 129, 20, 16);
-
-    ctx.fillStyle = item.c2;
-    ctx.fillRect(164, 136, 5, 4);
-
-    // Olhos
-    ctx.fillStyle = '#594B73';
-    ctx.fillRect(161, 132, 2, 2);
-    ctx.fillRect(173, 132, 2, 2);
-
-  } else if (item.id === 'obj_luminaria') {
-    // Base
-    ctx.fillStyle = '#594B73';
-    ctx.fillRect(155, 144, 28, 4);
-
-    // Haste
-    ctx.fillRect(166, 128, 7, 16);
-
-    // Cúpula
-    ctx.fillStyle = item.c1;
-    ctx.fillRect(157, 119, 25, 11);
-    ctx.fillRect(161, 115, 17, 4);
-
-    // Luz
-    ctx.fillStyle = '#FFF9C4';
-    ctx.fillRect(164, 122, 11, 4);
-
-  } else if (item.id === 'obj_trofeu') {
-    // Base
-    ctx.fillStyle = '#594B73';
-    ctx.fillRect(155, 143, 28, 5);
-
-    // Haste
-    ctx.fillRect(166, 134, 7, 9);
-
-    // Taça
-    ctx.fillStyle = item.c1;
-    ctx.fillRect(158, 120, 23, 14);
-    ctx.fillRect(154, 123, 4, 8);
-    ctx.fillRect(181, 123, 4, 8);
-
-    ctx.fillStyle = item.c2;
-    ctx.fillRect(162, 123, 15, 7);
-  }
-    }
-
     function spawnParticles(type, color) {
       for (let i = 0; i < 6; i++) {
         actor.particles.push({
@@ -2174,6 +1366,413 @@ function drawFoodBowl() {
           type,
           color
         });
+      }
+    }
+
+    // Helper para desenhar retângulos pixel art com cantos arredondados (chanfrados)
+    function drawRoundedPixelBox(x, y, w, h, outline, fill, highlight, shadow) {
+      ctx.fillStyle = outline;
+      ctx.fillRect(x + 2, y, w - 4, h);
+      ctx.fillRect(x, y + 2, w, h - 4);
+      ctx.fillRect(x + 1, y + 1, w - 2, h - 2);
+
+      if (w > 4 && h > 4) {
+        ctx.fillStyle = fill;
+        ctx.fillRect(x + 2, y + 2, w - 4, h - 4);
+
+        if (highlight) {
+          ctx.fillStyle = highlight;
+          ctx.fillRect(x + 3, y + 2, w - 6, 2);
+        }
+        if (shadow) {
+          ctx.fillStyle = shadow;
+          ctx.fillRect(x + 3, y + h - 4, w - 6, 2);
+        }
+      }
+    }
+
+    // =========================================================================
+    // 1. CAMA FOFA DE GATINHO
+    // =========================================================================
+    function drawFixedBed() {
+      // Sombra suave no chão
+      ctx.fillStyle = 'rgba(41, 31, 56, 0.24)';
+      ctx.fillRect(12, 179, 94, 6);
+
+      // Orelhinhas fofas no topo da cabeceira esquerda
+      ctx.fillStyle = '#7A4968';
+      ctx.fillRect(12, 134, 6, 6);
+      ctx.fillRect(19, 134, 6, 6);
+      ctx.fillStyle = '#F8BBD0';
+      ctx.fillRect(13, 136, 4, 4);
+      ctx.fillRect(20, 136, 4, 4);
+      ctx.fillStyle = '#F06292';
+      ctx.fillRect(14, 137, 2, 2);
+      ctx.fillRect(21, 137, 2, 2);
+
+      // Cabeceira lateral alta (esquerda)
+      drawRoundedPixelBox(11, 139, 14, 41, '#7A4968', '#F8BBD0', '#FCE4EC', '#F48FB1');
+
+      // Peseira lateral mais baixa (direita)
+      drawRoundedPixelBox(95, 147, 12, 33, '#7A4968', '#F8BBD0', '#FCE4EC', '#F48FB1');
+
+      // Base de madeira pastel da cama
+      drawRoundedPixelBox(15, 171, 88, 9, '#7A4968', '#F48FB1', '#F8BBD0', '#AD668A');
+
+      // Colchão fofo entre a cabeceira e a peseira
+      drawRoundedPixelBox(22, 150, 76, 23, '#8E5A7B', '#FFF9FB', '#FFFFFF', '#F3E5F5');
+
+      // Travesseiro fofo encostado à esquerda (na cabeceira)
+      drawRoundedPixelBox(23, 151, 23, 11, '#B39DDB', '#FFFFFF', '#FFFFFF', '#EDE7F6');
+      ctx.fillStyle = '#F48FB1';
+      ctx.fillRect(27, 155, 3, 2);
+      ctx.fillRect(31, 156, 2, 2);
+      ctx.fillRect(34, 155, 3, 2);
+
+      // Cobertor macio cobrindo da metade para a direita
+      ctx.fillStyle = '#EC407A';
+      ctx.fillRect(21, 161, 77, 12);
+      ctx.fillStyle = '#F48FB1';
+      ctx.fillRect(22, 161, 75, 10);
+
+      // Dobra superior do lençol
+      ctx.fillStyle = '#FFF0F5';
+      ctx.fillRect(21, 158, 77, 4);
+      ctx.fillStyle = '#F8BBD0';
+      ctx.fillRect(22, 162, 75, 2);
+
+      // Estampa de coraçõezinhos no cobertor
+      ctx.fillStyle = '#FFF9FB';
+      [28, 45, 62, 79].forEach(hx => {
+        ctx.fillRect(hx, 165, 2, 2);
+        ctx.fillRect(hx + 3, 165, 2, 2);
+        ctx.fillRect(hx + 1, 167, 3, 2);
+        ctx.fillRect(hx + 2, 169, 1, 1);
+      });
+
+      // Pezinhos arredondados da cama
+      ctx.fillStyle = '#7A4968';
+      ctx.fillRect(14, 179, 8, 3);
+      ctx.fillRect(96, 179, 8, 3);
+    }
+
+    // =========================================================================
+    // 2. MÓVEIS EQUIPÁVEIS (BAÚ, TORRE GATO, ESTANTE LIVROS, SETUP GAMER)
+    // =========================================================================
+    function drawEquippedFurniture(item) {
+      if (item.id === 'movel_bau_fofo') {
+        // Sombra suave
+        ctx.fillStyle = 'rgba(41, 31, 56, 0.24)';
+        ctx.fillRect(262, 200, 68, 6);
+
+        // Corpo do baú arredondado
+        drawRoundedPixelBox(261, 175, 70, 26, '#5D4777', item.c1, '#D1C4E9', '#7E57C2');
+
+        // Tampa fofa estofada
+        drawRoundedPixelBox(259, 166, 74, 12, '#5D4777', item.c2, '#FFFFFF', '#F8BBD0');
+
+        // Alças laterais fofas
+        ctx.fillStyle = '#FFD54F';
+        ctx.fillRect(267, 174, 4, 6);
+        ctx.fillRect(321, 174, 4, 6);
+
+        // Fecho de coração dourado no centro
+        ctx.fillStyle = '#5D4777';
+        ctx.fillRect(290, 174, 12, 11);
+        ctx.fillStyle = '#FFD54F';
+        ctx.fillRect(292, 176, 8, 7);
+        ctx.fillStyle = '#F48FB1';
+        ctx.fillRect(294, 178, 4, 3);
+
+        // Pezinhos fofos
+        ctx.fillStyle = '#5D4777';
+        ctx.fillRect(266, 200, 8, 4);
+        ctx.fillRect(318, 200, 8, 4);
+
+      } else if (item.id === 'movel_arranhador') {
+        // Sombra
+        ctx.fillStyle = 'rgba(41, 31, 56, 0.24)';
+        ctx.fillRect(262, 200, 68, 6);
+
+        // Base de pelúcia
+        drawRoundedPixelBox(263, 187, 66, 15, '#5D4037', item.c1, '#EFEBE9', '#BCAAA4');
+
+        // Poste arranhador de sisal com textura de corda
+        ctx.fillStyle = '#5D4037';
+        ctx.fillRect(288, 134, 16, 55);
+        ctx.fillStyle = item.c2;
+        ctx.fillRect(290, 134, 12, 55);
+        ctx.fillStyle = '#D7CCC8';
+        for (let py = 138; py < 186; py += 6) {
+          ctx.fillRect(290, py, 12, 2);
+        }
+
+        // Bolinha pendurada para brincar
+        ctx.fillStyle = '#5D4037';
+        ctx.fillRect(274, 136, 2, 14);
+        drawRoundedPixelBox(270, 149, 10, 10, '#7A4968', '#F48FB1', '#FCE4EC', '#EC407A');
+
+        // Camninha superior com orelhinhas de gato
+        drawRoundedPixelBox(265, 122, 62, 15, '#5D4037', item.c1, '#FFFFFF', '#BCAAA4');
+        // Orelhinhas na caminha
+        ctx.fillStyle = '#5D4037';
+        ctx.fillRect(269, 116, 10, 7);
+        ctx.fillRect(313, 116, 10, 7);
+        ctx.fillStyle = '#F48FB1';
+        ctx.fillRect(271, 118, 6, 5);
+        ctx.fillRect(315, 118, 6, 5);
+
+      } else if (item.id === 'movel_estante') {
+        // Sombra
+        ctx.fillStyle = 'rgba(41, 31, 56, 0.24)';
+        ctx.fillRect(268, 200, 64, 6);
+
+        // Estrutura arredondada de madeira quente
+        drawRoundedPixelBox(269, 110, 62, 91, '#4E342E', item.c1, '#D7CCC8', '#6D4C41');
+
+        // Fundo interno das prateleiras
+        ctx.fillStyle = '#5D4037';
+        ctx.fillRect(274, 116, 52, 24);
+        ctx.fillRect(274, 144, 52, 24);
+        ctx.fillRect(274, 172, 52, 23);
+
+        // Prateleira 1: Livros pastel + plantinha pendente
+        ctx.fillStyle = '#F48FB1';
+        ctx.fillRect(277, 123, 7, 17);
+        ctx.fillStyle = item.c2;
+        ctx.fillRect(285, 121, 8, 19);
+        ctx.fillStyle = '#80DEEA';
+        ctx.fillRect(294, 125, 6, 15);
+        // Vasinho pendente
+        ctx.fillStyle = '#FFCC80';
+        ctx.fillRect(311, 131, 10, 9);
+        ctx.fillStyle = '#81C784';
+        ctx.fillRect(309, 125, 14, 7);
+        ctx.fillRect(319, 132, 4, 7);
+
+        // Prateleira 2: Livros inclinados + trofeuzinho/estrela
+        ctx.fillStyle = '#FFD54F';
+        ctx.fillRect(278, 151, 8, 17);
+        ctx.fillStyle = '#CE93D8';
+        ctx.fillRect(287, 153, 7, 15);
+        ctx.fillStyle = '#FFF59D';
+        ctx.fillRect(308, 155, 10, 10);
+        ctx.fillRect(311, 152, 4, 15);
+
+        // Prateleira 3: Caixinha organizadora fofa + livros
+        drawRoundedPixelBox(277, 178, 22, 17, '#4E342E', '#F8BBD0', '#FCE4EC', '#F06292');
+        ctx.fillStyle = '#81C784';
+        ctx.fillRect(304, 178, 7, 17);
+        ctx.fillStyle = '#90CAF9';
+        ctx.fillRect(312, 180, 8, 15);
+
+      } else if (item.id === 'movel_pc') {
+        // Sombra
+        ctx.fillStyle = 'rgba(41, 31, 56, 0.24)';
+        ctx.fillRect(256, 200, 78, 6);
+
+        // Cadeira gamer fofa (encosto atrás da mesa)
+        drawRoundedPixelBox(284, 150, 26, 36, '#5D4777', '#F48FB1', '#FCE4EC', '#EC407A');
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fillRect(291, 156, 12, 6); // Almofadinha de pescoço
+
+        // Mesa pastel branca/lilás
+        drawRoundedPixelBox(257, 168, 76, 10, '#5D4777', '#FFF9FB', '#FFFFFF', '#E1BEE7');
+        // Pés da mesa
+        ctx.fillStyle = '#5D4777';
+        ctx.fillRect(262, 177, 7, 25);
+        ctx.fillRect(321, 177, 7, 25);
+        ctx.fillStyle = '#CE93D8';
+        ctx.fillRect(264, 178, 3, 22);
+        ctx.fillRect(323, 178, 3, 22);
+
+        // Monitor com orelhinhas de gatinho (estilo headset/kawaii)
+        drawRoundedPixelBox(274, 134, 42, 29, '#4527A0', '#EDE7F6', '#FFFFFF', '#B39DDB');
+        // Orelhinhas no topo do monitor
+        ctx.fillStyle = '#F48FB1';
+        ctx.fillRect(278, 129, 8, 6);
+        ctx.fillRect(304, 129, 8, 6);
+        // Tela acesa com gatinho/coração
+        ctx.fillStyle = item.c2;
+        ctx.fillRect(278, 138, 34, 21);
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fillRect(292, 145, 2, 2);
+        ctx.fillRect(296, 145, 2, 2);
+        ctx.fillRect(293, 147, 4, 2);
+        ctx.fillRect(294, 149, 2, 1);
+        // Suporte do monitor
+        ctx.fillStyle = '#B39DDB';
+        ctx.fillRect(291, 163, 8, 5);
+
+        // Mini gabinete RGB à direita + teclado à esquerda
+        drawRoundedPixelBox(318, 149, 13, 19, '#4527A0', '#311B92', '#7E57C2', '#1A237E');
+        ctx.fillStyle = '#F48FB1';
+        ctx.fillRect(321, 153, 7, 11);
+        ctx.fillStyle = '#F48FB1';
+        ctx.fillRect(276, 165, 24, 3);
+      }
+    }
+
+    // =========================================================================
+    // 3. POTE DE COMIDA FOFO (COM ORELHINHAS E PATINHA)
+    // =========================================================================
+    function drawFoodBowl() {
+      const bowlX = 55;
+      const bowlY = 211;
+      const isFull = petState.fome > 25;
+
+      // Sombra suave
+      ctx.fillStyle = 'rgba(41, 31, 56, 0.25)';
+      ctx.fillRect(bowlX + 2, bowlY + 17, 38, 5);
+
+      // Orelhinhas fofas na borda do pote
+      ctx.fillStyle = '#7A4968';
+      ctx.fillRect(bowlX + 4, bowlY - 3, 7, 5);
+      ctx.fillRect(bowlX + 31, bowlY - 3, 7, 5);
+      ctx.fillStyle = '#F8BBD0';
+      ctx.fillRect(bowlX + 6, bowlY - 1, 3, 3);
+      ctx.fillRect(bowlX + 33, bowlY - 1, 3, 3);
+
+      // Corpo arredondado do pote
+      drawRoundedPixelBox(bowlX, bowlY, 42, 18, '#7A4968', '#F48FB1', '#FCE4EC', '#EC407A');
+
+      // Interior do pote
+      ctx.fillStyle = '#594052';
+      ctx.fillRect(bowlX + 6, bowlY + 3, 30, 5);
+
+      if (isFull) {
+        // Montinho de ração fofinho
+        ctx.fillStyle = '#8D6E63';
+        ctx.fillRect(bowlX + 8, bowlY + 1, 26, 4);
+        ctx.fillStyle = '#BCAAA4';
+        ctx.fillRect(bowlX + 11, bowlY - 1, 6, 3);
+        ctx.fillRect(bowlX + 19, bowlY - 2, 6, 4);
+        ctx.fillRect(bowlX + 26, bowlY, 5, 3);
+      } else {
+        ctx.fillStyle = '#3E2738';
+        ctx.fillRect(bowlX + 8, bowlY + 4, 26, 3);
+      }
+
+      // Desenho de coraçãozinho/patinha na frente do pote
+      ctx.fillStyle = '#FFF9FB';
+      ctx.fillRect(bowlX + 18, bowlY + 11, 2, 2);
+      ctx.fillRect(bowlX + 22, bowlY + 11, 2, 2);
+      ctx.fillRect(bowlX + 19, bowlY + 13, 4, 2);
+      ctx.fillRect(bowlX + 20, bowlY + 15, 2, 1);
+    }
+
+    // =========================================================================
+    // 4. OBJETOS DECORATIVOS (VASINHO, PELÚCIA, LUMINÁRIA LUA, TROFÉU FOCO)
+    // =========================================================================
+    function drawEquippedObject(item) {
+      if (item.id === 'obj_vasinho') {
+        // Sombra
+        ctx.fillStyle = 'rgba(41, 31, 56, 0.2)';
+        ctx.fillRect(156, 146, 24, 3);
+
+        // Vasinho arredondado terracota/pastel
+        drawRoundedPixelBox(157, 133, 22, 15, '#6D4C41', item.c2, '#FFAB91', '#BF360C');
+        // Borda do vaso
+        drawRoundedPixelBox(155, 130, 26, 5, '#6D4C41', '#FF8A65', '#FFCCBC', '#D84315');
+
+        // Folhinhas gordinhas de suculenta/plantinha
+        drawRoundedPixelBox(163, 116, 10, 15, '#2E7D32', item.c1, '#A5D6A7', '#388E3C');
+        drawRoundedPixelBox(153, 121, 11, 9, '#2E7D32', '#81C784', '#C8E6C9', '#43A047');
+        drawRoundedPixelBox(172, 120, 11, 9, '#2E7D32', '#81C784', '#C8E6C9', '#43A047');
+
+        // Florzinha rosa no topo!
+        ctx.fillStyle = '#F48FB1';
+        ctx.fillRect(166, 113, 4, 4);
+        ctx.fillStyle = '#FFF59D';
+        ctx.fillRect(167, 114, 2, 2);
+
+      } else if (item.id === 'obj_pelucia') {
+        // Sombra
+        ctx.fillStyle = 'rgba(41, 31, 56, 0.2)';
+        ctx.fillRect(155, 146, 26, 3);
+
+        // Orelhinhas
+        ctx.fillStyle = '#5D4777';
+        ctx.fillRect(156, 120, 7, 7);
+        ctx.fillRect(173, 120, 7, 7);
+        ctx.fillStyle = item.c2;
+        ctx.fillRect(158, 122, 3, 4);
+        ctx.fillRect(175, 122, 3, 4);
+
+        // Cabeça e corpinho redondinhos de pelúcia
+        drawRoundedPixelBox(155, 125, 26, 23, '#5D4777', item.c1, '#EDE7F6', '#9575CD');
+
+        // Barriguinha fofa
+        ctx.fillStyle = '#FFF9FB';
+        ctx.fillRect(163, 139, 10, 7);
+
+        // Olhinhos, bochechas rosadas e focinho
+        ctx.fillStyle = '#311B92';
+        ctx.fillRect(160, 131, 2, 3);
+        ctx.fillRect(174, 131, 2, 3);
+        ctx.fillStyle = '#F48FB1';
+        ctx.fillRect(158, 134, 3, 2);
+        ctx.fillRect(175, 134, 3, 2);
+        ctx.fillRect(167, 133, 2, 2);
+
+      } else if (item.id === 'obj_luminaria') {
+        // Halo suave de luz amarelinha
+        ctx.fillStyle = 'rgba(255, 245, 157, 0.22)';
+        ctx.fillRect(152, 111, 32, 30);
+
+        // Base nuvem/pedestal
+        drawRoundedPixelBox(157, 142, 22, 6, '#4527A0', '#B39DDB', '#EDE7F6', '#7E57C2');
+        ctx.fillStyle = '#4527A0';
+        ctx.fillRect(166, 136, 4, 6);
+
+        // Lua crescente dourada fofa
+        ctx.fillStyle = '#E65100';
+        ctx.fillRect(160, 114, 16, 23);
+        ctx.fillStyle = item.c1;
+        ctx.fillRect(161, 115, 14, 21);
+        ctx.fillStyle = '#FFF9C4';
+        ctx.fillRect(162, 116, 6, 19);
+
+        // Recorte interno da lua (cor da parede)
+        const wall = SHOP_CATALOG.find(i => i.id === petState.equipados.parede) || SHOP_CATALOG[0];
+        ctx.fillStyle = wall.c1;
+        ctx.fillRect(168, 118, 9, 15);
+
+        // Estrelinha pendurada na ponta da lua
+        ctx.fillStyle = '#FFF59D';
+        ctx.fillRect(173, 123, 3, 3);
+
+      } else if (item.id === 'obj_trofeu') {
+        // Sombra
+        ctx.fillStyle = 'rgba(41, 31, 56, 0.2)';
+        ctx.fillRect(156, 146, 24, 3);
+
+        // Pedestal de madeira com plaquinha dourada
+        drawRoundedPixelBox(157, 140, 22, 8, '#4E342E', '#8D6E63', '#BCAAA4', '#5D4037');
+        ctx.fillStyle = '#FFD54F';
+        ctx.fillRect(163, 143, 10, 3);
+
+        // Haste dourada
+        ctx.fillStyle = '#B26A00';
+        ctx.fillRect(165, 134, 6, 6);
+        ctx.fillStyle = item.c1;
+        ctx.fillRect(166, 134, 4, 6);
+
+        // Alças laterais fofas
+        ctx.fillStyle = '#B26A00';
+        ctx.fillRect(154, 121, 5, 9);
+        ctx.fillRect(177, 121, 5, 9);
+        ctx.fillStyle = item.c1;
+        ctx.fillRect(155, 122, 3, 7);
+        ctx.fillRect(178, 122, 3, 7);
+
+        // Taça arredondada brilhante
+        drawRoundedPixelBox(158, 117, 20, 18, '#B26A00', item.c1, '#FFF9C4', item.c2);
+
+        // Coraçãozinho/estrela no centro da taça
+        ctx.fillStyle = '#FFF9FB';
+        ctx.fillRect(167, 122, 2, 7);
+        ctx.fillRect(165, 124, 6, 3);
       }
     }
 
@@ -2266,47 +1865,7 @@ function drawFoodBowl() {
         }
 
         if (petState.tipo) {
-          // Sombra no chão
-          ctx.fillStyle = 'rgba(0, 0, 0, 0.25)';
-          ctx.fillRect(Math.round(actor.x + 14), Math.round(actor.y + 56), 36, 6);
-
-          let offsetY = 0;
-          if (actor.state === 'walk') {
-            offsetY = Math.sin(actor.tick * 0.65) * 2;
-          } else if (actor.state === 'love' || actor.state === 'eat') {
-            offsetY = -Math.abs(Math.sin(actor.tick * 0.55)) * 7;
-          }
-
-          let moodMode = 'normal';
-          if (actor.state === 'sleep') moodMode = 'sleep';
-          else if (actor.state === 'love' || actor.state === 'eat') moodMode = 'happy';
-          else if (actor.blinkTimer > 0) moodMode = 'blink';
-
-          // ==========================================
-// DESENHO DO PERSONAGEM
-// ==========================================
-
-if (petState.tipo) {
-          // Sombra no chão (oculta quando dormindo na cama para não vazar)
-          if (actor.state !== 'sleep') {
-            ctx.fillStyle = 'rgba(0, 0, 0, 0.25)';
-            ctx.fillRect(Math.round(actor.x + 14), Math.round(actor.y + 56), 36, 6);
-          }
-
-          let offsetY = 0;
-          if (actor.state === 'walk') {
-            offsetY = Math.sin(actor.tick * 0.65) * 2;
-          } else if (actor.state === 'love' || actor.state === 'eat') {
-            offsetY = -Math.abs(Math.sin(actor.tick * 0.55)) * 7;
-          }
-
-          let moodMode = 'normal';
-          if (actor.state === 'sleep') moodMode = 'sleep';
-          else if (actor.state === 'love' || actor.state === 'eat') moodMode = 'happy';
-          else if (actor.blinkTimer > 0) moodMode = 'blink';
-
-          // Usa a folha de sprites se o pet já tiver uma registrada; senão usa a matriz 32x32
-          const usedSheet = PET_SHEETS[petState.tipo] && drawSheetPet(
+          drawSheetPet(
             ctx,
             petState.tipo,
             actor.x,
@@ -2315,21 +1874,6 @@ if (petState.tipo) {
             actor.state,
             actor.tick
           );
-
-          if (!usedSheet) {
-            if (actor.state === 'sleep') {
-              ctx.save();
-              ctx.translate(actor.x + 32, actor.y + 32);
-              ctx.rotate(Math.PI / 2);
-              drawPetSprite(ctx, petState.tipo, -32, -32, 2, actor.dir === -1, actor.animFrame, 'sleep');
-              ctx.restore();
-            } else {
-              drawPetSprite(ctx, petState.tipo, actor.x, actor.y + offsetY, 2, actor.dir === -1, actor.animFrame, moodMode);
-            }
-          }
-        } else {
-
-}
         }
 
 
