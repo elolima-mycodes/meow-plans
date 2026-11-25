@@ -716,7 +716,7 @@
             <path fill="#FFF" d="M11 2h3v3h-2v2h-2v2H8v2H6v2H3v-3h2V8h2V6h2V4h2V2z"/>
             <path fill="#FF8A65" d="M4 7h5v5H4V7z"/>
           </svg>
-          ALIMENTAR (10)
+          ALIMENTAR (R$ 2)
         </button>
 
         <button class="pixel-btn pink" id="btnPet">
@@ -2083,7 +2083,7 @@
       else if (c > 75) moodEl.textContent = 'Radiante';
       else moodEl.textContent = 'Tranquilo';
 
-      document.getElementById('btnFeed').disabled = petState.moedas < 10 || isSleeping;
+      document.getElementById('btnFeed').disabled = petState.moedas < 2 || isSleeping;
       document.getElementById('btnSleepText').textContent =
         isSleeping ? 'ACORDAR' : 'DORMIR';
     }
@@ -2149,15 +2149,15 @@
         showSpeech('Zzz... Acorde-me antes de me alimentar!');
         return;
       }
-      if (petState.moedas < 10) {
-        showSpeech('Preciso de 10 moedas para petiscos!');
+      if (petState.moedas < 2) {
+        showSpeech('Preciso de 2 moedas para petiscos!');
         return;
       }
       if (petState.fome >= 100) {
         showSpeech('Minha barriguinha já está cheia!');
         return;
       }
-      petState.moedas -= 10;
+      petState.moedas -= 2;
       petState.fome = Math.min(100, petState.fome + 25);
       actor.state = 'eat';
       actor.stateTimer = 36;
