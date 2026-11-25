@@ -397,77 +397,193 @@
 
     .shop-tab {
       font-family: 'Press Start 2P', cursive;
-      font-size: 8px;
-      padding: 8px 2px;
+      font-size: 7.5px;
+      padding: 9px 2px;
       background: var(--bg-dark);
       color: var(--text-muted);
       border: 3px solid var(--border-pixel);
+      box-shadow: inset 2px 2px 0px #2D3748, inset -2px -2px 0px #0D1117;
       cursor: pointer;
+      transition: transform 0.06s, filter 0.1s;
+    }
+
+    .shop-tab:hover:not(.active) {
+      color: #FFF;
+      background: #252E3F;
     }
 
     .shop-tab.active {
       background: var(--accent-purple);
       color: #FFF;
+      box-shadow: inset 2px 2px 0px #B9B2FF, inset -2px -2px 0px var(--accent-purple-dark);
     }
 
     .shop-items-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 10px;
-      max-height: 295px;
+      max-height: 310px;
       overflow-y: auto;
-      padding-right: 4px;
+      padding: 2px 4px 4px 2px;
+    }
+
+    /* Barra de rolagem retrô da loja */
+    .shop-items-grid::-webkit-scrollbar {
+      width: 8px;
+    }
+    .shop-items-grid::-webkit-scrollbar-track {
+      background: var(--bg-dark);
+      border: 2px solid var(--border-pixel);
+    }
+    .shop-items-grid::-webkit-scrollbar-thumb {
+      background: var(--border-light);
+      border: 1px solid var(--border-pixel);
     }
 
     .shop-card {
+      position: relative;
       background: var(--bg-card);
       border: 3px solid var(--border-pixel);
-      padding: 10px 8px;
+      box-shadow:
+        inset 3px 3px 0px #4F5D78,
+        inset -3px -3px 0px #262E3D,
+        3px 3px 0px var(--border-pixel);
+      padding: 10px 8px 8px;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: space-between;
-      gap: 8px;
+      gap: 7px;
       text-align: center;
+      transition: transform 0.08s ease, background-color 0.1s ease, box-shadow 0.08s ease;
+    }
+
+    .shop-card:hover {
+      transform: translate(-1px, -2px);
+      background: #435068;
+      box-shadow:
+        inset 3px 3px 0px #697999,
+        inset -3px -3px 0px #262E3D,
+        4px 5px 0px var(--border-pixel);
+    }
+
+    .shop-card.owned:not(.equipped) {
+      box-shadow:
+        inset 3px 3px 0px #5B789E,
+        inset -3px -3px 0px #243347,
+        3px 3px 0px var(--border-pixel);
     }
 
     .shop-card.equipped {
       border-color: var(--accent-gold);
-      background: #46506B;
+      background: #474B6B;
+      box-shadow:
+        inset 3px 3px 0px #FFE082,
+        inset -3px -3px 0px #2E2B47,
+        3px 3px 0px var(--border-pixel);
     }
 
-    .swatch-box {
-      width: 40px;
-      height: 40px;
+    /* Selo no canto superior do slot */
+    .shop-status-tag {
+      position: absolute;
+      top: 4px;
+      right: 4px;
+      font-family: 'Press Start 2P', cursive;
+      font-size: 6px;
+      padding: 2px 4px;
+      border: 2px solid var(--border-pixel);
+      background: var(--accent-gold);
+      color: #1A1A1A;
+      z-index: 2;
+    }
+
+    .shop-status-tag.owned-tag {
+      background: #4FC3F7;
+      color: #0F172A;
+    }
+
+    /* Vitrine 16-bit do ícone */
+    .item-icon-slot {
+      width: 56px;
+      height: 56px;
+      background: var(--bg-dark);
       border: 3px solid var(--border-pixel);
+      box-shadow:
+        inset 3px 3px 0px #10141C,
+        inset -2px -2px 0px #2E384D;
       display: flex;
       align-items: center;
       justify-content: center;
+      margin-top: 2px;
+    }
+
+    .shop-card:hover .item-icon-slot {
+      background: #202736;
+    }
+
+    .item-pixel-canvas {
+      width: 48px;
+      height: 48px;
+      display: block;
+      image-rendering: pixelated;
     }
 
     .item-label {
       font-size: 18px;
       line-height: 1.05;
+      color: #F8F9FA;
+      text-shadow: 1px 1px 0px var(--border-pixel);
     }
 
+    /* Botões retrô de compra / uso / equipado */
     .item-action-btn {
       width: 100%;
       font-family: 'Press Start 2P', cursive;
-      font-size: 8px;
+      font-size: 7.5px;
+      line-height: 1.2;
       padding: 7px 4px;
-      border: 2px solid var(--border-pixel);
-      background: var(--accent-gold);
+      border: 3px solid var(--border-pixel);
+      background: #F5B014;
       color: #1A1A1A;
+      box-shadow: inset 2px 2px 0px #FFE082, inset -2px -2px 0px #B27B00;
       cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+    }
+
+    .item-action-btn:hover:not(.equipped-btn):not(.too-expensive) {
+      filter: brightness(1.08);
+    }
+
+    .item-action-btn:active:not(.equipped-btn) {
+      transform: translate(1px, 1px);
+    }
+
+    .item-action-btn.too-expensive {
+      background: #54617A;
+      color: #CBD5E1;
+      box-shadow: inset 2px 2px 0px #6E7E9C, inset -2px -2px 0px #333B4D;
     }
 
     .item-action-btn.owned {
-      background: #64B5F6;
+      background: #2997D8;
+      color: #FFF;
+      box-shadow: inset 2px 2px 0px #81D4FA, inset -2px -2px 0px #1565C0;
     }
 
     .item-action-btn.equipped-btn {
-      background: #81C784;
+      background: #43A047;
+      color: #FFF;
+      box-shadow: inset 2px 2px 0px #81C784, inset -2px -2px 0px #2E7D32;
       cursor: default;
+    }
+
+    .mini-coin-svg {
+      width: 11px;
+      height: 11px;
+      flex-shrink: 0;
     }
 
     /* Modais (Adoção e Ajuda Moedas) */
@@ -1025,10 +1141,10 @@
     }
 
     // Registra Pets. Todos usam a mesma escala padronizada
-    registerPetSheet('dinossauro', 'dino-sprites.png');
-    registerPetSheet('gato', 'gato-sprites.png');
-    registerPetSheet('pato', 'pato-sprites.png');
-    registerPetSheet('corvo', 'corvo-sprites.png');
+    registerPetSheet('dinossauro', 'imgs/dino-sprites.png');
+    registerPetSheet('gato', 'imgs/gato-sprites.png');
+    registerPetSheet('pato', 'imgs/pato-sprites.png');
+    registerPetSheet('corvo', 'imgs/corvo-sprites.png');
 
     function drawSheetPet(context, species, x, y, flipX, state, tick) {
       const sheet = PET_SHEETS[species];
@@ -1066,7 +1182,7 @@
 
       if (state === 'sleep') {
         centerX = 60;
-        groundY = 171;
+        groundY = 160;
       } else if (state === 'eat') {
         centerX = 96;
         groundY = 224;
@@ -1160,39 +1276,86 @@
     ctx.fillRect(50, 30, 68, 60);
 
     if (isNight) {
-        // Lua
-        ctx.fillStyle = '#FFF59D';
-        ctx.fillRect(62, 40, 10, 10);
-        ctx.fillRect(66, 36, 6, 4);
+        // Brilho suave ao redor da lua
+        ctx.fillStyle = 'rgba(255, 249, 196, 0.16)';
+        ctx.fillRect(58, 34, 18, 18);
 
-        // Estrelas
+        // Lua crescente fofinha (arredondada)
+        ctx.fillStyle = '#FFF59D';
+        ctx.fillRect(62, 36, 9, 2);
+        ctx.fillRect(60, 38, 8, 3);
+        ctx.fillRect(60, 41, 6, 4);
+        ctx.fillRect(60, 45, 8, 3);
+        ctx.fillRect(62, 48, 9, 2);
+
+        // Reflexo claro na borda esquerda da lua
+        ctx.fillStyle = '#FFFDE7';
+        ctx.fillRect(61, 39, 2, 8);
+
+        // Estrelinhas (algumas piscam suavemente com o tick)
+        const twinkle = Math.floor(actor.tick / 14) % 2 === 0;
         ctx.fillStyle = '#FFFFFF';
-        [[95, 42], [104, 60], [83, 72], [108, 35]]
-            .forEach(([x, y]) => ctx.fillRect(x, y, 2, 2));
+        ctx.fillRect(96, 38, 2, 2);
+        ctx.fillRect(108, 46, 2, 2);
+        ctx.fillRect(74, 49, 2, 2);
+
+        // Estrelinha brilhante em cruz
+        ctx.fillStyle = twinkle ? '#FFF59D' : '#B3E5FC';
+        ctx.fillRect(92, 48, 4, 2);
+        ctx.fillRect(93, 47, 2, 4);
+
+        ctx.fillStyle = !twinkle ? '#FFF59D' : '#B3E5FC';
+        ctx.fillRect(104, 35, 3, 1);
+        ctx.fillRect(105, 34, 1, 3);
+
+        // Nuvem noturna suave
+        ctx.fillStyle = '#3949AB';
+        ctx.fillRect(54, 74, 22, 5);
+        ctx.fillRect(58, 71, 12, 3);
 
     } else {
-        // Sol
-        ctx.fillStyle = '#FFD54F';
-        ctx.fillRect(91, 39, 12, 12);
-        ctx.fillRect(95, 35, 4, 4);
+        // Halo suave de luz solar
+        ctx.fillStyle = 'rgba(255, 245, 157, 0.35)';
+        ctx.fillRect(88, 34, 18, 18);
 
-        // Nuvens
+        // Raios delicados ao redor do sol
+        ctx.fillStyle = '#FFE082';
+        ctx.fillRect(96, 32, 2, 2);  // Topo
+        ctx.fillRect(96, 52, 2, 2);  // Baixo
+        ctx.fillRect(86, 42, 2, 2);  // Esquerda
+        ctx.fillRect(106, 42, 2, 2); // Direita
+        ctx.fillRect(89, 35, 2, 2);  // Diagonal sup-esq
+        ctx.fillRect(103, 35, 2, 2); // Diagonal sup-dir
+        ctx.fillRect(89, 49, 2, 2);  // Diagonal inf-esq
+        ctx.fillRect(103, 49, 2, 2); // Diagonal inf-dir
+
+        // Corpo redondinho do sol (cantos chanfrados)
+        ctx.fillStyle = '#FFB74D'; // Borda quente
+        ctx.fillRect(92, 36, 10, 14);
+        ctx.fillRect(90, 38, 14, 10);
+
+        ctx.fillStyle = '#FFD54F'; // Miolo dourado
+        ctx.fillRect(92, 37, 10, 12);
+        ctx.fillRect(91, 38, 12, 10);
+
+        // Brilho superior no sol
+        ctx.fillStyle = '#FFF9C4';
+        ctx.fillRect(93, 38, 6, 2);
+        
+        // Nuvens fofinhas em movimento
         const cloudOffset = Math.floor((actor.tick / 20) % 24);
 
+        ctx.fillStyle = '#E1F5FE'; // Sombra suave da nuvem
+        ctx.fillRect(54 + cloudOffset, 58, 18, 2);
         ctx.fillStyle = '#FFFFFF';
+        ctx.fillRect(54 + cloudOffset, 53, 18, 5);
+        ctx.fillRect(58 + cloudOffset, 49, 10, 4);
 
-        ctx.fillRect(54 + cloudOffset, 53, 18, 7);
-        ctx.fillRect(59 + cloudOffset, 47, 10, 6);
-
-        ctx.fillRect(85 - cloudOffset / 2, 67, 17, 6);
-        ctx.fillRect(89 - cloudOffset / 2, 62, 9, 5);
-
-        // Paisagem distante
-        ctx.fillStyle = '#A5D6A7';
-        ctx.fillRect(50, 78, 68, 12);
-
-        ctx.fillStyle = '#81C784';
-        ctx.fillRect(50, 84, 68, 6);
+        ctx.fillStyle = '#E1F5FE';
+        ctx.fillRect(85 - cloudOffset / 2, 71, 17, 2);
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fillRect(85 - cloudOffset / 2, 67, 17, 4);
+        ctx.fillRect(89 - cloudOffset / 2, 63, 9, 4);
     }
 
     // Divisórias da janela
@@ -2052,32 +2215,278 @@
     // =========================================================================
     let activeShopCat = 'parede';
 
+    function drawShopItemIcon(canvasEl, item) {
+      const c = canvasEl.getContext('2d');
+      c.imageSmoothingEnabled = false;
+      c.clearRect(0, 0, 24, 24);
+
+      const px = (x, y, w, h, color) => {
+        c.fillStyle = color;
+        c.fillRect(x, y, w, h);
+      };
+
+      // --- CATEGORIA: PAREDES (Rolo de papel de parede / amostra decorada) ---
+      if (item.cat === 'parede') {
+        // Sombra e moldura do rolo de papel de parede
+        px(4, 3, 16, 18, '#131720');
+        px(5, 4, 14, 16, item.c1);
+        // Listras verticais
+        px(7, 4, 2, 16, item.c2);
+        px(11, 4, 2, 16, item.c2);
+        px(15, 4, 2, 16, item.c2);
+        // Detalhe temático de cada parede
+        if (item.id === 'parede_noite') {
+          px(8, 7, 2, 2, '#FFF59D');
+          px(14, 11, 2, 2, '#FFF59D');
+          px(9, 14, 1, 1, '#FFFFFF');
+        } else if (item.id === 'parede_pessego') {
+          px(10, 9, 4, 4, '#FF8A65');
+          px(11, 8, 2, 1, '#81C784');
+        } else if (item.id === 'parede_menta') {
+          px(10, 9, 4, 3, '#66BB6A');
+          px(11, 8, 2, 5, '#A5D6A7');
+        } else {
+          // Coraçãozinho lavanda
+          px(9, 9, 2, 2, '#F48FB1');
+          px(13, 9, 2, 2, '#F48FB1');
+          px(10, 11, 4, 2, '#F48FB1');
+          px(11, 13, 2, 1, '#F48FB1');
+        }
+        // Rolo enrolado na base
+        px(3, 17, 18, 4, '#131720');
+        px(4, 18, 16, 2, '#FFF9FB');
+        px(6, 18, 12, 1, item.c2);
+      }
+
+      // --- CATEGORIA: CHÃOS (Piso em perspectiva isométrica/diagonal) ---
+      else if (item.cat === 'chao') {
+        px(3, 4, 18, 16, '#131720');
+        px(4, 5, 16, 14, item.c1);
+
+        if (item.id === 'chao_xadrez') {
+          for (let y = 5; y < 19; y += 4) {
+            for (let x = ((y - 5) / 4) % 2 === 0 ? 4 : 8; x < 20; x += 8) {
+              px(x, y, 4, Math.min(4, 19 - y), item.c2);
+            }
+          }
+        } else if (item.id === 'chao_grama') {
+          px(6, 8, 2, 2, '#C8E6C9');
+          px(14, 7, 2, 2, '#2E7D32');
+          px(9, 13, 2, 2, '#FFF59D'); // Florzinha no gramado
+          px(15, 14, 2, 2, '#F48FB1');
+        } else if (item.id === 'chao_rosa') {
+          // Tapete fofo com franjas
+          px(5, 6, 14, 12, item.c2);
+          px(6, 7, 12, 10, item.c1);
+          px(10, 10, 4, 4, '#FFF9FB');
+        } else {
+          // Tábuas de madeira pinho
+          px(4, 9, 16, 1, item.c2);
+          px(4, 14, 16, 1, item.c2);
+          px(10, 5, 1, 4, item.c2);
+          px(14, 10, 1, 4, item.c2);
+          px(8, 15, 1, 4, item.c2);
+        }
+        // Brilho superior do bloco
+        px(4, 5, 16, 1, 'rgba(255,255,255,0.45)');
+      }
+
+      // --- CATEGORIA: MÓVEIS ---
+      else if (item.id === 'movel_bau_fofo') {
+        px(3, 6, 18, 13, '#3B2854');
+        px(4, 7, 16, 4, item.c2);     // Tampa rosa
+        px(5, 7, 14, 1, '#FFFFFF');   // Brilho tampa
+        px(4, 11, 16, 7, item.c1);    // Corpo lilás
+        px(10, 10, 4, 4, '#FFD54F');  // Fecho dourado
+        px(11, 11, 2, 2, '#F48FB1');  // Coração no fecho
+        px(5, 19, 3, 2, '#3B2854');   // Pé esq
+        px(16, 19, 3, 2, '#3B2854');  // Pé dir
+      }
+
+      else if (item.id === 'movel_arranhador') {
+        // Orelhinhas no topo
+        px(6, 2, 3, 3, '#4E342E');
+        px(15, 2, 3, 3, '#4E342E');
+        px(7, 3, 1, 2, '#F48FB1');
+        px(16, 3, 1, 2, '#F48FB1');
+        // Caminha superior
+        px(5, 4, 14, 5, '#4E342E');
+        px(6, 5, 12, 3, item.c1);
+        // Poste de sisal
+        px(10, 9, 4, 9, '#4E342E');
+        px(11, 9, 2, 9, item.c2);
+        px(11, 11, 2, 1, '#D7CCC8');
+        px(11, 14, 2, 1, '#D7CCC8');
+        // Bolinha pendurada
+        px(7, 9, 1, 3, '#4E342E');
+        px(6, 12, 3, 3, '#F48FB1');
+        // Base
+        px(4, 18, 16, 4, '#4E342E');
+        px(5, 19, 14, 2, item.c1);
+      }
+
+      else if (item.id === 'movel_estante') {
+        px(4, 2, 16, 20, '#3E2723');
+        px(5, 3, 14, 18, item.c1);
+        // Nichos internos
+        px(6, 4, 12, 4, '#4E342E');
+        px(6, 10, 12, 4, '#4E342E');
+        px(6, 16, 12, 4, '#4E342E');
+        // Livros coloridos
+        px(7, 5, 2, 3, '#F48FB1');
+        px(10, 4, 2, 4, item.c2);
+        px(14, 5, 3, 3, '#81C784');
+        px(7, 11, 2, 3, '#FFD54F');
+        px(10, 11, 2, 3, '#80DEEA');
+        px(14, 11, 3, 3, '#CE93D8');
+        px(7, 16, 5, 4, '#F8BBD0'); // Caixinha rosa
+        px(14, 17, 3, 3, '#90CAF9');
+      }
+
+      else if (item.id === 'movel_pc') {
+        // Orelhinhas no monitor
+        px(6, 2, 3, 2, '#F48FB1');
+        px(15, 2, 3, 2, '#F48FB1');
+        // Monitor
+        px(5, 4, 14, 10, '#311B92');
+        px(6, 5, 12, 8, item.c2);
+        // Coração na tela
+        px(10, 7, 1, 1, '#FFFFFF');
+        px(13, 7, 1, 1, '#FFFFFF');
+        px(10, 8, 4, 1, '#FFFFFF');
+        px(11, 9, 2, 1, '#FFFFFF');
+        // Suporte + Mesa
+        px(10, 14, 4, 2, '#B39DDB');
+        px(3, 16, 18, 3, '#311B92');
+        px(4, 17, 16, 1, '#FFF9FB');
+        px(5, 19, 2, 3, '#311B92');
+        px(17, 19, 2, 3, '#311B92');
+      }
+
+      // --- CATEGORIA: OBJETOS ---
+      else if (item.id === 'obj_vasinho') {
+        // Florzinha rosa no topo
+        px(11, 2, 2, 2, '#F48FB1');
+        px(11, 3, 1, 1, '#FFF59D');
+        // Folhas suculentas
+        px(9, 4, 6, 8, '#1B5E20');
+        px(10, 5, 4, 6, item.c1);
+        px(6, 7, 4, 4, '#1B5E20');
+        px(7, 8, 2, 2, '#81C784');
+        px(14, 7, 4, 4, '#1B5E20');
+        px(15, 8, 2, 2, '#81C784');
+        // Vaso terracota
+        px(6, 12, 12, 3, '#4E342E');
+        px(7, 13, 10, 1, '#FF8A65');
+        px(7, 15, 10, 6, '#4E342E');
+        px(8, 15, 8, 5, item.c2);
+      }
+
+      else if (item.id === 'obj_pelucia') {
+        // Orelhas
+        px(5, 3, 4, 4, '#3B2854');
+        px(15, 3, 4, 4, '#3B2854');
+        px(6, 4, 2, 2, item.c2);
+        px(16, 4, 2, 2, item.c2);
+        // Cabeça e corpo
+        px(4, 6, 16, 15, '#3B2854');
+        px(5, 7, 14, 13, item.c1);
+        // Olhos e bochechas
+        px(7, 10, 2, 2, '#1A1A2E');
+        px(15, 10, 2, 2, '#1A1A2E');
+        px(6, 12, 2, 1, '#F48FB1');
+        px(16, 12, 2, 1, '#F48FB1');
+        px(11, 12, 2, 1, '#F48FB1');
+        // Barriguinha
+        px(8, 15, 8, 4, '#FFF9FB');
+      }
+
+      else if (item.id === 'obj_luminaria') {
+        // Halo suave
+        px(6, 3, 12, 13, 'rgba(255, 245, 157, 0.22)');
+        // Lua crescente
+        px(8, 4, 7, 11, '#E65100');
+        px(9, 5, 5, 9, item.c1);
+        px(9, 5, 2, 9, '#FFF9C4');
+        px(12, 7, 3, 5, '#1A202C'); // Recorte fundo escuro
+        // Estrelinha
+        px(15, 8, 2, 2, '#FFF59D');
+        // Haste e base nuvem
+        px(11, 15, 2, 3, '#4527A0');
+        px(7, 18, 10, 3, '#4527A0');
+        px(8, 19, 8, 1, '#B39DDB');
+      }
+
+      else if (item.id === 'obj_trofeu') {
+        // Alças
+        px(4, 5, 3, 5, '#B26A00');
+        px(17, 5, 3, 5, '#B26A00');
+        // Taça
+        px(6, 3, 12, 10, '#B26A00');
+        px(7, 4, 10, 8, item.c1);
+        px(8, 5, 2, 6, '#FFF9C4'); // Brilho
+        // Estrelinha no centro
+        px(11, 6, 2, 4, '#FFF9FB');
+        px(10, 7, 4, 2, '#FFF9FB');
+        // Haste e pedestal
+        px(10, 13, 4, 4, '#B26A00');
+        px(11, 13, 2, 4, item.c1);
+        px(7, 17, 10, 4, '#4E342E');
+        px(8, 18, 8, 2, '#8D6E63');
+        px(10, 18, 4, 1, '#FFD54F');
+      }
+    }
+
     function renderShop() {
       const grid = document.getElementById('shopGrid');
       grid.innerHTML = '';
 
+      const coinSvg = `
+        <svg class="mini-coin-svg" viewBox="0 0 16 16">
+          <path fill="#5D4000" d="M5 1h6v1h2v2h1v8h-1v2h-2v1H5v-1H3v-2H2V4h1V2h2V1z"/>
+          <path fill="#FFD54F" d="M5 2h6v2h2v8h-2v2H5v-2H3V4h2V2z"/>
+          <path fill="#FFF9C4" d="M5 3h4v1H5V3zM4 4h1v6H4V4z"/>
+        </svg>`;
+
       SHOP_CATALOG.filter(item => item.cat === activeShopCat).forEach(item => {
         const owned = petState.inventario.includes(item.id);
         const equipped = petState.equipados[item.cat] === item.id;
+        const canAfford = petState.moedas >= item.preco;
 
         const card = document.createElement('div');
-        card.className = `shop-card ${equipped ? 'equipped' : ''}`;
+        card.className = `shop-card ${equipped ? 'equipped' : ''} ${owned ? 'owned' : ''}`;
 
-        let btnLabel = `${item.preco} MOEDAS`;
+        let statusTagHtml = '';
+        if (equipped) {
+          statusTagHtml = '<span class="shop-status-tag">EM USO</span>';
+        } else if (owned) {
+          statusTagHtml = '<span class="shop-status-tag owned-tag">SEU</span>';
+        }
+
+        let btnContent = `${coinSvg}<span>${item.preco}</span>`;
         let btnClass = 'item-action-btn';
         if (equipped) {
-          btnLabel = 'EQUIPADO';
+          btnContent = '✓ EQUIPADO';
           btnClass += ' equipped-btn';
         } else if (owned) {
-          btnLabel = 'USAR';
+          btnContent = 'EQUIPAR';
           btnClass += ' owned';
+        } else if (!canAfford) {
+          btnClass += ' too-expensive';
         }
 
         card.innerHTML = `
-          <div class="swatch-box" style="background: linear-gradient(135deg, ${item.c1} 50%, ${item.c2} 50%);"></div>
+          ${statusTagHtml}
+          <div class="item-icon-slot">
+            <canvas class="item-pixel-canvas" width="24" height="24"></canvas>
+          </div>
           <div class="item-label">${item.nome}</div>
-          <button class="${btnClass}">${btnLabel}</button>
+          <button class="${btnClass}">${btnContent}</button>
         `;
+
+        // Desenha o ícone pixel art exclusivo do item
+        const iconCanvas = card.querySelector('.item-pixel-canvas');
+        drawShopItemIcon(iconCanvas, item);
 
         card.querySelector('button').addEventListener('click', () => {
           if (equipped) return;
