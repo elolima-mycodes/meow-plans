@@ -1,6 +1,6 @@
-Forneça apenas as alterações necessárias com total clareza para que eu possa alterar.
+Meow Plans Testes
 
-Meow Plans codificação
+Continuar modificando a parte do usuário (último prompt no chat de sempre)
 
 
 
