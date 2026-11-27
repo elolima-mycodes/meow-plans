@@ -1,5 +1,6 @@
 /* ==========================================================================
    MEOW PLANS - CALENDÁRIO LOGIC (PocketBase SDK Integration)
+   Depende de ui.js (modais, card de tarefa, tema e utilitários)
    ========================================================================== */
 
 // 1. INICIALIZAÇÃO DO POCKETBASE SDK
@@ -15,7 +16,6 @@ let tasksList = [];
 let categoriesList = [];
 let routineCompletionsList = [];
 let draggingTaskId = null;
-let deletedSubtaskIds = []; // Guarda os IDs das subtarefas para excluir no banco
 
 const MONTH_NAMES = [
   'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
@@ -42,6 +42,16 @@ document.addEventListener('DOMContentLoaded', async () => {
   localStorage.setItem('last_activity', now.toString());
   currentUser = pb.authStore.model;
   renderUserAvatar();
+
+  TaskModal.init({
+    getUser: () => currentUser,
+    getCategories: () => categoriesList,
+    getTask: (id) => tasksList.find(t => t.id === id),
+    onChange: async () => {
+      await loadAndProcessTasks();
+      renderCurrentView();
+    }
+  });
   setupEventListeners();
 
   // Carregar Categorias e Tarefas na ordem correta
@@ -54,13 +64,15 @@ function renderUserAvatar() {
   const avatarEl = document.getElementById('userAvatar');
   if (currentUser && currentUser.avatar) {
     const avatarUrl = pb.files.getUrl(currentUser, currentUser.avatar);
-    avatarEl.innerHTML = `<img src="${avatarUrl}" alt="${currentUser.name || 'User'}" />`;
+    avatarEl.innerHTML = `<img src="${avatarUrl}" alt="${escapeHtml(currentUser.name || 'User')}" />`;
   } else if (currentUser && currentUser.name) {
-    avatarEl.innerHTML = `<span>${currentUser.name.charAt(0).toUpperCase()}</span>`;
+    avatarEl.innerHTML = `<span>${escapeHtml(currentUser.name.charAt(0).toUpperCase())}</span>`;
+  } else {
+    avatarEl.innerHTML = '<i class="bi bi-person-fill"></i>';
   }
 }
 
-// 3. EVENTOS DEFENSIVOS (Funciona tanto em calendario.html quanto gerenciar.html)
+// 3. EVENTOS
 function setupEventListeners() {
 
   // Inicializa o botão de alternar tema
@@ -76,10 +88,10 @@ function setupEventListeners() {
   }
 
   document.querySelectorAll('.tab-btn[data-view]').forEach(btn => {
-    btn.addEventListener('click', (e) => {
+    btn.addEventListener('click', () => {
       document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-      e.target.classList.add('active');
-      currentView = e.target.getAttribute('data-view');
+      btn.classList.add('active');
+      currentView = btn.getAttribute('data-view');
       renderCurrentView();
     });
   });
@@ -101,32 +113,6 @@ function setupEventListeners() {
   const btnNovaTarefa = document.getElementById('btnNovaTarefa');
   if (btnNovaTarefa) btnNovaTarefa.addEventListener('click', () => openTaskModal());
 
-  const closeTaskModalBtn = document.getElementById('closeTaskModalBtn');
-  if (closeTaskModalBtn) closeTaskModalBtn.addEventListener('click', closeTaskModal);
-
-  const taskRecurringCheck = document.getElementById('taskRecurringCheck');
-  if (taskRecurringCheck) {
-    taskRecurringCheck.addEventListener('change', (e) => {
-      toggleRecurringFields(e.target.checked);
-    });
-  }
-
-  const taskForm = document.getElementById('taskForm');
-  if (taskForm) taskForm.addEventListener('submit', handleSaveTask);
-
-  const btnDeleteTask = document.getElementById('btnDeleteTask');
-  if (btnDeleteTask) btnDeleteTask.addEventListener('click', handleDeleteTask);
-
-  const btnAddSubtaskBtn = document.getElementById('btnAddSubtaskBtn');
-  if (btnAddSubtaskBtn) btnAddSubtaskBtn.addEventListener('click', () => addSubtaskRow());
-
-  const taskCategorySelect = document.getElementById('taskCategorySelect');
-  if (taskCategorySelect) {
-    taskCategorySelect.addEventListener('change', (e) => {
-      updateTaskCategoryColorPreview(e.target.value);
-    });
-  }
-
   const btnExportCSV = document.getElementById('btnExportWeekCSV');
   if (btnExportCSV) btnExportCSV.addEventListener('click', exportWeekToCSV);
 
@@ -134,20 +120,9 @@ function setupEventListeners() {
   if (btnExportPDF) btnExportPDF.addEventListener('click', exportWeekToPDF);
 }
 
-function toggleRecurringFields(isRecurring) {
-  const freqGroup = document.getElementById('recurrenceFreqGroup');
-  const execGroup = document.getElementById('taskExecDateGroup');
-  const deliveryLabel = document.getElementById('taskDeliveryDateLabel');
-
-  if (isRecurring) {
-    freqGroup.classList.remove('hidden');
-    if (execGroup) execGroup.classList.add('hidden');
-    if (deliveryLabel) deliveryLabel.textContent = '🔁 Repetir até (Data Limite):';
-  } else {
-    freqGroup.classList.add('hidden');
-    if (execGroup) execGroup.classList.remove('hidden');
-    if (deliveryLabel) deliveryLabel.textContent = '📅 Data de Entrega (Prazo Final):';
-  }
+// Abre o modal compartilhado (sem ID = nova tarefa no dia selecionado)
+function openTaskModal(taskId = null) {
+  TaskModal.open(taskId, { defaultDate: getLocalDateStr(selectedDate) });
 }
 
 function navigatePeriod(direction) {
@@ -169,8 +144,6 @@ async function loadCategories() {
       filter: `user = "${currentUser.id}" && (deleted = false || deleted = null)`,
       sort: 'nome'
     });
-
-    populateCategoryOptions();
   } catch (err) {
     // Tenta fallback com a coleção em minúsculo caso o PocketBase aceite 'categorias'
     try {
@@ -178,27 +151,10 @@ async function loadCategories() {
         filter: `user = "${currentUser.id}" && (deleted = false || deleted = null)`,
         sort: 'nome'
       });
-      populateCategoryOptions();
     } catch (fallbackErr) {
       console.error('Erro ao carregar categorias do PocketBase:', err, fallbackErr);
     }
   }
-}
-
-function populateCategoryOptions(selectedCategoryId = '') {
-  const categorySelect = document.getElementById('taskCategorySelect');
-  if (!categorySelect) return;
-
-  categorySelect.innerHTML = '<option value="">Sem categoria</option>';
-  categoriesList.forEach(cat => {
-    const option = document.createElement('option');
-    option.value = cat.id;
-    option.textContent = cat.nome;
-    if (selectedCategoryId && cat.id === selectedCategoryId) {
-      option.selected = true;
-    }
-    categorySelect.appendChild(option);
-  });
 }
 
 async function loadAndProcessTasks() {
@@ -218,7 +174,8 @@ async function loadAndProcessTasks() {
       routineCompletionsList = [];
     }
 
-    const todayStr = new Date().toISOString().split('T')[0];
+    // Data local (toISOString adiantaria um dia após as 21h no horário de Brasília)
+    const todayStr = getLocalDateStr();
 
     tasksList = await Promise.all(rawTasks.map(async (task) => {
       let taskDeliveryStr = task.data_entrega ? task.data_entrega.split(' ')[0] : null;
@@ -283,171 +240,7 @@ function isRoutineForDate(task, targetDateObj) {
   return false;
 }
 
-// 6. VALIDAÇÃO E SALVAMENTO DE TAREFAS
-function validateTaskDates(dataExec, dataEntrega, isRecurring) {
-
-  // Pega a data de hoje formatada no padrão YYYY-MM-DD
-  const todayStr = getLocalDateStr();
-
-  // Validação 1: Bloquear criação/edição com datas passadas
-  if (dataEntrega && dataEntrega < todayStr) {
-    alert('⚠️ Regra de Negócio: A Data de Entrega/Limite não pode ser anterior ao dia de hoje!');
-    return false;
-  }
-
-  if (!isRecurring && dataExec && dataExec < todayStr) {
-    alert('⚠️ Regra de Negócio: A Data de Execução não pode ser anterior ao dia de hoje!');
-    return false;
-  }
-
-  // Validação 2: Data de execução nunca pode ser posterior à data de entrega
-  if (!isRecurring && dataExec && dataEntrega) {
-    if (dataExec > dataEntrega) {
-      alert('⚠️ Regra de Negócio: A Data de Execução NUNCA pode ser posterior à Data de Entrega!');
-      return false;
-    }
-  }
-
-  return true;
-}
-
-async function handleSaveTask(e) {
-  e.preventDefault();
-
-  const id = document.getElementById('taskIdInput').value;
-  const titulo = document.getElementById('taskTitleInput').value.trim();
-  const categoria = document.getElementById('taskCategorySelect').value || null;
-  const urgencia = document.getElementById('taskUrgencySelect').value;
-  const status = document.getElementById('taskStatusSelect').value;
-  const is_recurring = document.getElementById('taskRecurringCheck').checked;
-  const recurrence_freq = is_recurring ? document.getElementById('taskRecurrenceFreq').value : null;
-  const descricao = document.getElementById('taskDescInput').value.trim();
-
-  const data_execucao = is_recurring ? null : document.getElementById('taskExecDate').value;
-  const data_entrega = document.getElementById('taskDeliveryDate').value;
-
-  if (!validateTaskDates(data_execucao, data_entrega, is_recurring)) {
-    return;
-  }
-
-  const taskPayload = {
-    titulo,
-    categoria,
-    urgencia,
-    status,
-    data_entrega: data_entrega ? `${data_entrega} 12:00:00.000Z` : null,
-    data_execucao: data_execucao ? `${data_execucao} 12:00:00.000Z` : null,
-    is_recurring,
-    recurrence_freq,
-    descricao,
-    user: currentUser.id,
-    deleted: false
-  };
-
-  try {
-    let savedTask;
-    if (id) {
-      savedTask = await pb.collection('tarefas').update(id, taskPayload);
-    } else {
-      savedTask = await pb.collection('tarefas').create(taskPayload);
-    }
-
-    if (!is_recurring && status === 'concluida') {
-      recompensarConclusaoTarefa(savedTask.id, 10);
-    }
-
-    await saveSubtasks(savedTask.id);
-    closeTaskModal();
-    await loadAndProcessTasks();
-    renderCurrentView();
-  } catch (err) {
-    console.error('Erro ao salvar tarefa no PocketBase:', err);
-    alert('Ocorreu um erro ao salvar a tarefa.');
-  }
-}
-
-async function handleDeleteTask() {
-  const id = document.getElementById('taskIdInput').value;
-  if (!id) return;
-
-  if (confirm('Tem certeza que deseja enviar esta tarefa para a lixeira?')) {
-    try {
-      await pb.collection('tarefas').update(id, { deleted: true });
-      closeTaskModal();
-      await loadAndProcessTasks();
-      renderCurrentView();
-    } catch (err) {
-      console.error('Erro ao excluir tarefa (soft delete):', err);
-      alert('Erro ao excluir a tarefa.');
-    }
-  }
-}
-
-async function saveSubtasks(taskId) {
-  // 1. Exclui no PocketBase todas as subtarefas marcadas para remoção
-  for (const subid of deletedSubtaskIds) {
-    try {
-      await pb.collection('subtarefas').delete(subid);
-    } catch (err) {
-      console.error(`Erro ao apagar subtarefa ${subid}:`, err);
-    }
-  }
-
-  // 2. Cria ou atualiza as subtarefas que continuam na tela
-  const rows = document.querySelectorAll('.subtask-row');
-  for (const row of rows) {
-    const subid = row.dataset.subid;
-    const input = row.querySelector('.subtask-input');
-    const checkbox = row.querySelector('.subtask-check');
-    const titulo = input.value.trim();
-
-    if (!titulo && subid) {
-      await pb.collection('subtarefas').delete(subid);
-      continue;
-    }
-
-    if (titulo) {
-      if (subid) {
-        await pb.collection('subtarefas').update(subid, {
-          titulo,
-          completa: checkbox.checked
-        });
-      } else {
-        await pb.collection('subtarefas').create({
-          titulo,
-          completa: checkbox.checked,
-          tarefa: taskId,
-          user: currentUser.id
-        });
-      }
-    }
-  }
-}
-
-function addSubtaskRow(subtask = { id: '', titulo: '', completa: false }) {
-  const container = document.getElementById('subtasksList');
-  const row = document.createElement('div');
-  row.className = 'subtask-row flex-between';
-  row.dataset.subid = subtask.id;
-  row.style.gap = '0.5rem';
-
-  row.innerHTML = `
-    <input type="checkbox" class="subtask-check" ${subtask.completa ? 'checked' : ''} />
-    <input type="text" class="input-control subtask-input" value="${escapeHtml(subtask.titulo)}" placeholder="Título da subtarefa..." style="min-height:32px; padding:0.25rem 0.5rem; font-size:0.85rem;" />
-    <button type="button" class="btn-link" style="color:var(--color-danger); text-decoration:none;" onclick="removeSubtaskRow(this, '${subtask.id}')">&times;</button>
-  `;
-  container.appendChild(row);
-}
-
-// Remove o elemento da tela e registra o ID para exclusão no PocketBase
-function removeSubtaskRow(btnElement, subtaskId) {
-  if (subtaskId) {
-    deletedSubtaskIds.push(subtaskId);
-  }
-  btnElement.parentElement.remove();
-}
-
-// 7. RENDERIZAÇÃO DAS VISUALIZAÇÕES
+// 6. RENDERIZAÇÃO DAS VISUALIZAÇÕES
 function renderCurrentView() {
   const mainContent = document.getElementById('calendarMainContent');
   const label = document.getElementById('currentPeriodLabel');
@@ -542,7 +335,7 @@ function renderDayPanel(targetElement, dateObj) {
     <div class="task-section-box section-pink" style="margin-bottom: 0.5rem;">
       <div class="section-title">Para Entregar</div>
       <div class="section-cards-container">
-        ${deliveryTasks.map(t => renderTaskCard(t, false, dateStr)).join('') || '<p class="text-center text-muted" style="font-size:0.75rem;">Nenhuma entrega para hoje ✨</p>'}
+        ${deliveryTasks.map(t => renderTaskCard(t, false, dateStr)).join('') || '<p class="text-center text-muted" style="font-size:0.75rem;">Nenhuma entrega para hoje <i class="bi bi-stars"></i></p>'}
       </div>
     </div>
 
@@ -550,7 +343,7 @@ function renderDayPanel(targetElement, dateObj) {
     <div class="task-section-box section-mint drop-zone" data-dropdate="${dateStr}" style="margin-bottom: 0.5rem;" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event)">
       <div class="section-title">Para Fazer</div>
       <div class="section-cards-container">
-        ${execTasks.map(t => renderTaskCard(t, true, dateStr)).join('') || '<p class="text-center text-muted" style="font-size:0.75rem;">Nada agendado para fazer ✨</p>'}
+        ${execTasks.map(t => renderTaskCard(t, true, dateStr)).join('') || '<p class="text-center text-muted" style="font-size:0.75rem;">Nada agendado para fazer <i class="bi bi-stars"></i></p>'}
       </div>
     </div>
 
@@ -558,7 +351,7 @@ function renderDayPanel(targetElement, dateObj) {
     <div class="task-section-box section-green">
       <div class="section-title">Rotineiros</div>
       <div class="section-cards-container">
-        ${routineTasks.map(t => renderTaskCard(t, false, dateStr)).join('') || '<p class="text-center text-muted" style="font-size:0.75rem;">Sem rotinas para hoje 🐾</p>'}
+        ${routineTasks.map(t => renderTaskCard(t, false, dateStr)).join('') || '<p class="text-center text-muted" style="font-size:0.75rem;">Sem rotinas para hoje <i class="bi bi-arrow-repeat"></i></p>'}
       </div>
     </div>
   `;
@@ -582,7 +375,7 @@ function renderWeekView(container) {
   for (let i = 0; i < 7; i++) {
     const currentDay = new Date(startOfWeek);
     currentDay.setDate(startOfWeek.getDate() + i);
-    const dateStr = currentDay.toISOString().split('T')[0];
+    const dateStr = getLocalDateStr(currentDay);
 
     const deliveryTasks = tasksList.filter(t => !t.is_recurring && t.data_entrega && t.data_entrega.startsWith(dateStr));
     const execTasks = tasksList.filter(t => !t.is_recurring && t.data_execucao && t.data_execucao.startsWith(dateStr));
@@ -598,7 +391,7 @@ function renderWeekView(container) {
         <div class="task-section-box section-pink" style="padding: 0.5rem; margin-bottom: 0.5rem;">
           <div class="section-title" style="font-size:0.75rem;">Para Entregar</div>
           <div class="section-cards-container">
-            ${deliveryTasks.map(t => renderTaskCard(t, false, dateStr)).join('') || '<p class="text-center text-muted" style="font-size:0.7rem; margin:0.25rem 0;">Sem entregas ✨</p>'}
+            ${deliveryTasks.map(t => renderTaskCard(t, false, dateStr)).join('') || '<p class="text-center text-muted" style="font-size:0.7rem; margin:0.25rem 0;">Sem entregas <i class="bi bi-stars"></i></p>'}
           </div>
         </div>
 
@@ -606,7 +399,7 @@ function renderWeekView(container) {
         <div class="task-section-box section-mint drop-zone" data-dropdate="${dateStr}" style="padding: 0.5rem; margin-bottom: 0.5rem;" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event)">
           <div class="section-title" style="font-size:0.75rem;">Para Fazer</div>
           <div class="section-cards-container">
-            ${execTasks.map(t => renderTaskCard(t, true, dateStr)).join('') || '<p class="text-center text-muted" style="font-size:0.7rem; margin:0.25rem 0;">Nada a fazer ✨</p>'}
+            ${execTasks.map(t => renderTaskCard(t, true, dateStr)).join('') || '<p class="text-center text-muted" style="font-size:0.7rem; margin:0.25rem 0;">Nada a fazer <i class="bi bi-stars"></i></p>'}
           </div>
         </div>
 
@@ -614,7 +407,7 @@ function renderWeekView(container) {
         <div class="task-section-box section-green" style="padding: 0.5rem;">
           <div class="section-title" style="font-size:0.75rem;">Rotineiros</div>
           <div class="section-cards-container">
-            ${routineTasks.map(t => renderTaskCard(t, false, dateStr)).join('') || '<p class="text-center text-muted" style="font-size:0.7rem; margin:0.25rem 0;">Sem rotinas 🐾</p>'}
+            ${routineTasks.map(t => renderTaskCard(t, false, dateStr)).join('') || '<p class="text-center text-muted" style="font-size:0.7rem; margin:0.25rem 0;">Sem rotinas <i class="bi bi-arrow-repeat"></i></p>'}
           </div>
         </div>
       </div>
@@ -634,7 +427,7 @@ function renderAllTasksView(container) {
   container.innerHTML = `
     <div style="padding: 1rem; width: 100%;">
       <div class="task-section-box section-mint" style="max-width: 800px; margin: 0 auto;">
-        <div class="section-title">Todas as Suas Tarefas 🐾</div>
+        <div class="section-title">Todas as Suas Tarefas <i class="bi bi-list-check"></i></div>
         <div class="section-cards-container" style="display: flex; flex-direction: column; gap: 0.75rem;">
           ${tasksList.map(t => renderTaskCard(t, false)).join('') || '<p class="text-center text-muted">Nenhuma tarefa encontrada.</p>'}
         </div>
@@ -643,105 +436,29 @@ function renderAllTasksView(container) {
   `;
 }
 
-// 8. CARD DE TAREFA E DRAG & DROP (RF02.3 & RF05.4)
+// 7. CARD DE TAREFA E DRAG & DROP (RF02.3 & RF05.4)
 function renderTaskCard(task, isDraggable = false, currentDateStr = null) {
   // Pega a data do dia em que o card está sendo renderizado (ex: '2026-11-04')
   const targetDateStr = currentDateStr || getLocalDateStr(selectedDate);
 
-  // 1. Determina se esta tarefa está concluída HOJE
-  let isCompleted = false;
+  // Rotinas: concluída se houver registro na data. Normais: status do banco.
+  const isCompleted = task.is_recurring
+    ? routineCompletionsList.some(c => c.tarefa === task.id && c.data === targetDateStr)
+    : task.status === 'concluida';
 
-  if (task.is_recurring) {
-    // Para rotinas: verifica se existe registro na tabela conclusoes_rotina para esta data
-    const hasCompletion = routineCompletionsList.some(
-      c => c.tarefa === task.id && c.data === targetDateStr
-    );
-    isCompleted = hasCompletion;
-  } else {
-    // Para tarefas normais: verifica o status direto do banco
-    isCompleted = task.status === 'concluida';
-  }
-
-  // 2. Formatadores de data para a rodapé do card
   const execFormatted = task.data_execucao ? formatDateBR(task.data_execucao) : '---';
   const deliveryFormatted = task.data_entrega ? formatDateBR(task.data_entrega) : '---';
 
-  // 3. Monta a chamada do clique passando a data e se é rotina
-  const toggleOnClick = `toggleTaskStatus(event, '${task.id}', '${task.status}', '${targetDateStr}', ${task.is_recurring})`;
-
-  // 4. Monta o Ícone de Status dinâmico
-  let statusIconHtml = '';
-
-  if (isCompleted) {
-    // Ícone verde de concluído
-    statusIconHtml = `<i class="bi bi-check-circle-fill status-icon status-done status-icon-btn" 
-                        title="Reabrir tarefa" 
-                        style="cursor:pointer;" 
-                        onclick="${toggleOnClick}"></i>`;
-  } else if (task.status === 'em_progresso') {
-    statusIconHtml = `<i class="bi bi-hourglass-split status-icon status-doing status-icon-btn" 
-                        title="Em Progresso - Clique para alternar" 
-                        style="cursor:pointer;" 
-                        onclick="${toggleOnClick}"></i>`;
-  } else if (task.status === 'atrasada') {
-    statusIconHtml = `<i class="bi bi-exclamation-triangle-fill status-icon status-overdue status-icon-btn" 
-                        title="Atrasada - Clique para concluir" 
-                        style="cursor:pointer;" 
-                        onclick="${toggleOnClick}"></i>`;
-  } else if (task.status === 'cancelada') {
-    statusIconHtml = `<i class="bi bi-x-circle-fill status-icon status-cancelled status-icon-btn" 
-                        title="Cancelada" 
-                        style="cursor:pointer;" 
-                        onclick="${toggleOnClick}"></i>`;
-  } else {
-    // Padrão: A Fazer (círculo vazio)
-    statusIconHtml = `<i class="bi bi-circle status-icon status-todo status-icon-btn" 
-                        title="Marcar como Concluída" 
-                        style="cursor:pointer;" 
-                        onclick="${toggleOnClick}"></i>`;
-  }
-
-  // 5. Cores das bandeiras de urgência
-  let flagColor = '#A8F5B4';
-  let urgencyLabel = 'Normal';
-
-  if (task.urgencia === 'baixa') {
-    flagColor = '#C2E0FF';
-    urgencyLabel = 'Baixa';
-  } else if (task.urgencia === 'normal') {
-    flagColor = '#A8F5B4';
-    urgencyLabel = 'Normal';
-  } else if (task.urgencia === 'alta') {
-    flagColor = '#FFD8A8';
-    urgencyLabel = 'Alta';
-  } else if (task.urgencia === 'urgente') {
-    flagColor = '#FFA8A8';
-    urgencyLabel = 'Urgente';
-  }
-
-  const flagIcon = `<i class="bi bi-flag-fill" style="color: ${flagColor}; -webkit-text-stroke: 1px #2D3748; font-size: 1.1rem; vertical-align: middle;"></i>`;
-
-  // 6. Retorna o HTML do Card montado
-  return `
-    <div class="meow-card ${isDraggable ? 'card-draggable' : ''} ${isCompleted ? 'card-completed' : ''}" 
-         onclick="openTaskModal('${task.id}')"
-         ${isDraggable ? `draggable="true" ondragstart="handleDragStart(event, '${task.id}')"` : ''}>
-      <div class="meow-card-header">
-        <div class="meow-card-title-group">
-          ${statusIconHtml}
-          <span class="meow-card-title ${isCompleted ? 'text-strikethrough' : ''}">${escapeHtml(task.titulo)}</span>
-        </div>
-        <span class="flag-icon" title="Urgência: ${urgencyLabel}">
-          ${flagIcon}
-        </span>
-      </div>
-      <div class="meow-card-footer">
-        ${task.is_recurring
-      ? `<span>🔄 ${task.recurrence_freq || 'Rotina'}</span>`
-      : `<span>Fazer: ${execFormatted}</span><span>Para: ${deliveryFormatted}</span>`}
-      </div>
-    </div>
-  `;
+  return buildTaskCard(task, {
+    isCompleted,
+    categoryName: getCategoryName(task, categoriesList),
+    openOnClick: `openTaskModal('${task.id}')`,
+    toggleOnClick: `toggleTaskStatus(event, '${task.id}', '${task.status}', '${targetDateStr}', ${task.is_recurring})`,
+    dragAttrs: isDraggable ? `draggable="true" ondragstart="handleDragStart(event, '${task.id}')"` : '',
+    footerHtml: task.is_recurring
+      ? `<span><i class="bi bi-arrow-repeat"></i> ${task.recurrence_freq || 'Rotina'}</span>`
+      : `<span>Fazer: ${execFormatted}</span><span>Para: ${deliveryFormatted}</span>`
+  });
 }
 
 // Alterna rapidamente o status da tarefa entre 'concluida' e 'a_fazer' (RF02.3 / RF05.4)
@@ -782,7 +499,7 @@ async function toggleTaskStatus(event, taskId, currentStatus, targetDateStr = nu
     renderCurrentView();
   } catch (err) {
     console.error('Erro ao alternar status da tarefa:', err);
-    alert('Erro ao atualizar o status da tarefa.');
+    MeowUI.alert('Erro ao atualizar o status da tarefa.', { title: 'Erro' });
   }
 }
 
@@ -814,8 +531,8 @@ async function handleDrop(e) {
 
   // Bloqueia se tentar soltar em um dia que já passou
   if (newExecDateStr < todayStr) {
-    alert('⚠️ Regra de Negócio: Não é possível mover a Data de Execução para um dia que já passou!');
     draggingTaskId = null;
+    MeowUI.alert('Não é possível mover a Data de Execução para um dia que já passou!', { title: 'Regra de Negócio' });
     return;
   }
 
@@ -825,8 +542,8 @@ async function handleDrop(e) {
   if (task.data_entrega) {
     const deliveryDateStr = task.data_entrega.split(' ')[0];
     if (newExecDateStr > deliveryDateStr) {
-      alert('⚠️ Regra de Negócio: Não é possível mover a Data de Execução para depois da Data de Entrega!');
       draggingTaskId = null;
+      MeowUI.alert('Não é possível mover a Data de Execução para depois da Data de Entrega!', { title: 'Regra de Negócio' });
       return;
     }
   }
@@ -841,145 +558,11 @@ async function handleDrop(e) {
     renderCurrentView();
   } catch (err) {
     console.error('Erro ao mover a tarefa:', err);
-    alert('Erro ao mover a tarefa.');
+    MeowUI.alert('Erro ao mover a tarefa.', { title: 'Erro' });
   }
 }
 
-// Utilitário para pegar a data atual/local sem problemas de fuso horário UTC
-function getLocalDateStr(dateObj = new Date()) {
-  const year = dateObj.getFullYear();
-  const month = String(dateObj.getMonth() + 1).padStart(2, '0');
-  const day = String(dateObj.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
-}
-
-// 9. MODAL DE EDIÇÃO
-async function openTaskModal(taskId = null) {
-  deletedSubtaskIds = []; // <-- Reseta a lista de subtarefas a serem excluídas
-  const modalOverlay = document.getElementById('taskModalOverlay');
-  const form = document.getElementById('taskForm');
-  const subtasksList = document.getElementById('subtasksList');
-  subtasksList.innerHTML = '';
-
-  // Atualiza dinamicamente a data mínima permitida nos campos do formulário para HOJE
-  const todayStr = getLocalDateStr();
-  const deliveryInput = document.getElementById('taskDeliveryDate');
-  const execInput = document.getElementById('taskExecDate');
-
-  if (deliveryInput) deliveryInput.min = todayStr;
-  if (execInput) execInput.min = todayStr;
-
-  if (taskId) {
-    const task = tasksList.find(t => t.id === taskId);
-    if (!task) return;
-
-    populateCategoryOptions(task.categoria || '');
-    updateTaskCategoryColorPreview(task.categoria || ''); // <-- Atualiza a cor do círculo no modal
-
-    document.getElementById('taskIdInput').value = task.id;
-    document.getElementById('taskTitleInput').value = task.titulo;
-    const urgencyValue = task.urgencia || 'normal';
-    document.getElementById('taskUrgencySelect').value = urgencyValue;
-    updateModalUrgencyFlag(urgencyValue); // <-- Atualiza a cor do ícone no modal
-    document.getElementById('taskStatusSelect').value = task.status || 'a_fazer';
-    document.getElementById('taskDeliveryDate').value = task.data_entrega ? task.data_entrega.split(' ')[0] : '';
-    document.getElementById('taskExecDate').value = task.data_execucao ? task.data_execucao.split(' ')[0] : '';
-
-    const isRecurring = task.is_recurring || false;
-    document.getElementById('taskRecurringCheck').checked = isRecurring;
-    toggleRecurringFields(isRecurring);
-
-    if (isRecurring) {
-      document.getElementById('taskRecurrenceFreq').value = task.recurrence_freq || 'semanal';
-    }
-
-    document.getElementById('taskDescInput').value = task.descricao || '';
-    document.getElementById('btnDeleteTask').classList.remove('hidden');
-
-    try {
-      const subs = await pb.collection('subtarefas').getFullList({
-        filter: `tarefa = "${task.id}" && user = "${currentUser.id}"`
-      });
-      subs.forEach(s => addSubtaskRow(s));
-    } catch (e) {
-      console.error('Erro ao carregar subtarefas:', e);
-    }
-
-  } else {
-    form.reset();
-    populateCategoryOptions('');
-    updateTaskCategoryColorPreview('');
-
-    // Se o dia selecionado no calendário for anterior a hoje, força a data para HOJE
-    const selectedDateStr = getLocalDateStr(selectedDate);
-    const initialDateStr = selectedDateStr < todayStr ? todayStr : selectedDateStr;
-
-    document.getElementById('taskIdInput').value = '';
-    document.getElementById('taskDeliveryDate').value = initialDateStr;
-    document.getElementById('taskExecDate').value = initialDateStr;
-    document.getElementById('taskUrgencySelect').value = 'normal';
-    updateModalUrgencyFlag('normal'); // <-- Garante a cor verde para nova tarefa
-
-    toggleRecurringFields(false);
-    document.getElementById('btnDeleteTask').classList.add('hidden');
-  }
-
-  modalOverlay.classList.add('is-active');
-}
-
-function closeTaskModal() {
-  document.getElementById('taskModalOverlay').classList.remove('is-active');
-}
-
-function formatDateBR(dateString) {
-  if (!dateString) return '';
-  const dateOnly = dateString.split(' ')[0];
-  const parts = dateOnly.split('-');
-  if (parts.length !== 3) return dateString;
-  return `${parts[2]}/${parts[1]}/${parts[0]}`;
-}
-
-function escapeHtml(str) {
-  if (!str) return '';
-  return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
-}
-
-// Atualiza apenas a cor do ícone da bandeira do Bootstrap Icons no Modal
-function updateModalUrgencyFlag(urgency) {
-  const flagIcon = document.getElementById('urgencyFlagIcon');
-  if (!flagIcon) return;
-
-  const colors = {
-    baixa: '#C2E0FF',   // Azul pastel
-    normal: '#A8F5B4',  // Verde pastel
-    alta: '#FFD8A8',    // Laranja pastel
-    urgente: '#FFA8A8'  // Vermelho/Coral pastel
-  };
-
-  flagIcon.style.color = colors[urgency] || colors.normal;
-}
-
-// Atualiza a bolinha indicadora de cor da categoria no modal do calendário
-function updateTaskCategoryColorPreview(categoryId) {
-  const previewEl = document.getElementById('taskCategoryColorPreview');
-  if (!previewEl) return;
-
-  if (!categoryId) {
-    // Tarefa sem categoria: oculta o círculo de cor
-    previewEl.style.display = 'none';
-    return;
-  }
-
-  const catObj = categoriesList.find(c => c.id === categoryId);
-  if (catObj && catObj.cor) {
-    previewEl.style.backgroundColor = catObj.cor;
-    previewEl.style.display = 'inline-block';
-  } else {
-    previewEl.style.display = 'none';
-  }
-}
-
-// Gerenciador de inatividade no Calendário (Sessão de 30 minutos)
+// Gerenciador de inatividade no Calendário (Sessão de 120 minutos)
 function initInactivityTracker() {
   const updateActivity = () => {
     if (pb.authStore.isValid) {
@@ -1004,35 +587,8 @@ function initInactivityTracker() {
 
 initInactivityTracker();
 
-// ==========================================
-// CONTROLE DE TEMA (CLARO / ESCURO)
-// ==========================================
-function initThemeTracker() {
-  const savedTheme = localStorage.getItem('app_theme') || 'dark'; // Padrão escuro ou claro
-
-  if (savedTheme === 'dark') {
-    document.body.classList.add('dark-theme');
-  } else {
-    document.body.classList.remove('dark-theme');
-  }
-
-  const themeBtn = document.getElementById('themeToggleBtn');
-  if (themeBtn) {
-    themeBtn.textContent = savedTheme === 'dark' ? '☀️' : '🌙';
-
-    // Garante que não duplica o evento de clique
-    themeBtn.onclick = () => {
-      const isDark = document.body.classList.toggle('dark-theme');
-      const newTheme = isDark ? 'dark' : 'light';
-
-      localStorage.setItem('app_theme', newTheme);
-      themeBtn.textContent = isDark ? '☀️' : '🌙';
-    };
-  }
-}
-
 // ==========================================================================
-// 10. EXPORTAÇÃO DA VISUALIZAÇÃO SEMANAL (CSV & PDF - RF07.2)
+// 8. EXPORTAÇÃO DA VISUALIZAÇÃO SEMANAL (CSV & PDF - RF07.2)
 // ==========================================================================
 
 function getCurrentWeekExportData() {
@@ -1052,7 +608,7 @@ function getCurrentWeekExportData() {
     const routineTasks = tasksList.filter(t => isRoutineForDate(t, currentDay));
 
     const pushTask = (task, secao) => {
-      const catName = task.expand?.categoria?.nome || 'Sem categoria';
+      const catName = getCategoryName(task, categoriesList);
       const isDone = task.is_recurring
         ? routineCompletionsList.some(c => c.tarefa === task.id && c.data === dateStr)
         : task.status === 'concluida';
@@ -1079,11 +635,11 @@ function exportWeekToCSV() {
   const { startOfWeek, rows } = getCurrentWeekExportData();
 
   if (rows.length === 0) {
-    alert('Não há tarefas cadastradas nesta semana para exportar. 🐾');
+    MeowUI.alert('Não há tarefas cadastradas nesta semana para exportar.', { title: 'Nada para exportar', type: 'info' });
     return;
   }
 
-  // Cabeçalho com BOM (\uFEFF) para acentuação correta no Excel
+  // Cabeçalho com BOM (﻿) para acentuação correta no Excel
   const headers = ['Dia da Semana', 'Seção', 'Tarefa', 'Categoria', 'Urgência', 'Status'];
   const csvLines = [
     headers.join(';'),
@@ -1091,13 +647,13 @@ function exportWeekToCSV() {
       `"${r.dia}"`,
       `"${r.secao}"`,
       `"${r.titulo.replace(/"/g, '""')}"`,
-      `"${r.categoria}"`,
+      `"${r.categoria.replace(/"/g, '""')}"`,
       `"${r.urgencia}"`,
       `"${r.status}"`
     ].join(';'))
   ];
 
-  const blob = new Blob(['\uFEFF' + csvLines.join('\n')], { type: 'text/csv;charset=utf-8;' });
+  const blob = new Blob(['﻿' + csvLines.join('\n')], { type: 'text/csv;charset=utf-8;' });
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.href = url;
@@ -1110,7 +666,7 @@ function exportWeekToPDF() {
   const { startOfWeek, rows } = getCurrentWeekExportData();
 
   if (rows.length === 0) {
-    alert('Não há tarefas cadastradas nesta semana para exportar. 🐾');
+    MeowUI.alert('Não há tarefas cadastradas nesta semana para exportar.', { title: 'Nada para exportar', type: 'info' });
     return;
   }
 
@@ -1153,43 +709,4 @@ if ('serviceWorker' in navigator) {
       .then(() => console.log('PWA: Service Worker registrado com sucesso!'))
       .catch((err) => console.error('PWA: Erro ao registrar Service Worker:', err));
   });
-}
-
-async function recompensarConclusaoTarefa(taskRewardKey, valor = 10) {
-  if (!pb.authStore.isValid || !pb.authStore.model) return;
-  const userId = pb.authStore.model.id;
-  const storageKey = `meow_plans_pet_${userId}`;
-
-  try {
-    const res = await pb.collection('pets').getList(1, 1, {
-      filter: `user = "${userId}"`
-    });
-
-    if (res.items.length === 0) return; // Usuário ainda não adotou um pet
-
-    const pet = res.items[0];
-    const jaPagas = Array.isArray(pet.tarefas_recompensadas) ? pet.tarefas_recompensadas : [];
-
-    // Trava no banco: evita ganhar moedas duas vezes pela mesma tarefa em qualquer dispositivo
-    if (jaPagas.includes(taskRewardKey)) return;
-
-    const novoSaldo = (pet.moedas || 0) + valor;
-    const novasPagas = [...jaPagas, taskRewardKey];
-
-    await pb.collection('pets').update(pet.id, {
-      moedas: novoSaldo,
-      tarefas_recompensadas: novasPagas
-    });
-
-    // Atualiza o cache local isolado do usuário (dispara atualização ao vivo se pet.html estiver aberto)
-    const localRaw = localStorage.getItem(storageKey);
-    if (localRaw) {
-      const parsed = JSON.parse(localRaw);
-      parsed.moedas = novoSaldo;
-      parsed.tarefas_recompensadas = novasPagas;
-      localStorage.setItem(storageKey, JSON.stringify(parsed));
-    }
-  } catch (err) {
-    console.error('Erro ao creditar moedas no PocketBase:', err);
-  }
 }

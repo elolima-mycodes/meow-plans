@@ -18,24 +18,24 @@
 </head>
 <body>
   <div class="app-container" style="max-width: 500px; margin: 0 auto; padding: 1.5rem 1rem;">
-    
+
     <!-- CABEÇALHO DE NAVEGAÇÃO -->
     <header class="flex-between mb-1" style="align-items: center;">
       <button type="button" class="btn btn-outline" onclick="voltarTela()" style="padding: 0.35rem 0.75rem;">
-        &larr; Voltar
+        <i class="bi bi-arrow-left"></i> Voltar
       </button>
-      <h2 style="font-size: 1.2rem; font-weight: 700; margin: 0;">Meu Perfil 🐾</h2>
-      <button id="themeToggleBtn" class="btn btn-outline" style="padding: 0.35rem 0.6rem;">🌙</button>
+      <h2 style="font-size: 1.2rem; font-weight: 700; margin: 0;">Meu Perfil <i class="bi bi-person-circle"></i></h2>
+      <button id="themeToggleBtn" class="btn btn-outline" style="padding: 0.35rem 0.6rem;" title="Alternar Tema"><i class="bi bi-moon-fill"></i></button>
     </header>
 
     <!-- CARTÃO DE PERFIL -->
     <main class="main-lilac-card" style="padding: 1.5rem; min-height: auto;">
       <form id="profileForm">
-        
+
         <!-- AVATAR -->
         <div class="text-center mb-1" style="display: flex; flex-direction: column; align-items: center; gap: 0.5rem;">
           <div class="user-avatar-badge" id="profileAvatarPreview" style="width: 70px; height: 70px; font-size: 1.8rem;">
-            <span>🐾</span>
+            <i class="bi bi-person-fill"></i>
           </div>
           <label for="avatarInput" class="btn btn-outline btn-sm" style="cursor: pointer; font-size: 0.75rem;">
             Alterar Foto
@@ -74,9 +74,9 @@
           <button type="submit" class="btn btn-secondary btn-block" style="min-height: 42px; font-weight: 700;">
             Salvar Alterações
           </button>
-          
+
           <button type="button" id="btnDeleteAccount" class="btn btn-danger btn-block" style="min-height: 42px; font-weight: 700;">
-            🗑 Excluir Minha Conta
+            <i class="bi bi-trash3"></i> Excluir Minha Conta
           </button>
         </div>
 
@@ -86,22 +86,24 @@
 
   <!-- MODAL DE FEEDBACK (SUCESSO / ERRO) -->
   <div id="feedbackModal" class="modal-overlay">
-    <div class="modal-card modal-cute-container text-center" style="max-width: 380px;">
-      <div id="feedbackModalIcon" style="font-size: 2rem; margin-bottom: 0.5rem;">✅</div>
-      <h3 id="feedbackModalTitle" class="mb-1">Sucesso!</h3>
-      <p id="feedbackModalMessage" class="mb-1">Alterações feitas com sucesso!</p>
-      <button type="button" id="btnCloseFeedbackModal" class="btn btn-secondary btn-block">
-        Fechar
-      </button>
+    <div class="modal-card modal-cute-container meow-modal meow-dialog">
+      <i id="feedbackModalIcon" class="bi bi-check-circle-fill meow-dialog-icon meow-dialog-icon-success"></i>
+      <h3 id="feedbackModalTitle" class="meow-dialog-title">Sucesso!</h3>
+      <p id="feedbackModalMessage" class="meow-dialog-message">Alterações feitas com sucesso!</p>
+      <div class="meow-modal-actions">
+        <button type="button" id="btnCloseFeedbackModal" class="btn btn-secondary">
+          Fechar
+        </button>
+      </div>
     </div>
   </div>
 
   <!-- MODAL DE EXCLUSÃO DE CONTA -->
   <div id="deleteAccountModal" class="modal-overlay">
-    <div class="modal-card modal-cute-container text-center" style="max-width: 400px;">
-      <div style="font-size: 2rem; margin-bottom: 0.5rem;">⚠️</div>
-      <h3 class="mb-1">Excluir Minha Conta</h3>
-      <p class="mb-1">
+    <div class="modal-card modal-cute-container meow-modal meow-dialog">
+      <i class="bi bi-exclamation-triangle-fill meow-dialog-icon meow-dialog-icon-danger"></i>
+      <h3 class="meow-dialog-title">Excluir Minha Conta</h3>
+      <p class="meow-dialog-message">
         Esta ação apagará sua conta permanentemente! Digite <strong>EXCLUIR</strong> para confirmar:
       </p>
       <div class="form-group">
@@ -116,11 +118,11 @@
           Digite exatamente EXCLUIR para confirmar.
         </span>
       </div>
-      <div class="flex-row">
-        <button type="button" id="btnCancelDeleteModal" class="btn btn-outline btn-block">
+      <div class="meow-modal-actions">
+        <button type="button" id="btnCancelDeleteModal" class="btn btn-outline">
           Cancelar
         </button>
-        <button type="button" id="btnConfirmDeleteModal" class="btn btn-danger btn-block">
+        <button type="button" id="btnConfirmDeleteModal" class="btn btn-danger">
           Excluir Conta
         </button>
       </div>

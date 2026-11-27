@@ -50,7 +50,9 @@ function initModals() {
 
 function showFeedbackModal(title, message, type = 'success', onClose = null) {
   const modal = document.getElementById('feedbackModal');
-  document.getElementById('feedbackModalIcon').textContent = type === 'error' ? '⚠️' : '✅';
+  document.getElementById('feedbackModalIcon').className = type === 'error'
+    ? 'bi bi-exclamation-triangle-fill meow-dialog-icon meow-dialog-icon-warning'
+    : 'bi bi-check-circle-fill meow-dialog-icon meow-dialog-icon-success';
   document.getElementById('feedbackModalTitle').textContent = title;
   document.getElementById('feedbackModalMessage').textContent = message;
   onFeedbackCloseCallback = onClose;
@@ -77,7 +79,8 @@ function loadUserProfile() {
     avatarPreview.innerHTML = `<img src="${avatarUrl}" alt="User Avatar" style="width:100%; height:100%; object-fit:cover; border-radius:50%;" />`;
   } else {
     const initial = (currentUser.name || currentUser.username || 'P').charAt(0).toUpperCase();
-    avatarPreview.innerHTML = `<span>${initial}</span>`;
+    avatarPreview.innerHTML = '<span></span>';
+    avatarPreview.firstChild.textContent = initial;
   }
 }
 
@@ -87,7 +90,7 @@ function handleAvatarPreview(e) {
   if (file) {
     const reader = new FileReader();
     reader.onload = (event) => {
-      document.getElementById('profileAvatarPreview').innerHTML = 
+      document.getElementById('profileAvatarPreview').innerHTML =
         `<img src="${event.target.result}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;" />`;
     };
     reader.readAsDataURL(file);
@@ -125,8 +128,8 @@ async function handleUpdateProfile(e) {
 
   try {
     const updatedUser = await pb.collection('users').update(currentUser.id, formData);
-    showFeedbackModal('Tudo certo! 🐾', 'Alterações feitas com sucesso!', 'success');
-    
+    showFeedbackModal('Tudo certo!', 'Alterações feitas com sucesso!', 'success');
+
     // Atualiza a sessão ativa no SDK
     currentUser = updatedUser;
     loadUserProfile();
@@ -188,11 +191,14 @@ function initThemeTracker() {
 
   const themeBtn = document.getElementById('themeToggleBtn');
   if (themeBtn) {
-    themeBtn.textContent = savedTheme === 'dark' ? '☀️' : '🌙';
+    const paint = (isDark) => {
+      themeBtn.innerHTML = `<i class="bi ${isDark ? 'bi-sun-fill' : 'bi-moon-fill'}"></i>`;
+    };
+    paint(savedTheme === 'dark');
     themeBtn.onclick = () => {
       const isDark = document.body.classList.toggle('dark-theme');
       localStorage.setItem('app_theme', isDark ? 'dark' : 'light');
-      themeBtn.textContent = isDark ? '☀️' : '🌙';
+      paint(isDark);
     };
   }
 }

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'meow-plans-v2';
+const CACHE_NAME = 'meow-plans-v3';
 const STATIC_ASSETS = [
   './',
   './index.html',
@@ -8,6 +8,7 @@ const STATIC_ASSETS = [
   './usuario.html',
   './pet.html',
   './style.css',
+  './ui.js',
   './login.js',
   './calendario.js',
   './gerenciar.js',
