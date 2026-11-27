@@ -1,0 +1,1154 @@
+/* ==========================================================================
+   MEOW PLANS - GLOBAL STYLESHEET
+   Style System: Mobile-First Strict | Cute Feline Aesthetic
+   ========================================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&display=swap');
+
+/* --------------------------------------------------------------------------
+   1. VARIABLES & DESIGN SYSTEM (DESIGN TOKENS)
+   -------------------------------------------------------------------------- */
+:root {
+  /* Brand Primary Colors */
+  --color-primary: #C2BEF6;
+  /* Lilás principal */
+  --color-primary-hover: #B0A9F3;
+  /* Lilás destaque */
+  --color-primary-light: #E8E6FC;
+  /* Lilás suavizado */
+  --color-pink-primary: #F4C1F2;
+  /* Rosa Pastel principal */
+  --color-pink-soft: #EEC6FF;
+  /* Rosa Lilás claro */
+
+  /* Accent & Highlight Colors */
+  --color-mint-light: #BEF7F3;
+  /* Verde Mint claro */
+  --color-mint-medium: #CCF6CC;
+  /* Verde Mint médio */
+  --color-mint-bright: #78FF92;
+  /* Verde Mint vibrante (Concluído/Sucesso) */
+  --color-yellow-orange: #FFC878;
+  /* Amarelo/Laranja (Atenção/Em Andamento) */
+
+  /* Status & Alerts */
+  --color-danger: #FF8A8A;
+  /* Coral/Vermelho (Alertas/Cancelados/Atrasados) */
+  --color-danger-light: #FFE5E5;
+  --color-disabled: #B5B3AD;
+  /* Cinza desabilitado / Texto secundário */
+
+  /* Neutral Backgrounds & Text */
+  --color-bg-app: #F8F9FA;
+  /* Fundo global da aplicação */
+  --color-card-bg: #FFFFFF;
+  /* Fundo dos cards e contêineres */
+  --color-border: #E2E8F0;
+  /* Bordas sutis */
+  --color-text-dark: #2D3748;
+  /* Texto principal de alto contraste */
+  --color-text-muted: #718096;
+  /* Texto secundário e legendas */
+
+  /* Typography */
+  --font-family-base: 'Quicksand', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+
+  /* Border Radius (Brand System) */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --radius-pill: 9999px;
+
+  /* Touch Targets & Sizes */
+  --touch-target-min: 44px;
+
+  /* Shadows (Soft Cute Style) */
+  --shadow-sm: 0 2px 8px rgba(194, 190, 246, 0.15);
+  --shadow-md: 0 4px 16px rgba(194, 190, 246, 0.25);
+  --shadow-lg: 0 8px 24px rgba(45, 55, 72, 0.12);
+  --shadow-glow: 0 0 12px rgba(194, 190, 246, 0.5);
+
+  /* Transitions */
+  --transition-fast: 0.15s ease;
+  --transition-normal: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* --------------------------------------------------------------------------
+   2. RESET & BASE STYLES
+   -------------------------------------------------------------------------- */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html {
+  font-size: 16px;
+  scroll-behavior: smooth;
+  height: 100%;
+}
+
+body {
+  font-family: var(--font-family-base);
+  background-color: var(--color-bg-app);
+  color: var(--color-text-dark);
+  line-height: 1.5;
+  font-weight: 500;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+img,
+svg {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+  border: none;
+  outline: none;
+  background: none;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+ul,
+ol {
+  list-style: none;
+}
+
+/* --------------------------------------------------------------------------
+   3. TYPOGRAPHY
+   -------------------------------------------------------------------------- */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--color-text-dark);
+}
+
+h1 {
+  font-size: 1.75rem;
+}
+
+h2 {
+  font-size: 1.35rem;
+}
+
+h3 {
+  font-size: 1.15rem;
+}
+
+h4 {
+  font-size: 1rem;
+}
+
+p {
+  font-size: 0.95rem;
+  color: var(--color-text-dark);
+}
+
+.text-muted {
+  color: var(--color-text-muted);
+  font-size: 0.85rem;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.text-right {
+  text-align: right;
+}
+
+.font-bold {
+  font-weight: 700;
+}
+
+/* --------------------------------------------------------------------------
+   4. FORM CONTROLS & INPUTS
+   -------------------------------------------------------------------------- */
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  margin-bottom: 1rem;
+  width: 100%;
+}
+
+.form-label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--color-text-dark);
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.input-control,
+.select-control,
+.textarea-control {
+  width: 100%;
+  min-height: var(--touch-target-min);
+  padding: 0.75rem 1rem;
+  background-color: var(--color-card-bg);
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-md);
+  color: var(--color-text-dark);
+  font-size: 0.95rem;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.input-control:focus,
+.select-control:focus,
+.textarea-control:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(194, 190, 246, 0.3);
+}
+
+.input-control::placeholder,
+.textarea-control::placeholder {
+  color: var(--color-disabled);
+}
+
+.textarea-control {
+  min-height: 100px;
+  resize: vertical;
+}
+
+/* Custom Checkbox Fofo */
+.custom-checkbox {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  user-select: none;
+  min-height: var(--touch-target-min);
+}
+
+.custom-checkbox input {
+  position: absolute;
+  opacity: 0;
+  cursor: pointer;
+  height: 0;
+  width: 0;
+}
+
+.checkmark {
+  height: 24px;
+  width: 24px;
+  background-color: var(--color-card-bg);
+  border: 2px solid var(--color-primary);
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: var(--transition-fast);
+}
+
+.custom-checkbox input:checked~.checkmark {
+  background-color: var(--color-primary);
+}
+
+.checkmark::after {
+  content: "🐾";
+  font-size: 0.75rem;
+  display: none;
+}
+
+.custom-checkbox input:checked~.checkmark::after {
+  display: block;
+}
+
+/* Switch Toggle (Inspirado na interface do protótipo) */
+.switch-toggle {
+  position: relative;
+  display: inline-block;
+  width: 52px;
+  height: 28px;
+}
+
+.switch-toggle input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: var(--color-disabled);
+  transition: var(--transition-normal);
+  border-radius: var(--radius-pill);
+}
+
+.slider::before {
+  position: absolute;
+  content: "";
+  height: 22px;
+  width: 22px;
+  left: 3px;
+  bottom: 3px;
+  background-color: var(--color-card-bg);
+  transition: var(--transition-normal);
+  border-radius: 50%;
+  box-shadow: var(--shadow-sm);
+}
+
+input:checked+.slider {
+  background-color: var(--color-mint-bright);
+}
+
+input:checked+.slider::before {
+  transform: translateX(24px);
+}
+
+/* --------------------------------------------------------------------------
+   5. BUTTONS & INTERACTIVE ELEMENTS
+   -------------------------------------------------------------------------- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: var(--touch-target-min);
+  padding: 0.65rem 1.25rem;
+  border-radius: var(--radius-md);
+  font-weight: 700;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast), background-color var(--transition-fast);
+  box-shadow: var(--shadow-sm);
+  touch-action: manipulation;
+}
+
+.btn:active {
+  transform: scale(0.97);
+}
+
+.btn-primary {
+  background-color: var(--color-primary);
+  color: #FFFFFF;
+}
+
+.btn-primary:hover {
+  background-color: var(--color-primary-hover);
+  box-shadow: var(--shadow-md);
+}
+
+.btn-secondary {
+  background-color: var(--color-pink-primary);
+  color: var(--color-text-dark);
+}
+
+.btn-secondary:hover {
+  background-color: var(--color-pink-soft);
+}
+
+.btn-accent {
+  background-color: var(--color-mint-light);
+  color: var(--color-text-dark);
+}
+
+.btn-accent:hover {
+  background-color: var(--color-mint-medium);
+}
+
+.btn-danger {
+  background-color: var(--color-danger);
+  color: #FFFFFF;
+}
+
+.btn-danger:hover {
+  background-color: #FF6B6B;
+}
+
+.btn-outline {
+  background-color: transparent;
+  border: 2px solid var(--color-primary);
+  color: var(--color-text-dark);
+}
+
+.btn-outline:hover {
+  background-color: var(--color-primary-light);
+}
+
+.btn-icon {
+  width: var(--touch-target-min);
+  height: var(--touch-target-min);
+  padding: 0;
+  border-radius: 50%;
+}
+
+.btn:disabled {
+  background-color: var(--color-disabled);
+  color: #FFFFFF;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* --------------------------------------------------------------------------
+   6. STATUS & URGENCY BADGES
+   -------------------------------------------------------------------------- */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.75rem;
+  border-radius: var(--radius-pill);
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+}
+
+/* Badges de Status das Tarefas */
+.badge-todo {
+  background-color: var(--color-pink-soft);
+  color: #8C4189;
+}
+
+.badge-doing {
+  background-color: var(--color-yellow-orange);
+  color: #6B4900;
+}
+
+.badge-done {
+  background-color: var(--color-mint-bright);
+  color: #125420;
+}
+
+.badge-overdue {
+  background-color: var(--color-danger);
+  color: #FFFFFF;
+}
+
+.badge-cancelled {
+  background-color: var(--color-disabled);
+  color: #FFFFFF;
+}
+
+/* Badges de Urgência */
+.badge-urgency-low {
+  background-color: #E2F0D9;
+  color: #385723;
+}
+
+.badge-urgency-normal {
+  background-color: #FFF2CC;
+  color: #7F6000;
+}
+
+.badge-urgency-high {
+  background-color: #FCE4D6;
+  color: #C65911;
+}
+
+.badge-urgency-urgent {
+  background-color: var(--color-danger-light);
+  color: #C00000;
+  border: 1px solid var(--color-danger);
+}
+
+/* RF02.3: Estilo visual acinzentado para tarefas concluídas */
+.meow-card.card-completed {
+  background-color: #E2E8F0 !important;
+  /* Fundo cinza suave */
+  border-color: #CBD5E0 !important;
+  /* Borda acinzentada */
+  opacity: 0.75;
+}
+
+.meow-card.card-completed .meow-card-title {
+  color: #718096 !important;
+  text-decoration: line-through;
+}
+
+.meow-card.card-completed .meow-card-footer {
+  color: #A0AEC0 !important;
+}
+
+/* Cursor interativo no ícone de status */
+.status-icon-btn {
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+
+.status-icon-btn:hover {
+  transform: scale(1.2);
+}
+
+/* --------------------------------------------------------------------------
+   7. CARDS & DRAG-AND-DROP CONTAINERS
+   -------------------------------------------------------------------------- */
+.card {
+  background-color: var(--color-card-bg);
+  border-radius: var(--radius-xl);
+  padding: 1rem;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--color-border);
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.card-task {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  position: relative;
+  overflow: hidden;
+  border-left: 6px solid var(--color-primary);
+}
+
+/* Estilização diferenciada por tipo de seção */
+.card-delivery {
+  border-left-color: var(--color-pink-primary);
+}
+
+.card-routine {
+  border-left-color: var(--color-mint-light);
+}
+
+/* Drag and Drop apenas em cards permitidos (Data de Execução) */
+.card-draggable {
+  cursor: grab;
+  user-select: none;
+}
+
+.card-draggable:active {
+  cursor: grabbing;
+}
+
+.card-draggable.is-dragging {
+  opacity: 0.5;
+  transform: scale(0.98);
+  box-shadow: var(--shadow-lg);
+  border: 2px dashed var(--color-primary);
+}
+
+.drop-zone {
+  min-height: 80px;
+  border-radius: var(--radius-lg);
+  transition: background-color var(--transition-fast), border-color var(--transition-fast);
+}
+
+.drop-zone.drag-over {
+  background-color: var(--color-primary-light);
+  border: 2px dashed var(--color-primary);
+}
+
+/* Soft Delete / Lixeira */
+.card-deleted,
+.is-deleted {
+  opacity: 0.65;
+  filter: grayscale(0.5);
+  background-color: #F1F1F1;
+  border-left-color: var(--color-disabled);
+}
+
+/* --------------------------------------------------------------------------
+   8. MODALS, OVERLAYS & DRAWER
+   -------------------------------------------------------------------------- */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(45, 55, 72, 0.4);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  z-index: 1000;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity var(--transition-fast);
+}
+
+.modal-overlay.is-active {
+  opacity: 1;
+  visibility: visible;
+}
+
+.modal-card {
+  background-color: var(--color-card-bg);
+  border-radius: var(--radius-xl);
+  width: 100%;
+  max-width: 500px;
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: 1.5rem;
+  box-shadow: var(--shadow-lg);
+  transform: translateY(20px);
+  transition: transform var(--transition-normal);
+}
+
+.modal-overlay.is-active .modal-card {
+  transform: translateY(0);
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.25rem;
+}
+
+/* --------------------------------------------------------------------------
+   9. LAYOUT UTILITIES & COMPONENT STRUCTURE
+   -------------------------------------------------------------------------- */
+.app-container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+/* Aplica o espaçamento entre as seções nas colunas de tela grande */
+  .week-day-column {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+.flex-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.flex-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.flex-wrap {
+  flex-wrap: wrap;
+}
+
+.grid-stack {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+
+/* Header & Logo */
+.brand-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.brand-logo {
+  width: 100px;
+  height: 100px;
+  object-fit: contain;
+}
+
+.brand-title {
+  font-size: 1.5rem;
+  color: var(--color-text-dark);
+  font-weight: 700;
+}
+
+/* --------------------------------------------------------------------------
+   10. MEDIA QUERIES (DESKTOP ADAPTATION - MOBILE FIRST STRICT)
+   -------------------------------------------------------------------------- */
+@media (min-width: 768px) {
+  html {
+    font-size: 17px;
+  }
+
+  .app-container {
+    padding: 2rem;
+    gap: 2rem;
+  }
+
+  /* Grid Responsivo para Calendário e Colunas de Tarefas */
+  .grid-calendar-week {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 1rem;
+  }
+
+  .grid-stack {
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  }
+
+  .modal-card {
+    padding: 2rem;
+  }
+
+  .card-task {
+    padding: 1.25rem;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   11. AUTHENTICATION & ALERT EXTENSIONS
+   -------------------------------------------------------------------------- */
+.auth-container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 420px;
+  margin-top: 1rem;
+}
+
+.auth-card-header {
+  margin-bottom: 1.25rem;
+}
+
+.auth-links {
+  margin-top: 0.5rem;
+  font-size: 0.85rem;
+}
+
+.btn-link {
+  background: none;
+  border: none;
+  color: var(--color-primary-hover);
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+  text-decoration: none;
+  transition: color var(--transition-fast);
+}
+
+.btn-link:hover {
+  color: var(--color-text-dark);
+}
+
+.btn-block {
+  width: 100%;
+}
+
+.mb-1 {
+  margin-bottom: 1rem;
+}
+
+/* Visibilidade e Alertas */
+.hidden {
+  display: none !important;
+}
+
+.alert-box {
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-md);
+  font-size: 0.875rem;
+  font-weight: 600;
+  margin-bottom: 1.25rem;
+  text-align: center;
+  transition: var(--transition-fast);
+}
+
+.alert-box.error {
+  background-color: var(--color-danger-light);
+  color: #C00000;
+  border: 1px solid var(--color-danger);
+}
+
+.alert-box.success {
+  background-color: var(--color-mint-light);
+  color: #125420;
+  border: 1px solid var(--color-mint-bright);
+}
+
+/* Estilo dos Cards Identico ao Calendario */
+.meow-card {
+  background: #FFFFFF;
+  border-radius: var(--radius-lg, 16px);
+  padding: 0.75rem 1rem;
+  margin-bottom: 0.75rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.meow-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.meow-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.meow-card-title-group {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.meow-card-title {
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: #2D3748;
+}
+
+.meow-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  color: #718096;
+  padding-top: 0.25rem;
+}
+
+/* Status e Riscos */
+.text-strikethrough {
+  text-decoration: line-through;
+  opacity: 0.6;
+}
+
+.card-completed {
+  opacity: 0.75;
+  background-color: #F7FAFC;
+}
+
+/* Bootstrap Icons Corrigidos */
+.status-icon {
+  font-size: 1.1rem;
+}
+
+.status-done {
+  color: #38A169;
+}
+
+.status-doing {
+  color: #DD6B20;
+}
+
+.status-overdue {
+  color: #E53E3E;
+}
+
+.status-cancelled {
+  color: #A0AEC0;
+}
+
+.status-todo {
+  color: #CBD5E0;
+}
+
+/* ==========================================================================
+   VARIÁVEIS DE CORES & TEMAS (LIGHT / DARK)
+   ========================================================================== */
+
+/* Tema Claro (Padrão) */
+:root {
+  --bg-app: #F7FAFC;
+  --bg-card: #FFFFFF;
+  --bg-lilac-panel: #C2BEF6;
+  --bg-calendar-app: #E8E6FC; /* Fundo lilás bem suave para o calendário */
+  --bg-header: #E2E8F0;       /* Cabeçalho claro */
+
+  --text-main: #2D3748;
+  --text-muted: #718096;
+  --border-color: #CBD5E0;
+
+  --color-primary: #C2BEF6;
+  --color-primary-dark: #8C82F2;
+  --color-secondary: #384252;
+
+  /* Cores Harmônicas para Modais */
+  --bg-modal: #FFFFFF;
+  --text-modal: #2D3748;
+}
+
+/* Tema Escuro */
+body.dark-theme {
+  --bg-app: #1A202C;
+  --bg-card: #2D3748;
+  --bg-lilac-panel: #4A5568;
+  --bg-calendar-app: #2D3748; /* Fundo escuro do calendário */
+  --bg-header: #232B38;       /* Cabeçalho escuro */
+
+  --text-main: #EDF2F7;
+  --text-muted: #A0AEC0;
+  --border-color: #4A5568;
+
+  --color-primary: #8C82F2;
+  --color-primary-dark: #6B46C1;
+  --color-secondary: #E2E8F0;
+
+  /* Cores Harmônicas para Modais no Tema Escuro */
+  --bg-modal: #232B38;
+  --text-modal: #EDF2F7;
+}
+
+/* Aplicação Global das Variáveis no Body */
+body {
+  background-color: var(--bg-app);
+  color: var(--text-main);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* ==========================================================================
+   AJUSTES DE MODAIS HARMONIZADOS
+   ========================================================================== */
+
+.modal-cute-container {
+  background-color: var(--bg-modal) !important;
+  color: var(--text-modal) !important;
+  border: 1px solid var(--border-color);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+}
+
+.modal-cute-container .form-label,
+.modal-cute-container label,
+.modal-cute-container h1,
+.modal-cute-container h2,
+.modal-cute-container h3,
+.modal-cute-container h4 {
+  color: var(--text-modal) !important;
+}
+
+.modal-cute-container .input-control,
+.modal-cute-container .select-control,
+.modal-cute-container .textarea-control,
+.modal-cute-container .form-cute-input {
+  background-color: var(--bg-card) !important;
+  color: var(--text-main) !important;
+  border: 1px solid var(--border-color) !important;
+}
+
+/* Ajuste no container interno de subtarefas nos modais */
+.modal-cute-container .form-group[style*="background"] {
+  background: rgba(0, 0, 0, 0.05) !important;
+}
+
+body.dark-theme .modal-cute-container .form-group[style*="background"] {
+  background: rgba(255, 255, 255, 0.05) !important;
+}
+
+/* ==========================================================================
+   PERSONALIZAÇÃO FOFA/PASTEL DOS MODAIS (CLARO & ESCURO)
+   ========================================================================== */
+
+/* Container Principal do Modal */
+.modal-overlay .modal-cute-container {
+  background-color: var(--bg-card, #FFFFFF) !important;
+  border: 2px solid var(--color-primary, #C2BEF6) !important;
+  box-shadow: var(--shadow-lg) !important;
+}
+
+/* Modificação no tema escuro: apenas o fundo do cartão modal escurece suavemente */
+body.dark-theme .modal-overlay .modal-cute-container {
+  background-color: #232B38 !important;
+  border-color: #4A5568 !important;
+}
+
+/* --- RÓTULOS E TÍTULOS --- */
+.modal-overlay .modal-cute-container .form-label,
+.modal-overlay .modal-cute-container label,
+.modal-overlay .modal-cute-container span:not(.checkmark) {
+  color: var(--text-main) !important;
+  font-weight: 700 !important;
+}
+
+/* --- INPUTS DE TEXTO E DATAS (Fundo Branco com Borda Definida) --- */
+.modal-overlay .modal-cute-container input[type="text"],
+.modal-overlay .modal-cute-container input[type="date"],
+.modal-overlay .modal-cute-container .form-cute-input,
+.modal-overlay .modal-cute-container .input-control {
+  background-color: #FFFFFF !important;
+  color: #2D3748 !important;
+  border: 1.5px solid #CBD5E0 !important;
+  border-radius: var(--radius-md) !important;
+  font-weight: 600 !important;
+}
+
+/* --- SELECTS / CAIXAS DE SELEÇÃO --- */
+.modal-overlay .modal-cute-container select,
+.modal-overlay .modal-cute-container .select-control {
+  background-color: #FFFFFF !important;
+  color: #2D3748 !important;
+  border: 1.5px solid #CBD5E0 !important;
+  border-radius: var(--radius-md) !important;
+  font-weight: 600 !important;
+}
+
+/* Mantém o Select de Categoria com fundo colorido personalizado */
+.modal-overlay .modal-cute-container #taskCategorySelect,
+.modal-overlay .modal-cute-container #task-category-select {
+  background-color: var(--color-primary, #C2BEF6) !important;
+  color: #FFFFFF !important;
+  border: none !important;
+}
+
+/* --- CAIXA DE TEXTO / OBSERVAÇÕES (Estilo Fofo Cinza/Grafite) --- */
+.modal-overlay .modal-cute-container textarea,
+.modal-overlay .modal-cute-container .textarea-control,
+.modal-overlay .modal-cute-container .form-cute-textarea {
+  background-color: #4A5568 !important;
+  color: #FFFFFF !important;
+  border: none !important;
+  border-radius: var(--radius-md) !important;
+  font-weight: 500 !important;
+}
+
+.modal-overlay .modal-cute-container textarea::placeholder {
+  color: #CBD5E0 !important;
+}
+
+/* --- ÁREA DE SUBTAREFAS (Container Interno Pastel) --- */
+.modal-overlay .modal-cute-container .form-group[style*="background"] {
+  background: rgba(194, 190, 246, 0.2) !important;
+  border: 1px dashed var(--color-primary, #C2BEF6) !important;
+  border-radius: var(--radius-md) !important;
+}
+
+body.dark-theme .modal-overlay .modal-cute-container .form-group[style*="background"] {
+  background: rgba(255, 255, 255, 0.05) !important;
+  border-color: #4A5568 !important;
+}
+
+/* Linha individual das subtarefas */
+.modal-overlay .modal-cute-container .subtask-row {
+  background-color: #FFFFFF !important;
+  border-radius: var(--radius-sm) !important;
+  padding: 0.25rem 0.5rem !important;
+}
+
+.modal-overlay .modal-cute-container .subtask-row input[type="text"] {
+  border: none !important;
+  background: transparent !important;
+}
+
+/* Estilo do botão de subtarefa no modal */
+.modal-overlay #btnAddSubtaskBtn,
+.modal-overlay #btn-add-subtask-row {
+  background-color: #FFFFFF !important;
+  color: var(--color-primary-dark, #6B46C1) !important;
+  border: 1.5px solid var(--color-primary-dark, #8C82F2) !important;
+  font-weight: 700 !important;
+  transition: all 0.2s ease !important;
+}
+
+/* Estado Hover (ao passar o mouse) */
+.modal-overlay #btnAddSubtaskBtn:hover,
+.modal-overlay #btn-add-subtask-row:hover {
+  background-color: var(--color-primary-dark, #6B46C1) !important;
+  color: #FFFFFF !important;
+}
+
+/* Ajuste específico para o Tema Escuro */
+body.dark-theme .modal-overlay #btnAddSubtaskBtn,
+body.dark-theme .modal-overlay #btn-add-subtask-row {
+  background-color: rgba(255, 255, 255, 0.1) !important;
+  color: #FFFFFF !important;
+  border: 1.5px solid var(--color-primary, #8C82F2) !important;
+}
+
+body.dark-theme .modal-overlay #btnAddSubtaskBtn:hover,
+body.dark-theme .modal-overlay #btn-add-subtask-row:hover {
+  background-color: var(--color-primary, #8C82F2) !important;
+  color: #FFFFFF !important;
+}
+
+/* ==========================================================================
+   FIX: LEGIBILIDADE NO TEMA ESCURO (TELA DE PERFIL E FORMULÁRIOS)
+   ========================================================================== */
+
+/* 1. Títulos e Rótulos (Meu Perfil, Nome de Usuário, E-mail, Alterar Senha) */
+body.dark-theme h2,
+body.dark-theme h3,
+body.dark-theme .form-label,
+body.dark-theme label {
+  color: var(--text-main, #EDF2F7) !important;
+}
+
+/* 2. Botões com Borda (← Voltar e Alterar Foto) */
+body.dark-theme .btn-outline {
+  color: var(--text-main, #EDF2F7) !important;
+  border-color: var(--color-primary, #8C82F2) !important;
+  background-color: rgba(255, 255, 255, 0.05) !important;
+}
+
+body.dark-theme .btn-outline:hover {
+  background-color: var(--color-primary, #8C82F2) !important;
+  color: #FFFFFF !important;
+}
+
+/* 3. Garante que o texto digitado dentro dos inputs brancos continue escuro */
+body.dark-theme .input-control {
+  background-color: #FFFFFF !important;
+  color: #2D3748 !important;
+}
+
+body.dark-theme p,
+body.dark-theme .modal-cute-container p,
+body.dark-theme .modal-cute-container strong {
+  color: var(--text-main, #EDF2F7) !important;
+}
+
+/* Mantém a cor de alerta/erro visível nos spans de validação dos modais */
+body.dark-theme .modal-cute-container span[style*="color: var(--color-danger)"] {
+  color: var(--color-danger, #FF8A8A) !important;
+}
+
+/* ==========================================================================
+   AVATAR DO USUÁRIO (TELA DE PERFIL)
+   ========================================================================== */
+.user-avatar-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-pill);
+  background-color: var(--color-primary-dark);
+  color: #FFFFFF;
+  font-weight: 700;
+  border: 3px solid var(--color-primary);
+  box-shadow: var(--shadow-md);
+  overflow: hidden;
+}
+
+body.dark-theme .user-avatar-badge {
+  background-color: var(--color-primary);
+  border-color: rgba(255, 255, 255, 0.25);
+}

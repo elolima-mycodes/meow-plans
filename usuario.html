@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Meow Plans - Meu Perfil</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/pocketbase@0.21.3/dist/pocketbase.umd.js"></script>
+
+  <!-- Configuração PWA -->
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#8C82F2" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <link rel="apple-touch-icon" href="icons/icon-192.png" />
+</head>
+<body>
+  <div class="app-container" style="max-width: 500px; margin: 0 auto; padding: 1.5rem 1rem;">
+
+    <!-- CABEÇALHO DE NAVEGAÇÃO -->
+    <header class="flex-between mb-1" style="align-items: center;">
+      <button type="button" class="btn btn-outline" onclick="voltarTela()" style="padding: 0.35rem 0.75rem;">
+        <i class="bi bi-arrow-left"></i> Voltar
+      </button>
+      <h2 style="font-size: 1.2rem; font-weight: 700; margin: 0;">Meu Perfil <i class="bi bi-person-circle"></i></h2>
+      <button id="themeToggleBtn" class="btn btn-outline" style="padding: 0.35rem 0.6rem;" title="Alternar Tema"><i class="bi bi-moon-fill"></i></button>
+    </header>
+
+    <!-- CARTÃO DE PERFIL -->
+    <main class="main-lilac-card" style="padding: 1.5rem; min-height: auto;">
+      <form id="profileForm">
+
+        <!-- AVATAR -->
+        <div class="text-center mb-1" style="display: flex; flex-direction: column; align-items: center; gap: 0.5rem;">
+          <div class="user-avatar-badge" id="profileAvatarPreview" style="width: 70px; height: 70px; font-size: 1.8rem;">
+            <i class="bi bi-person-fill"></i>
+          </div>
+          <label for="avatarInput" class="btn btn-outline btn-sm" style="cursor: pointer; font-size: 0.75rem;">
+            Alterar Foto
+          </label>
+          <input type="file" id="avatarInput" accept="image/*" class="hidden" />
+        </div>
+
+        <!-- NOME -->
+        <div class="form-group mb-1">
+          <label class="form-label">Nome de Usuário:</label>
+          <input type="text" id="userNameInput" class="input-control" required />
+        </div>
+
+        <!-- EMAIL -->
+        <div class="form-group mb-1">
+          <label class="form-label">E-mail:</label>
+          <input type="email" id="userEmailInput" class="input-control" required />
+        </div>
+
+        <!-- ALTERAR SENHA -->
+        <hr style="border: 0; border-top: 1px dashed var(--border-color); margin: 1.25rem 0;" />
+        <h3 style="font-size: 0.95rem; font-weight: 700; margin-bottom: 0.75rem;">Alterar Senha</h3>
+
+        <div class="form-group mb-1">
+          <label class="form-label">Nova Senha (deixe em branco para não alterar):</label>
+          <input type="password" id="newPasswordInput" class="input-control" placeholder="Mínimo 8 caracteres" minlength="8" />
+        </div>
+
+        <div class="form-group mb-1">
+          <label class="form-label">Confirmar Nova Senha:</label>
+          <input type="password" id="confirmPasswordInput" class="input-control" placeholder="Repita a nova senha" />
+        </div>
+
+        <!-- BOTÕES DE AÇÃO -->
+        <div style="margin-top: 1.5rem; display: flex; flex-direction: column; gap: 0.75rem;">
+          <button type="submit" class="btn btn-secondary btn-block" style="min-height: 42px; font-weight: 700;">
+            Salvar Alterações
+          </button>
+
+          <button type="button" id="btnDeleteAccount" class="btn btn-danger btn-block" style="min-height: 42px; font-weight: 700;">
+            <i class="bi bi-trash3"></i> Excluir Minha Conta
+          </button>
+        </div>
+
+      </form>
+    </main>
+  </div>
+
+  <!-- MODAL DE FEEDBACK (SUCESSO / ERRO) -->
+  <div id="feedbackModal" class="modal-overlay">
+    <div class="modal-card modal-cute-container meow-modal meow-dialog">
+      <i id="feedbackModalIcon" class="bi bi-check-circle-fill meow-dialog-icon meow-dialog-icon-success"></i>
+      <h3 id="feedbackModalTitle" class="meow-dialog-title">Sucesso!</h3>
+      <p id="feedbackModalMessage" class="meow-dialog-message">Alterações feitas com sucesso!</p>
+      <div class="meow-modal-actions">
+        <button type="button" id="btnCloseFeedbackModal" class="btn btn-secondary">
+          Fechar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL DE EXCLUSÃO DE CONTA -->
+  <div id="deleteAccountModal" class="modal-overlay">
+    <div class="modal-card modal-cute-container meow-modal meow-dialog">
+      <i class="bi bi-exclamation-triangle-fill meow-dialog-icon meow-dialog-icon-danger"></i>
+      <h3 class="meow-dialog-title">Excluir Minha Conta</h3>
+      <p class="meow-dialog-message">
+        Esta ação apagará sua conta permanentemente! Digite <strong>EXCLUIR</strong> para confirmar:
+      </p>
+      <div class="form-group">
+        <input
+          type="text"
+          id="deleteConfirmInput"
+          class="input-control text-center font-bold"
+          placeholder='Digite "EXCLUIR"'
+          autocomplete="off"
+        />
+        <span id="deleteConfirmError" class="hidden" style="color: var(--color-danger); font-size: 0.85rem;">
+          Digite exatamente EXCLUIR para confirmar.
+        </span>
+      </div>
+      <div class="meow-modal-actions">
+        <button type="button" id="btnCancelDeleteModal" class="btn btn-outline">
+          Cancelar
+        </button>
+        <button type="button" id="btnConfirmDeleteModal" class="btn btn-danger">
+          Excluir Conta
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script src="usuario.js"></script>
+</body>
+</html>

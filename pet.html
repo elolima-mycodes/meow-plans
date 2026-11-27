@@ -1,0 +1,2582 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Meow Plans - Meu Pet</title>
+
+  <!-- Configuração PWA -->
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#8C82F2" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <link rel="apple-touch-icon" href="icons/icon-192.png" />
+
+  <!-- Fontes Pixel Art -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet" />
+
+  <!-- SDK PocketBase -->
+  <script src="https://cdn.jsdelivr.net/npm/pocketbase@0.21.5/dist/pocketbase.umd.js"></script>
+
+  <style>
+    :root {
+      --bg-page: #232B38;
+      --bg-panel: #2E3748;
+      --bg-card: #3A4559;
+      --bg-dark: #1A202C;
+      --border-pixel: #131720;
+      --border-light: #5A6885;
+      --accent-purple: #8C82F2;
+      --accent-purple-dark: #6358D4;
+      --accent-pink: #F48FB1;
+      --accent-gold: #FFD54F;
+      --accent-green: #66BB6A;
+      --accent-blue: #4FC3F7;
+      --text-main: #F8F9FA;
+      --text-muted: #B0BEC5;
+    }
+
+    * {
+      box-sizing: border-box;
+      image-rendering: pixelated;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: var(--bg-page);
+      background-image:
+        linear-gradient(45deg, #283140 25%, transparent 25%),
+        linear-gradient(-45deg, #283140 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, #283140 75%),
+        linear-gradient(-45deg, transparent 75%, #283140 75%);
+      background-size: 32px 32px;
+      background-position: 0 0, 0 16px, 16px -16px, -16px 0;
+      color: var(--text-main);
+      font-family: 'VT323', monospace;
+      font-size: 21px;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      user-select: none;
+    }
+
+    h1, h2, h3, .pixel-font {
+      font-family: 'Press Start 2P', cursive;
+      letter-spacing: 1px;
+    }
+
+    /* Moldura Pixel Art 3D */
+    .pixel-box {
+      background: var(--bg-panel);
+      border: 4px solid var(--border-pixel);
+      box-shadow:
+        inset 4px 4px 0px var(--border-light),
+        inset -4px -4px 0px #1D2330,
+        6px 6px 0px rgba(0, 0, 0, 0.4);
+    }
+
+    /* Botões Pixel Art */
+    .pixel-btn {
+      font-family: 'Press Start 2P', cursive;
+      font-size: 10px;
+      line-height: 1.4;
+      padding: 12px 14px;
+      background: var(--accent-purple);
+      color: #FFF;
+      border: 4px solid var(--border-pixel);
+      box-shadow:
+        inset 3px 3px 0px #B9B2FF,
+        inset -3px -3px 0px var(--accent-purple-dark),
+        4px 4px 0px var(--border-pixel);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      text-decoration: none;
+      transition: transform 0.06s;
+    }
+
+    .pixel-btn:hover:not(:disabled) {
+      filter: brightness(1.08);
+      transform: translate(-1px, -1px);
+    }
+
+    .pixel-btn:active:not(:disabled) {
+      transform: translate(3px, 3px);
+      box-shadow:
+        inset 3px 3px 0px var(--accent-purple-dark),
+        0px 0px 0px var(--border-pixel);
+    }
+
+    .pixel-btn:disabled {
+      opacity: 0.48;
+      cursor: not-allowed;
+    }
+
+    .pixel-btn.green {
+      background: #43A047;
+      box-shadow: inset 3px 3px 0px #81C784, inset -3px -3px 0px #2E7D32, 4px 4px 0px var(--border-pixel);
+    }
+
+    .pixel-btn.pink {
+      background: #E05A87;
+      box-shadow: inset 3px 3px 0px #FF9EC0, inset -3px -3px 0px #AD3B62, 4px 4px 0px var(--border-pixel);
+    }
+
+    .pixel-btn.blue {
+      background: #2997D8;
+      box-shadow: inset 3px 3px 0px #81D4FA, inset -3px -3px 0px #1565C0, 4px 4px 0px var(--border-pixel);
+    }
+
+    .pixel-btn.gold {
+      background: #F5B014;
+      color: #1A1A1A;
+      box-shadow: inset 3px 3px 0px #FFE082, inset -3px -3px 0px #B27B00, 4px 4px 0px var(--border-pixel);
+    }
+
+    .pixel-btn.dark {
+      background: #46536B;
+      box-shadow: inset 3px 3px 0px #6D7FA1, inset -3px -3px 0px #2A3242, 4px 4px 0px var(--border-pixel);
+    }
+
+    .px-icon {
+      width: 18px;
+      height: 18px;
+      flex-shrink: 0;
+      shape-rendering: crispEdges;
+    }
+
+    /* Cabeçalho */
+    .top-bar {
+      width: calc(100% - 24px);
+      max-width: 1020px;
+      margin: 14px auto;
+      padding: 12px 16px;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 14px;
+      margin: 0;
+      color: #FFF;
+      text-shadow: 2px 2px 0px var(--border-pixel);
+    }
+
+    .coin-area {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .coin-badge {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--bg-dark);
+      border: 4px solid var(--border-pixel);
+      padding: 8px 14px;
+      font-family: 'Press Start 2P', cursive;
+      font-size: 13px;
+      color: var(--accent-gold);
+      box-shadow: inset 3px 3px 0px #2D3748;
+      cursor: pointer;
+    }
+
+    /* Grid Principal */
+    .main-grid {
+      width: 100%;
+      max-width: 1020px;
+      padding: 0 12px 32px;
+      display: grid;
+      grid-template-columns: 1fr 360px;
+      gap: 18px;
+    }
+
+    @media (max-width: 880px) {
+      .main-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* Palco do Quarto */
+    .room-panel {
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .room-top-info {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      gap: 8px;
+    }
+
+    .pet-name-tag {
+      font-size: 14px;
+      color: var(--accent-pink);
+      margin: 0;
+      text-shadow: 2px 2px 0px var(--border-pixel);
+    }
+
+    .mood-pill {
+      background: var(--bg-dark);
+      border: 3px solid var(--border-pixel);
+      padding: 4px 10px;
+      font-size: 19px;
+      color: #A5D6A7;
+    }
+
+    .canvas-viewport {
+      position: relative;
+      width: 100%;
+      border: 4px solid var(--border-pixel);
+      background: #141821;
+      box-shadow: inset 0 0 0 4px #2B3344;
+      cursor: default;
+    }
+
+    #roomCanvas {
+      width: 100%;
+      height: auto;
+      display: block;
+      aspect-ratio: 3 / 2;
+    }
+
+    /* Balão de Fala Pixelado */
+    .speech-bubble {
+      position: absolute;
+      top: 12px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #FFFDF9;
+      color: #2A2138;
+      border: 4px solid #2A2138;
+      padding: 8px 14px;
+      font-family: 'Press Start 2P', cursive;
+      font-size: 9px;
+      line-height: 1.6;
+      text-align: center;
+      box-shadow: 4px 4px 0px rgba(0, 0, 0, 0.35);
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.15s;
+      z-index: 6;
+      max-width: 88%;
+    }
+
+    .speech-bubble.visible {
+      opacity: 1;
+    }
+
+    .speech-bubble::after {
+      content: '';
+      position: absolute;
+      bottom: -10px;
+      left: 50%;
+      transform: translateX(-50%);
+      border-width: 10px 10px 0;
+      border-style: solid;
+      border-color: #2A2138 transparent;
+    }
+
+    .room-hint {
+      text-align: center;
+      font-size: 17px;
+      color: var(--text-muted);
+      margin-top: 8px;
+    }
+
+    .care-actions {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    @media (max-width: 540px) {
+      .care-actions {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* Painel Direito */
+    .sidebar-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .card-box {
+      padding: 16px;
+    }
+
+    .panel-heading {
+      font-size: 11px;
+      color: var(--accent-gold);
+      margin: 0 0 14px 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      text-shadow: 2px 2px 0px var(--border-pixel);
+    }
+
+    /* Barras de Status Pixeladas */
+    .stat-group {
+      margin-bottom: 14px;
+    }
+
+    .stat-group:last-child {
+      margin-bottom: 0;
+    }
+
+    .stat-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 5px;
+      font-size: 20px;
+    }
+
+    .stat-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .bar-track {
+      width: 100%;
+      height: 22px;
+      background: var(--bg-dark);
+      border: 3px solid var(--border-pixel);
+      padding: 2px;
+      position: relative;
+    }
+
+    .bar-fill {
+      height: 100%;
+      width: 80%;
+      transition: width 0.3s steps(10);
+    }
+
+    .bar-fome {
+      background: #FF8A65;
+      box-shadow: inset 0 3px 0 #FFCCBC, inset 0 -3px 0 #D84315;
+    }
+
+    .bar-carinho {
+      background: #F48FB1;
+      box-shadow: inset 0 3px 0 #FCE4EC, inset 0 -3px 0 #C2185B;
+    }
+
+    .bar-energia {
+      background: #4FC3F7;
+      box-shadow: inset 0 3px 0 #E1F5FE, inset 0 -3px 0 #0277BD;
+    }
+
+    /* Loja Pixel Art */
+    .shop-tabs {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 4px;
+      margin-bottom: 12px;
+    }
+
+    .shop-tab {
+      font-family: 'Press Start 2P', cursive;
+      font-size: 7.5px;
+      padding: 9px 2px;
+      background: var(--bg-dark);
+      color: var(--text-muted);
+      border: 3px solid var(--border-pixel);
+      box-shadow: inset 2px 2px 0px #2D3748, inset -2px -2px 0px #0D1117;
+      cursor: pointer;
+      transition: transform 0.06s, filter 0.1s;
+    }
+
+    .shop-tab:hover:not(.active) {
+      color: #FFF;
+      background: #252E3F;
+    }
+
+    .shop-tab.active {
+      background: var(--accent-purple);
+      color: #FFF;
+      box-shadow: inset 2px 2px 0px #B9B2FF, inset -2px -2px 0px var(--accent-purple-dark);
+    }
+
+    .shop-items-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      max-height: 310px;
+      overflow-y: auto;
+      padding: 2px 4px 4px 2px;
+    }
+
+    /* Barra de rolagem retrô da loja */
+    .shop-items-grid::-webkit-scrollbar {
+      width: 8px;
+    }
+    .shop-items-grid::-webkit-scrollbar-track {
+      background: var(--bg-dark);
+      border: 2px solid var(--border-pixel);
+    }
+    .shop-items-grid::-webkit-scrollbar-thumb {
+      background: var(--border-light);
+      border: 1px solid var(--border-pixel);
+    }
+
+    .shop-card {
+      position: relative;
+      background: var(--bg-card);
+      border: 3px solid var(--border-pixel);
+      box-shadow:
+        inset 3px 3px 0px #4F5D78,
+        inset -3px -3px 0px #262E3D,
+        3px 3px 0px var(--border-pixel);
+      padding: 10px 8px 8px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      gap: 7px;
+      text-align: center;
+      transition: transform 0.08s ease, background-color 0.1s ease, box-shadow 0.08s ease;
+    }
+
+    .shop-card:hover {
+      transform: translate(-1px, -2px);
+      background: #435068;
+      box-shadow:
+        inset 3px 3px 0px #697999,
+        inset -3px -3px 0px #262E3D,
+        4px 5px 0px var(--border-pixel);
+    }
+
+    .shop-card.owned:not(.equipped) {
+      box-shadow:
+        inset 3px 3px 0px #5B789E,
+        inset -3px -3px 0px #243347,
+        3px 3px 0px var(--border-pixel);
+    }
+
+    .shop-card.equipped {
+      border-color: var(--accent-gold);
+      background: #474B6B;
+      box-shadow:
+        inset 3px 3px 0px #FFE082,
+        inset -3px -3px 0px #2E2B47,
+        3px 3px 0px var(--border-pixel);
+    }
+
+    /* Selo no canto superior do slot */
+    .shop-status-tag {
+      position: absolute;
+      top: 4px;
+      right: 4px;
+      font-family: 'Press Start 2P', cursive;
+      font-size: 6px;
+      padding: 2px 4px;
+      border: 2px solid var(--border-pixel);
+      background: var(--accent-gold);
+      color: #1A1A1A;
+      z-index: 2;
+    }
+
+    .shop-status-tag.owned-tag {
+      background: #4FC3F7;
+      color: #0F172A;
+    }
+
+    /* Vitrine 16-bit do ícone */
+    .item-icon-slot {
+      width: 56px;
+      height: 56px;
+      background: var(--bg-dark);
+      border: 3px solid var(--border-pixel);
+      box-shadow:
+        inset 3px 3px 0px #10141C,
+        inset -2px -2px 0px #2E384D;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-top: 2px;
+    }
+
+    .shop-card:hover .item-icon-slot {
+      background: #202736;
+    }
+
+    .item-pixel-canvas {
+      width: 48px;
+      height: 48px;
+      display: block;
+      image-rendering: pixelated;
+    }
+
+    .item-label {
+      font-size: 18px;
+      line-height: 1.05;
+      color: #F8F9FA;
+      text-shadow: 1px 1px 0px var(--border-pixel);
+    }
+
+    /* Botões retrô de compra / uso / equipado */
+    .item-action-btn {
+      width: 100%;
+      font-family: 'Press Start 2P', cursive;
+      font-size: 7.5px;
+      line-height: 1.2;
+      padding: 7px 4px;
+      border: 3px solid var(--border-pixel);
+      background: #F5B014;
+      color: #1A1A1A;
+      box-shadow: inset 2px 2px 0px #FFE082, inset -2px -2px 0px #B27B00;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+    }
+
+    .item-action-btn:hover:not(.equipped-btn):not(.too-expensive) {
+      filter: brightness(1.08);
+    }
+
+    .item-action-btn:active:not(.equipped-btn) {
+      transform: translate(1px, 1px);
+    }
+
+    .item-action-btn.too-expensive {
+      background: #54617A;
+      color: #CBD5E1;
+      box-shadow: inset 2px 2px 0px #6E7E9C, inset -2px -2px 0px #333B4D;
+    }
+
+    .item-action-btn.owned {
+      background: #2997D8;
+      color: #FFF;
+      box-shadow: inset 2px 2px 0px #81D4FA, inset -2px -2px 0px #1565C0;
+    }
+
+    .item-action-btn.equipped-btn {
+      background: #43A047;
+      color: #FFF;
+      box-shadow: inset 2px 2px 0px #81C784, inset -2px -2px 0px #2E7D32;
+      cursor: default;
+    }
+
+    .mini-coin-svg {
+      width: 11px;
+      height: 11px;
+      flex-shrink: 0;
+    }
+
+    /* Modais (Adoção e Ajuda Moedas) */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(14, 18, 26, 0.92);
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+
+    .modal-box {
+      width: 100%;
+      max-width: 780px;
+      padding: 24px;
+      text-align: center;
+    }
+
+    .species-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin: 18px 0;
+    }
+
+    @media (max-width: 700px) {
+      .species-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    .species-card {
+      background: var(--bg-card);
+      border: 4px solid var(--border-pixel);
+      padding: 12px 8px;
+      cursor: pointer;
+      transition: transform 0.08s;
+    }
+
+    .species-card:hover {
+      transform: translateY(-4px);
+    }
+
+    .species-card.selected {
+      border-color: var(--accent-gold);
+      background: #4B5675;
+      box-shadow: 0 0 0 3px var(--accent-purple);
+    }
+
+    .species-card img {
+      width: 96px;
+      height: 96px;
+      object-fit: contain;
+      margin: 0 auto 8px;
+      display: block;
+      image-rendering: auto;
+    }
+
+    .pixel-input {
+      font-family: 'Press Start 2P', cursive;
+      font-size: 12px;
+      padding: 12px;
+      width: 100%;
+      max-width: 340px;
+      background: var(--bg-dark);
+      color: #FFF;
+      border: 4px solid var(--border-pixel);
+      margin-bottom: 16px;
+      text-align: center;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Barra Superior -->
+  <header class="top-bar pixel-box">
+    <a href="gerenciar.html" class="pixel-btn dark">
+      <svg class="px-icon" viewBox="0 0 16 16"><path fill="#FFF" d="M9 2h2v2H9V2zM7 4h2v2H7V4zM5 6h2v2H5V6zM3 7h2v2H3V7zm2 2h2v2H5V9zm2 2h2v2H7v-2zm2 2h2v2H9v-2z"/></svg>
+      VOLTAR
+    </a>
+
+    <h1 class="brand-title">
+      <svg class="px-icon" viewBox="0 0 16 16">
+        <path fill="#B8A5F2" d="M3 2h2v3H3V2zm8 0h2v3h-2V2zM2 5h12v8H2V5z"/>
+        <path fill="#F59BB9" d="M4 3h1v2H4V3zm7 0h1v2h-1V3zM7 9h2v1H7V9z"/>
+        <path fill="#232B38" d="M5 7h2v2H5V7zm4 0h2v2H9V7z"/>
+      </svg>
+      MEOW PETS
+    </h1>
+
+    <div class="coin-area">
+      <div class="coin-badge" id="coinBadge" title="Clique para saber como ganhar moedas">
+        <svg class="px-icon" viewBox="0 0 16 16">
+          <path fill="#8D6E00" d="M5 1h6v1h2v2h1v8h-1v2h-2v1H5v-1H3v-2H2V4h1V2h2V1z"/>
+          <path fill="#FFD54F" d="M5 2h6v2h2v8h-2v2H5v-2H3V4h2V2z"/>
+          <path fill="#FFF9C4" d="M5 3h4v1H5V3zM4 4h1v6H4V4z"/>
+          <path fill="#FFA000" d="M7 5h2v6H7V5z"/>
+        </svg>
+        <span id="coinBalance">0</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Conteúdo Principal -->
+  <main class="main-grid">
+    <!-- Quarto Interativo -->
+    <section class="room-panel pixel-box">
+      <div class="room-top-info">
+        <h2 class="pet-name-tag" id="petNameDisplay">CARREGANDO...</h2>
+        <span class="mood-pill" id="petMoodBadge">Feliz</span>
+      </div>
+
+      <div class="canvas-viewport" id="canvasClickArea" title="Clique no seu pet para fazer carinho!">
+        <div class="speech-bubble" id="speechBubble">Miau! Que bom te ver!</div>
+        <canvas id="roomCanvas" width="360" height="240"></canvas>
+      </div>
+
+      <div class="room-hint">Dica: Clique diretamente no seu pet no quarto para dar carinho!</div>
+
+      <div class="care-actions">
+        <button class="pixel-btn green" id="btnFeed">
+          <svg class="px-icon" viewBox="0 0 16 16">
+            <path fill="#FFF" d="M11 2h3v3h-2v2h-2v2H8v2H6v2H3v-3h2V8h2V6h2V4h2V2z"/>
+            <path fill="#FF8A65" d="M4 7h5v5H4V7z"/>
+          </svg>
+          ALIMENTAR (R$ 2)
+        </button>
+
+        <button class="pixel-btn pink" id="btnPet">
+          <svg class="px-icon" viewBox="0 0 16 16">
+            <path fill="#FFF" d="M3 3h3v1h1v1h2V4h1V3h3v1h1v4h-1v2h-2v2H9v2H7v-2H5v-2H3V8H2V4h1V3z"/>
+          </svg>
+          CARINHO
+        </button>
+
+        <button class="pixel-btn blue" id="btnSleep">
+          <svg class="px-icon" viewBox="0 0 16 16">
+            <path fill="#FFF" d="M2 3h5v2H5v2h2v2H2V7h2V5H2V3zm6 3h6v2h-3v2h3v2H8v-2h3V8H8V6z"/>
+          </svg>
+          <span id="btnSleepText">DORMIR</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- Barra Lateral: Status e Loja -->
+    <aside class="sidebar-panel">
+      <!-- Status -->
+      <div class="card-box pixel-box">
+        <h3 class="panel-heading">STATUS DO PET</h3>
+
+        <div class="stat-group">
+          <div class="stat-header">
+            <span class="stat-title">
+              <svg class="px-icon" viewBox="0 0 16 16"><path fill="#FF8A65" d="M4 5h6v6H4V5z"/><path fill="#FFF" d="M10 3h3v2h-2v2h-1V3zM2 11h2v3H2v-3z"/></svg>
+              Fome
+            </span>
+            <span id="txtFome">85%</span>
+          </div>
+          <div class="bar-track">
+            <div class="bar-fill bar-fome" id="barFome" style="width: 85%;"></div>
+          </div>
+        </div>
+
+        <div class="stat-group">
+          <div class="stat-header">
+            <span class="stat-title">
+              <svg class="px-icon" viewBox="0 0 16 16"><path fill="#F48FB1" d="M3 3h3v1h1v1h2V4h1V3h3v1h1v4h-1v2h-2v2H9v2H7v-2H5v-2H3V8H2V4h1V3z"/></svg>
+              Carinho
+            </span>
+            <span id="txtCarinho">85%</span>
+          </div>
+          <div class="bar-track">
+            <div class="bar-fill bar-carinho" id="barCarinho" style="width: 85%;"></div>
+          </div>
+        </div>
+
+        <div class="stat-group">
+          <div class="stat-header">
+            <span class="stat-title">
+              <svg class="px-icon" viewBox="0 0 16 16"><path fill="#4FC3F7" d="M8 1h3v5h3l-6 9v-6H5l3-8z"/></svg>
+              Energia
+            </span>
+            <span id="txtEnergia">85%</span>
+          </div>
+          <div class="bar-track">
+            <div class="bar-fill bar-energia" id="barEnergia" style="width: 85%;"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Loja Rápida -->
+      <div class="card-box pixel-box">
+        <h3 class="panel-heading">LOJA DO QUARTO</h3>
+
+        <div class="shop-tabs">
+          <button class="shop-tab active" data-cat="parede">PAREDE</button>
+          <button class="shop-tab" data-cat="chao">CHÃO</button>
+          <button class="shop-tab" data-cat="movel">MÓVEIS</button>
+          <button class="shop-tab" data-cat="objeto">OBJETOS</button>
+        </div>
+
+        <div class="shop-items-grid" id="shopGrid"></div>
+      </div>
+    </aside>
+  </main>
+
+  <!-- Modal de Adoção Inicial (Exibido apenas se o usuário ainda não escolheu seu pet) -->
+  <div id="adoptionModal" class="modal-backdrop hidden">
+    <div class="modal-box pixel-box">
+      <h2 style="font-size: 15px; color: var(--accent-gold); margin-top: 0;">ESCOLHA SEU COMPANHEIRO!</h2>
+      <p style="font-size: 21px; color: var(--text-muted); margin: 8px 0 14px;">
+        Você cuidará exclusivamente do pet escolhido.
+      </p>
+
+      <div class="species-grid" id="speciesGrid">
+        <div class="species-card selected" data-species="gato">
+          <img src="imgs/gato.png" alt="Gatinho" />
+          <div class="pixel-font" style="font-size: 10px; color: #C7B8FF;">GATO</div>
+        </div>
+        <div class="species-card" data-species="pato">
+          <img src="imgs/pato.png" alt="Patinho" />
+          <div class="pixel-font" style="font-size: 10px; color: #FFF176;">PATO</div>
+        </div>
+        <div class="species-card" data-species="corvo">
+          <img src="imgs/corvo.png" alt="Corvinho" />
+          <div class="pixel-font" style="font-size: 10px; color: #B39DDB;">CORVO</div>
+        </div>
+        <div class="species-card" data-species="dinossauro">
+          <img src="imgs/dinossauro.png" alt="Dinossauro" />
+          <div class="pixel-font" style="font-size: 10px; color: #EF9A9A;">DINOSSAURO</div>
+        </div>
+      </div>
+      <div>
+        <input type="text" id="inputPetName" class="pixel-input" maxlength="16" placeholder="Digite um nome..." />
+      </div>
+
+      <button class="pixel-btn gold" id="btnConfirmAdopt">ADOTAR COMPANHEIRO</button>
+    </div>
+  </div>
+
+  <!-- Modal Explicativo das Moedas -->
+  <div id="coinHelpModal" class="modal-backdrop hidden">
+    <div class="modal-box pixel-box" style="max-width: 480px;">
+      <h2 style="font-size: 14px; color: var(--accent-gold); margin-top: 0;">COMO GANHAR MOEDAS?</h2>
+      <p style="font-size: 21px; line-height: 1.4; color: #E2E8F0;">
+        Cada tarefa ou rotina concluída no <strong>Calendário</strong> ou <strong>Gerenciador</strong> rende <strong>+10 moedas</strong> automaticamente!
+      </p>
+      <p style="font-size: 19px; color: var(--text-muted);">
+        (Concluir novamente a mesma tarefa já recompensada não gera moedas extras.)
+      </p>
+      <button class="pixel-btn" id="btnCloseCoinHelp">ENTENDI!</button>
+    </div>
+  </div>
+
+  <script>
+    // =========================================================================
+    // 1. PERSISTÊNCIA (POCKETBASE COMO FONTE PRINCIPAL + CACHE ISOLADO POR USER)
+    // =========================================================================
+    const POCKETBASE_URL = 'http://127.0.0.1:8090';
+    const pb = new PocketBase(POCKETBASE_URL);
+
+    // Redireciona se não estiver autenticado
+    if (!pb.authStore.isValid || !pb.authStore.model) {
+      window.location.href = 'login.html';
+    }
+
+    const currentUserId = pb.authStore.model.id;
+    // Chave dinâmica por usuário: impede que outra conta no mesmo PC veja dados anteriores
+    const PET_STORAGE_KEY = `meow_plans_pet_${currentUserId}`;
+
+    let petState = {
+      id: null,
+      tipo: null,
+      nome: '',
+      fome: 85,
+      carinho: 85,
+      energia: 85,
+      moedas: 50,
+      dormindo: false,
+      ultimaInteracao: Date.now(),
+      inventario: ['parede_lavanda', 'chao_pinho', 'movel_bau_fofo', 'obj_vasinho'],
+      equipados: {
+        parede: 'parede_lavanda',
+        chao: 'chao_pinho',
+        movel: 'movel_bau_fofo',
+        objeto: 'obj_vasinho'
+      },
+      tarefas_recompensadas: []
+    };
+
+    // =========================================================================
+    // 2. CATÁLOGO DA LOJA (PAREDES, CHÃOS, MÓVEIS E OBJETOS)
+    // =========================================================================
+    const SHOP_CATALOG = [
+      // Papéis de Parede
+      { id: 'parede_lavanda', cat: 'parede', nome: 'Lavanda Meow', preco: 0, c1: '#D6CCF7', c2: '#C2B3F0' },
+      { id: 'parede_pessego', cat: 'parede', nome: 'Pêssego Doce', preco: 30, c1: '#FAD4C0', c2: '#F2B89B' },
+      { id: 'parede_menta', cat: 'parede', nome: 'Menta Suave', preco: 45, c1: '#C8E6C9', c2: '#A5D6A7' },
+      { id: 'parede_noite', cat: 'parede', nome: 'Céu Estrelado', preco: 65, c1: '#283149', c2: '#1E2538' },
+
+      // Chãos
+      { id: 'chao_pinho', cat: 'chao', nome: 'Pinho Claro', preco: 0, c1: '#D7A87E', c2: '#BA875B' },
+      { id: 'chao_rosa', cat: 'chao', nome: 'Tapete Fofo', preco: 35, c1: '#F48FB1', c2: '#EC407A' },
+      { id: 'chao_xadrez', cat: 'chao', nome: 'Xadrez Retrô', preco: 50, c1: '#ECEFF1', c2: '#B0BEC5' },
+      { id: 'chao_grama', cat: 'chao', nome: 'Jardim Macio', preco: 60, c1: '#81C784', c2: '#66BB6A' },
+
+      // Móveis
+      { id: 'movel_bau_fofo', cat: 'movel', nome: 'Baú Decorativo', preco: 0, c1: '#B8A5F2', c2: '#FCE4EC' },
+      { id: 'movel_arranhador', cat: 'movel', nome: 'Torre Gato', preco: 45, c1: '#D7CCC8', c2: '#8D6E63' },
+      { id: 'movel_estante', cat: 'movel', nome: 'Estante Livros', preco: 60, c1: '#A1887F', c2: '#8C82F2' },
+      { id: 'movel_pc', cat: 'movel', nome: 'Setup Gamer', preco: 90, c1: '#7E57C2', c2: '#4FC3F7' },
+
+      // Objetos
+      { id: 'obj_vasinho', cat: 'objeto', nome: 'Vasinho Pixel', preco: 0, c1: '#66BB6A', c2: '#D84315' },
+      { id: 'obj_pelucia', cat: 'objeto', nome: 'Pelúcia Gato', preco: 30, c1: '#B8A5F2', c2: '#F59BB9' },
+      { id: 'obj_luminaria', cat: 'objeto', nome: 'Luminária Lua', preco: 45, c1: '#FFD54F', c2: '#5C6BC0' },
+      { id: 'obj_trofeu', cat: 'objeto', nome: 'Troféu Foco', preco: 75, c1: '#FFD54F', c2: '#FFA000' }
+    ];
+
+
+    // =========================================================================
+    // 4. SINCRONIZAÇÃO DE DADOS E DECAIMENTO TEMPORAL
+    // =========================================================================
+
+
+    const canvas = document.getElementById('roomCanvas');
+    const ctx = canvas.getContext('2d');
+
+    const actor = {
+      x: 155,
+      y: 138,
+      targetX: 155,
+      dir: 1, // 1 = direita, -1 = esquerda
+      state: 'idle', // 'idle' | 'walk' | 'eat' | 'love' | 'sleep'
+      stateTimer: 0,
+      tick: 0,
+      animFrame: 0,
+      blinkTimer: 0,
+      particles: []
+    };
+
+    async function loadPetData() {
+      // Remove chave legada global (caso exista) para não contaminar outras contas
+      localStorage.removeItem('meow_plans_pet_data_v1');
+
+      try {
+        const res = await pb.collection('pets').getList(1, 1, {
+          filter: `user = "${currentUserId}"`
+        });
+
+        if (res.items.length > 0) {
+          const rec = res.items[0];
+          petState.id = rec.id;
+          petState.tipo = rec.tipo || null;
+          petState.nome = rec.nome || '';
+          petState.fome = rec.fome ?? 85;
+          petState.carinho = rec.carinho ?? 85;
+          petState.energia = rec.energia ?? 85;
+          petState.moedas = rec.moedas ?? 50;
+          petState.dormindo = Boolean(rec.dormindo);
+
+          if (Array.isArray(rec.inventario) && rec.inventario.length > 0) {
+            petState.inventario = rec.inventario;
+          }
+          if (rec.equipados && typeof rec.equipados === 'object') {
+            petState.equipados = { ...petState.equipados, ...rec.equipados };
+          }
+          if (Array.isArray(rec.tarefas_recompensadas)) {
+            petState.tarefas_recompensadas = rec.tarefas_recompensadas;
+          }
+          if (rec.ultima_interacao) {
+            petState.ultimaInteracao = new Date(rec.ultima_interacao).getTime();
+          }
+
+          if (petState.dormindo) {
+            const hoursAsleep = (Date.now() - petState.ultimaInteracao) / (1000 * 60 * 60);
+            if (hoursAsleep > 0.01) {
+              petState.energia = Math.min(100, petState.energia + hoursAsleep * 25);
+            }
+            actor.x = 32;
+            actor.y = 112;
+            actor.dir = 1;
+            actor.state = 'sleep';
+            actor.sleepPending = false;
+          } else {
+            applyOfflineDecay();
+          }
+
+          await savePetData();
+          return;
+        }
+      } catch (err) {
+        console.warn('Falha ao buscar pet no PocketBase, usando cache local do usuário:', err);
+        const localRaw = localStorage.getItem(PET_STORAGE_KEY);
+        if (localRaw) {
+          try {
+            petState = { ...petState, ...JSON.parse(localRaw) };
+            if (petState.dormindo) {
+              actor.x = 32;
+              actor.y = 112;
+              actor.dir = 1;
+              actor.state = 'sleep';
+              actor.sleepPending = false;
+            } else {
+              applyOfflineDecay();
+            }
+          } catch (e) {}
+        }
+      }
+    }
+
+    async function savePetData() {
+      petState.ultimaInteracao = Date.now();
+      localStorage.setItem(PET_STORAGE_KEY, JSON.stringify(petState));
+
+      if (!pb.authStore.isValid || !petState.tipo) return;
+
+      const payload = {
+        user: currentUserId,
+        nome: petState.nome,
+        tipo: petState.tipo,
+        fome: Math.round(petState.fome),
+        carinho: Math.round(petState.carinho),
+        energia: Math.round(petState.energia),
+        moedas: Math.round(petState.moedas),
+        dormindo: Boolean(petState.dormindo),
+        inventario: petState.inventario,
+        equipados: petState.equipados,
+        tarefas_recompensadas: petState.tarefas_recompensadas,
+        ultima_interacao: new Date().toISOString()
+      };
+
+      try {
+        if (petState.id) {
+          await pb.collection('pets').update(petState.id, payload);
+        } else {
+          const created = await pb.collection('pets').create(payload);
+          petState.id = created.id;
+          localStorage.setItem(PET_STORAGE_KEY, JSON.stringify(petState));
+        }
+      } catch (err) {
+        console.error('Erro ao salvar progresso do pet no PocketBase:', err);
+      }
+    }
+
+    function applyOfflineDecay() {
+      const hours = (Date.now() - petState.ultimaInteracao) / (1000 * 60 * 60);
+      if (hours > 0.05) {
+        petState.fome = Math.max(5, petState.fome - hours * 4.5);
+        petState.carinho = Math.max(10, petState.carinho - hours * 3.5);
+        petState.energia = Math.max(10, petState.energia - hours * 3);
+      }
+    }
+
+    // Atualiza moedas ao vivo se outra aba (Calendário/Gerenciador) conceder recompensa
+    window.addEventListener('storage', (e) => {
+      if (e.key === PET_STORAGE_KEY && e.newValue) {
+        const updated = JSON.parse(e.newValue);
+        if (updated.moedas > petState.moedas) {
+          const ganho = updated.moedas - petState.moedas;
+          petState.moedas = updated.moedas;
+          updateUI();
+          spawnParticles('coin', '#FFD54F');
+          showSpeech(`+${ganho} moedas por concluir tarefa!`);
+        }
+      }
+    });
+
+    // =========================================================================
+    //  5. MOTOR DE SPRITE SHEETS (4 POSES HORIZONTAIS: IDLE, EAT, SLEEP, LOVE)
+    // =========================================================================
+    const PET_SHEETS = {};
+
+    // Carrega a imagem, remove fundo branco (se houver) e detecta automaticamente
+    // a caixa exata de cada uma das 4 poses para nunca cortar rabo, crista ou corações.
+    function registerPetSheet(species, src, targetHeights) {
+      const sheet = { ready: false, canvas: null, boxes: [] };
+      PET_SHEETS[species] = sheet;
+
+      const img = new Image();
+      img.onload = () => {
+        const w = img.naturalWidth;
+        const h = img.naturalHeight;
+        const off = document.createElement('canvas');
+        off.width = w;
+        off.height = h;
+        const octx = off.getContext('2d');
+        octx.drawImage(img, 0, 0);
+
+        const imgData = octx.getImageData(0, 0, w, h);
+        const d = imgData.data;
+
+        // 1. Torna pixels brancos/quase brancos transparentes
+        for (let i = 0; i < d.length; i += 4) {
+          if (d[i] > 242 && d[i + 1] > 242 && d[i + 2] > 242) {
+            d[i + 3] = 0;
+          }
+        }
+        octx.putImageData(imgData, 0, 0);
+
+        // 2. Detecta automaticamente as 4 colunas/poses separadas por espaços vazios
+        const colHasPixel = new Uint8Array(w);
+        for (let x = 0; x < w; x++) {
+          for (let y = 0; y < h; y++) {
+            if (d[(y * w + x) * 4 + 3] > 20) {
+              colHasPixel[x] = 1;
+              break;
+            }
+          }
+        }
+
+        const segments = [];
+        let inSeg = false, startX = 0;
+        for (let x = 0; x < w; x++) {
+          if (colHasPixel[x] && !inSeg) {
+            inSeg = true;
+            startX = x;
+          } else if (!colHasPixel[x] && inSeg) {
+            inSeg = false;
+            if (x - startX > 20) segments.push([startX, x - 1]);
+          }
+        }
+        if (inSeg && w - startX > 20) segments.push([startX, w - 1]);
+
+        // Calcula o bounding box exato (sx, sy, sw, sh) de cada pose
+        sheet.boxes = segments.map(([x0, x1]) => {
+          let minY = h, maxY = 0;
+          for (let y = 0; y < h; y++) {
+            for (let x = x0; x <= x1; x++) {
+              if (d[(y * w + x) * 4 + 3] > 20) {
+                if (y < minY) minY = y;
+                if (y > maxY) maxY = y;
+              }
+            }
+          }
+          return {
+            sx: Math.max(0, x0 - 2),
+            sy: Math.max(0, minY - 2),
+            sw: Math.min(w - x0, x1 - x0 + 5),
+            sh: Math.min(h - minY, maxY - minY + 5)
+          };
+        });
+
+        sheet.canvas = off;
+        sheet.ready = sheet.boxes.length >= 4;
+      };
+      img.src = src;
+    }
+
+    // Registra Pets. Todos usam a mesma escala padronizada
+    registerPetSheet('dinossauro', 'imgs/dino-sprites.png');
+    registerPetSheet('gato', 'imgs/gato-sprites.png');
+    registerPetSheet('pato', 'imgs/pato-sprites.png');
+    registerPetSheet('corvo', 'imgs/corvo-sprites.png');
+
+    function drawSheetPet(context, species, x, y, flipX, state, tick) {
+      const sheet = PET_SHEETS[species];
+      if (!sheet || !sheet.ready) return false;
+
+      // Ordem das 4 poses na imagem: [0]=idle/walk, [1]=eat, [2]=sleep, [3]=love
+      const poseIndexMap = { idle: 0, walk: 0, eat: 1, sleep: 2, love: 3 };
+      const box = sheet.boxes[poseIndexMap[state] ?? 0];
+      if (!box) return false;
+
+      // 1. Escala uniforme: usa a maior dimensão entre as 4 poses do pet para caber
+      // dentro de uma caixa padrão de 66px, mantendo todas as poses proporcionais entre si
+      const MAX_STAGE_SIZE = 66;
+      const maxSpriteDim = Math.max(...sheet.boxes.map(b => Math.max(b.sw, b.sh)));
+      const scale = MAX_STAGE_SIZE / maxSpriteDim;
+
+      const targetW = Math.round(box.sw * scale);
+      const targetH = Math.round(box.sh * scale);
+
+      // 2. Animação procedural de passos e respiração
+      let offsetY = 0;
+      let angle = 0;
+      if (state === 'walk') {
+        offsetY = -Math.abs(Math.sin(tick * 0.55)) * 4;
+        angle = Math.sin(tick * 0.55) * 0.07;
+      } else if (state === 'idle') {
+        offsetY = Math.sin(tick * 0.12) * 1.2;
+      } else if (state === 'love') {
+        offsetY = -Math.abs(Math.sin(tick * 0.45)) * 5;
+      }
+
+      // 3. Posições fixas universais (iguais para gato, pato, corvo e dino)
+      let centerX = x + 32;
+      let groundY = y + 62;
+
+      if (state === 'sleep') {
+        centerX = 60;
+        groundY = 160;
+      } else if (state === 'eat') {
+        centerX = 96;
+        groundY = 224;
+      }
+
+      const drawX = Math.round(centerX - targetW / 2);
+      const drawY = Math.round(groundY - targetH + offsetY);
+
+      // 4. Sombra dinâmica alinhada à base do pet (oculta ao dormir na cama)
+      if (state !== 'sleep') {
+        const jumpShrink = Math.max(0, -offsetY * 1.2);
+        const shadowW = Math.max(16, Math.round(targetW * 0.68 - jumpShrink));
+        const shadowX = Math.round(centerX - shadowW / 2);
+
+        context.fillStyle = 'rgba(31, 24, 43, 0.25)';
+        context.fillRect(shadowX, Math.round(groundY - 4), shadowW, 5);
+      }
+
+      // 5. Desenho do sprite
+      context.save();
+      context.imageSmoothingEnabled = true;
+
+      context.translate(Math.round(drawX + targetW / 2), Math.round(drawY + targetH / 2));
+      if (flipX) context.scale(-1, 1);
+      if (angle !== 0) context.rotate(angle);
+
+      context.drawImage(
+        sheet.canvas,
+        box.sx, box.sy, box.sw, box.sh,
+        Math.round(-targetW / 2), Math.round(-targetH / 2), targetW, targetH
+      );
+
+      context.restore();
+      return true;
+    }
+
+    function drawRoom() {
+      const wall = SHOP_CATALOG.find(i => i.id === petState.equipados.parede) || SHOP_CATALOG[0];
+    const floor = SHOP_CATALOG.find(i => i.id === petState.equipados.chao) || SHOP_CATALOG[4];
+    const movel = SHOP_CATALOG.find(i => i.id === petState.equipados.movel) ||
+              SHOP_CATALOG.find(i => i.id === 'movel_bau_fofo');
+
+    const objeto = SHOP_CATALOG.find(i => i.id === petState.equipados.objeto) ||
+                  SHOP_CATALOG[12];
+        const isNight = actor.state === 'sleep';
+
+    // ==========================================
+    // 1. PAREDE
+    // ==========================================
+
+    ctx.fillStyle = wall.c1;
+    ctx.fillRect(0, 0, 360, 146);
+
+    // Textura vertical
+    ctx.fillStyle = wall.c2;
+
+    for (let x = 0; x < 360; x += 24) {
+        ctx.fillRect(x, 0, 6, 144);
+    }
+
+    // Pequenos detalhes decorativos na parede
+    ctx.fillStyle = 'rgba(255,255,255,0.18)';
+
+    for (let x = 12; x < 360; x += 48) {
+        ctx.fillRect(x, 112, 3, 3);
+        ctx.fillRect(x + 12, 124, 2, 2);
+    }
+
+    // Estrelas para papel de parede noturno
+    if (wall.id === 'parede_noite') {
+        ctx.fillStyle = '#FFF59D';
+
+        [[30, 22], [150, 30], [210, 18], [320, 42], [280, 24]]
+            .forEach(([x, y]) => ctx.fillRect(x, y, 3, 3));
+    }
+
+    // ==========================================
+    // 2. JANELA
+    // ==========================================
+
+    // Sombra
+    ctx.fillStyle = 'rgba(41,31,56,0.25)';
+    ctx.fillRect(49, 30, 76, 68);
+
+    // Moldura
+    ctx.fillStyle = '#594B73';
+    ctx.fillRect(46, 26, 76, 68);
+
+    // Paisagem
+    ctx.fillStyle = isNight ? '#1E2A5E' : '#B3E5FC';
+    ctx.fillRect(50, 30, 68, 60);
+
+    if (isNight) {
+        // Brilho suave ao redor da lua
+        ctx.fillStyle = 'rgba(255, 249, 196, 0.16)';
+        ctx.fillRect(58, 34, 18, 18);
+
+        // Lua crescente fofinha (arredondada)
+        ctx.fillStyle = '#FFF59D';
+        ctx.fillRect(62, 36, 9, 2);
+        ctx.fillRect(60, 38, 8, 3);
+        ctx.fillRect(60, 41, 6, 4);
+        ctx.fillRect(60, 45, 8, 3);
+        ctx.fillRect(62, 48, 9, 2);
+
+        // Reflexo claro na borda esquerda da lua
+        ctx.fillStyle = '#FFFDE7';
+        ctx.fillRect(61, 39, 2, 8);
+
+        // Estrelinhas (algumas piscam suavemente com o tick)
+        const twinkle = Math.floor(actor.tick / 14) % 2 === 0;
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fillRect(96, 38, 2, 2);
+        ctx.fillRect(108, 46, 2, 2);
+        ctx.fillRect(74, 49, 2, 2);
+
+        // Estrelinha brilhante em cruz
+        ctx.fillStyle = twinkle ? '#FFF59D' : '#B3E5FC';
+        ctx.fillRect(92, 48, 4, 2);
+        ctx.fillRect(93, 47, 2, 4);
+
+        ctx.fillStyle = !twinkle ? '#FFF59D' : '#B3E5FC';
+        ctx.fillRect(104, 35, 3, 1);
+        ctx.fillRect(105, 34, 1, 3);
+
+        // Nuvem noturna suave
+        ctx.fillStyle = '#3949AB';
+        ctx.fillRect(54, 74, 22, 5);
+        ctx.fillRect(58, 71, 12, 3);
+
+    } else {
+        // Halo suave de luz solar
+        ctx.fillStyle = 'rgba(255, 245, 157, 0.35)';
+        ctx.fillRect(88, 34, 18, 18);
+
+        // Raios delicados ao redor do sol
+        ctx.fillStyle = '#FFE082';
+        ctx.fillRect(96, 32, 2, 2);  // Topo
+        ctx.fillRect(96, 52, 2, 2);  // Baixo
+        ctx.fillRect(86, 42, 2, 2);  // Esquerda
+        ctx.fillRect(106, 42, 2, 2); // Direita
+        ctx.fillRect(89, 35, 2, 2);  // Diagonal sup-esq
+        ctx.fillRect(103, 35, 2, 2); // Diagonal sup-dir
+        ctx.fillRect(89, 49, 2, 2);  // Diagonal inf-esq
+        ctx.fillRect(103, 49, 2, 2); // Diagonal inf-dir
+
+        // Corpo redondinho do sol (cantos chanfrados)
+        ctx.fillStyle = '#FFB74D'; // Borda quente
+        ctx.fillRect(92, 36, 10, 14);
+        ctx.fillRect(90, 38, 14, 10);
+
+        ctx.fillStyle = '#FFD54F'; // Miolo dourado
+        ctx.fillRect(92, 37, 10, 12);
+        ctx.fillRect(91, 38, 12, 10);
+
+        // Brilho superior no sol
+        ctx.fillStyle = '#FFF9C4';
+        ctx.fillRect(93, 38, 6, 2);
+        
+        // Nuvens fofinhas em movimento
+        const cloudOffset = Math.floor((actor.tick / 20) % 24);
+
+        ctx.fillStyle = '#E1F5FE'; // Sombra suave da nuvem
+        ctx.fillRect(54 + cloudOffset, 58, 18, 2);
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fillRect(54 + cloudOffset, 53, 18, 5);
+        ctx.fillRect(58 + cloudOffset, 49, 10, 4);
+
+        ctx.fillStyle = '#E1F5FE';
+        ctx.fillRect(85 - cloudOffset / 2, 71, 17, 2);
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fillRect(85 - cloudOffset / 2, 67, 17, 4);
+        ctx.fillRect(89 - cloudOffset / 2, 63, 9, 4);
+    }
+
+    // Divisórias da janela
+    ctx.fillStyle = '#FFF9E6';
+    ctx.fillRect(82, 30, 4, 60);
+    ctx.fillRect(50, 58, 68, 4);
+
+    // Cortinas
+    ctx.fillStyle = '#9575CD';
+    ctx.fillRect(42, 24, 12, 74);
+    ctx.fillRect(114, 24, 12, 74);
+
+    // Detalhes das cortinas
+    ctx.fillStyle = '#B39DDB';
+    ctx.fillRect(45, 28, 4, 66);
+    ctx.fillRect(117, 28, 4, 66);
+
+    // ==========================================
+    // 3. QUADRO DECORATIVO
+    // ==========================================
+
+    // Sombra
+    ctx.fillStyle = 'rgba(41,31,56,0.25)';
+    ctx.fillRect(248, 38, 48, 40);
+
+    // Moldura
+    ctx.fillStyle = '#594B73';
+    ctx.fillRect(244, 34, 48, 40);
+
+    // Interior
+    ctx.fillStyle = '#FFF9E6';
+    ctx.fillRect(248, 38, 40, 32);
+
+    // Desenho de gatinho
+    ctx.fillStyle = '#F48FB1';
+    ctx.fillRect(262, 46, 4, 4);
+    ctx.fillRect(270, 46, 4, 4);
+    ctx.fillRect(260, 50, 16, 4);
+    ctx.fillRect(264, 54, 8, 4);
+    ctx.fillRect(266, 58, 4, 4);
+
+    // ==========================================
+    // 4. RODAPÉ
+    // ==========================================
+
+    ctx.fillStyle = '#594B73';
+    ctx.fillRect(0, 144, 360, 7);
+
+    ctx.fillStyle = '#B39DDB';
+    ctx.fillRect(0, 144, 360, 2);
+
+    // ==========================================
+    // 5. CHÃO
+    // ==========================================
+
+    ctx.fillStyle = floor.c1;
+    ctx.fillRect(0, 151, 360, 89);
+
+    ctx.fillStyle = floor.c2;
+
+    if (floor.id === 'chao_xadrez') {
+
+        for (let y = 151; y < 240; y += 18) {
+            for (
+                let x = ((y - 151) / 18) % 2 === 0 ? 0 : 18;
+                x < 360;
+                x += 36
+            ) {
+                ctx.fillRect(x, y, 18, 18);
+            }
+        }
+
+    } else if (floor.id === 'chao_grama') {
+
+        for (let x = 12; x < 350; x += 28) {
+            ctx.fillRect(x, 166, 4, 4);
+            ctx.fillRect(x + 12, 196, 4, 4);
+        }
+
+    } else {
+
+        // Tábuas do piso
+        for (let y = 164; y < 240; y += 20) {
+            ctx.fillRect(0, y, 360, 2);
+
+            for (let x = (y % 40 === 4 ? 30 : 90); x < 360; x += 120) {
+                ctx.fillRect(x, y - 18, 2, 20);
+            }
+        }
+
+        // Brilho das tábuas
+        ctx.fillStyle = 'rgba(255,255,255,0.13)';
+
+        for (let y = 168; y < 240; y += 20) {
+            ctx.fillRect(0, y, 360, 1);
+        }
+    }
+
+    // Pequenos veios da madeira.
+    for (let y = 169; y < 240; y += 20) {
+      for (let x = 12; x < 350; x += 46) {
+        ctx.fillStyle = 'rgba(75, 43, 35, 0.18)';
+        ctx.fillRect(x, y + 5, 8, 1);
+
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.16)';
+        ctx.fillRect(x + 3, y + 6, 5, 1);
+      }
+    }
+
+    // Pequenos nós da madeira.
+    for (let y = 180; y < 240; y += 40) {
+      ctx.fillStyle = 'rgba(75, 43, 35, 0.20)';
+      ctx.fillRect(112, y, 4, 2);
+      ctx.fillRect(114, y - 1, 2, 4);
+    }
+
+    // ==========================================
+    // 6. SOMBRAS DOS MÓVEIS
+    // ==========================================
+
+    ctx.fillStyle = 'rgba(41,31,56,0.22)';
+    ctx.fillRect(245, 207, 95, 7);
+
+    // ==========================================
+    // 7. OBJETOS E MÓVEIS
+    // ==========================================
+
+    drawFixedBed();
+
+    drawEquippedFurniture(movel);
+    drawEquippedObject(objeto);
+    
+
+    // ==========================================
+    // 8. POTE DE COMIDA
+    // ==========================================
+
+    drawFoodBowl();
+    }
+
+    // Desenha uma superfície pixel art com contorno e camadas de luz.
+    function drawPixelPanel(x, y, width, height, colors) {
+      // Sombra externa
+      ctx.fillStyle = colors.outline;
+      ctx.fillRect(x, y, width, height);
+
+      // Superfície principal
+      ctx.fillStyle = colors.base;
+      ctx.fillRect(x + 2, y + 2, width - 4, height - 4);
+
+      // Iluminação superior
+      ctx.fillStyle = colors.light;
+      ctx.fillRect(x + 2, y + 2, width - 4, 2);
+
+      // Sombra inferior
+      ctx.fillStyle = colors.shadow;
+      ctx.fillRect(x + 2, y + height - 4, width - 4, 2);
+
+      // Reflexo lateral
+      ctx.fillStyle = colors.light;
+      ctx.fillRect(x + 2, y + 4, 2, height - 8);
+    }
+
+    function spawnParticles(type, color) {
+      for (let i = 0; i < 6; i++) {
+        actor.particles.push({
+          x: actor.x + 24 + (Math.random() * 34 - 17),
+          y: actor.y + 4,
+          vy: -0.6 - Math.random() * 0.6,
+          life: 45,
+          type,
+          color
+        });
+      }
+    }
+
+    // Helper para desenhar retângulos pixel art com cantos arredondados (chanfrados)
+    function drawRoundedPixelBox(x, y, w, h, outline, fill, highlight, shadow) {
+      ctx.fillStyle = outline;
+      ctx.fillRect(x + 2, y, w - 4, h);
+      ctx.fillRect(x, y + 2, w, h - 4);
+      ctx.fillRect(x + 1, y + 1, w - 2, h - 2);
+
+      if (w > 4 && h > 4) {
+        ctx.fillStyle = fill;
+        ctx.fillRect(x + 2, y + 2, w - 4, h - 4);
+
+        if (highlight) {
+          ctx.fillStyle = highlight;
+          ctx.fillRect(x + 3, y + 2, w - 6, 2);
+        }
+        if (shadow) {
+          ctx.fillStyle = shadow;
+          ctx.fillRect(x + 3, y + h - 4, w - 6, 2);
+        }
+      }
+    }
+
+    // =========================================================================
+    // 1. CAMA FOFA DE GATINHO
+    // =========================================================================
+    function drawFixedBed() {
+      // Sombra suave no chão
+      ctx.fillStyle = 'rgba(41, 31, 56, 0.24)';
+      ctx.fillRect(12, 179, 94, 6);
+
+      // Orelhinhas fofas no topo da cabeceira esquerda
+      ctx.fillStyle = '#7A4968';
+      ctx.fillRect(12, 134, 6, 6);
+      ctx.fillRect(19, 134, 6, 6);
+      ctx.fillStyle = '#F8BBD0';
+      ctx.fillRect(13, 136, 4, 4);
+      ctx.fillRect(20, 136, 4, 4);
+      ctx.fillStyle = '#F06292';
+      ctx.fillRect(14, 137, 2, 2);
+      ctx.fillRect(21, 137, 2, 2);
+
+      // Cabeceira lateral alta (esquerda)
+      drawRoundedPixelBox(11, 139, 14, 41, '#7A4968', '#F8BBD0', '#FCE4EC', '#F48FB1');
+
+      // Peseira lateral mais baixa (direita)
+      drawRoundedPixelBox(95, 147, 12, 33, '#7A4968', '#F8BBD0', '#FCE4EC', '#F48FB1');
+
+      // Base de madeira pastel da cama
+      drawRoundedPixelBox(15, 171, 88, 9, '#7A4968', '#F48FB1', '#F8BBD0', '#AD668A');
+
+      // Colchão fofo entre a cabeceira e a peseira
+      drawRoundedPixelBox(22, 150, 76, 23, '#8E5A7B', '#FFF9FB', '#FFFFFF', '#F3E5F5');
+
+      // Travesseiro fofo encostado à esquerda (na cabeceira)
+      drawRoundedPixelBox(23, 151, 23, 11, '#B39DDB', '#FFFFFF', '#FFFFFF', '#EDE7F6');
+      ctx.fillStyle = '#F48FB1';
+      ctx.fillRect(27, 155, 3, 2);
+      ctx.fillRect(31, 156, 2, 2);
+      ctx.fillRect(34, 155, 3, 2);
+
+      // Cobertor macio cobrindo da metade para a direita
+      ctx.fillStyle = '#EC407A';
+      ctx.fillRect(21, 161, 77, 12);
+      ctx.fillStyle = '#F48FB1';
+      ctx.fillRect(22, 161, 75, 10);
+
+      // Dobra superior do lençol
+      ctx.fillStyle = '#FFF0F5';
+      ctx.fillRect(21, 158, 77, 4);
+      ctx.fillStyle = '#F8BBD0';
+      ctx.fillRect(22, 162, 75, 2);
+
+      // Estampa de coraçõezinhos no cobertor
+      ctx.fillStyle = '#FFF9FB';
+      [28, 45, 62, 79].forEach(hx => {
+        ctx.fillRect(hx, 165, 2, 2);
+        ctx.fillRect(hx + 3, 165, 2, 2);
+        ctx.fillRect(hx + 1, 167, 3, 2);
+        ctx.fillRect(hx + 2, 169, 1, 1);
+      });
+
+      // Pezinhos arredondados da cama
+      ctx.fillStyle = '#7A4968';
+      ctx.fillRect(14, 179, 8, 3);
+      ctx.fillRect(96, 179, 8, 3);
+    }
+
+    // =========================================================================
+    // 2. MÓVEIS EQUIPÁVEIS (BAÚ, TORRE GATO, ESTANTE LIVROS, SETUP GAMER)
+    // =========================================================================
+    function drawEquippedFurniture(item) {
+      if (item.id === 'movel_bau_fofo') {
+        // Sombra suave
+        ctx.fillStyle = 'rgba(41, 31, 56, 0.24)';
+        ctx.fillRect(262, 200, 68, 6);
+
+        // Corpo do baú arredondado
+        drawRoundedPixelBox(261, 175, 70, 26, '#5D4777', item.c1, '#D1C4E9', '#7E57C2');
+
+        // Tampa fofa estofada
+        drawRoundedPixelBox(259, 166, 74, 12, '#5D4777', item.c2, '#FFFFFF', '#F8BBD0');
+
+        // Alças laterais fofas
+        ctx.fillStyle = '#FFD54F';
+        ctx.fillRect(267, 174, 4, 6);
+        ctx.fillRect(321, 174, 4, 6);
+
+        // Fecho de coração dourado no centro
+        ctx.fillStyle = '#5D4777';
+        ctx.fillRect(290, 174, 12, 11);
+        ctx.fillStyle = '#FFD54F';
+        ctx.fillRect(292, 176, 8, 7);
+        ctx.fillStyle = '#F48FB1';
+        ctx.fillRect(294, 178, 4, 3);
+
+        // Pezinhos fofos
+        ctx.fillStyle = '#5D4777';
+        ctx.fillRect(266, 200, 8, 4);
+        ctx.fillRect(318, 200, 8, 4);
+
+      } else if (item.id === 'movel_arranhador') {
+        // Sombra
+        ctx.fillStyle = 'rgba(41, 31, 56, 0.24)';
+        ctx.fillRect(262, 200, 68, 6);
+
+        // Base de pelúcia
+        drawRoundedPixelBox(263, 187, 66, 15, '#5D4037', item.c1, '#EFEBE9', '#BCAAA4');
+
+        // Poste arranhador de sisal com textura de corda
+        ctx.fillStyle = '#5D4037';
+        ctx.fillRect(288, 134, 16, 55);
+        ctx.fillStyle = item.c2;
+        ctx.fillRect(290, 134, 12, 55);
+        ctx.fillStyle = '#D7CCC8';
+        for (let py = 138; py < 186; py += 6) {
+          ctx.fillRect(290, py, 12, 2);
+        }
+
+        // Bolinha pendurada para brincar
+        ctx.fillStyle = '#5D4037';
+        ctx.fillRect(274, 136, 2, 14);
+        drawRoundedPixelBox(270, 149, 10, 10, '#7A4968', '#F48FB1', '#FCE4EC', '#EC407A');
+
+        // Camninha superior com orelhinhas de gato
+        drawRoundedPixelBox(265, 122, 62, 15, '#5D4037', item.c1, '#FFFFFF', '#BCAAA4');
+        // Orelhinhas na caminha
+        ctx.fillStyle = '#5D4037';
+        ctx.fillRect(269, 116, 10, 7);
+        ctx.fillRect(313, 116, 10, 7);
+        ctx.fillStyle = '#F48FB1';
+        ctx.fillRect(271, 118, 6, 5);
+        ctx.fillRect(315, 118, 6, 5);
+
+      } else if (item.id === 'movel_estante') {
+        // Sombra
+        ctx.fillStyle = 'rgba(41, 31, 56, 0.24)';
+        ctx.fillRect(268, 200, 64, 6);
+
+        // Estrutura arredondada de madeira quente
+        drawRoundedPixelBox(269, 110, 62, 91, '#4E342E', item.c1, '#D7CCC8', '#6D4C41');
+
+        // Fundo interno das prateleiras
+        ctx.fillStyle = '#5D4037';
+        ctx.fillRect(274, 116, 52, 24);
+        ctx.fillRect(274, 144, 52, 24);
+        ctx.fillRect(274, 172, 52, 23);
+
+        // Prateleira 1: Livros pastel + plantinha pendente
+        ctx.fillStyle = '#F48FB1';
+        ctx.fillRect(277, 123, 7, 17);
+        ctx.fillStyle = item.c2;
+        ctx.fillRect(285, 121, 8, 19);
+        ctx.fillStyle = '#80DEEA';
+        ctx.fillRect(294, 125, 6, 15);
+        // Vasinho pendente
+        ctx.fillStyle = '#FFCC80';
+        ctx.fillRect(311, 131, 10, 9);
+        ctx.fillStyle = '#81C784';
+        ctx.fillRect(309, 125, 14, 7);
+        ctx.fillRect(319, 132, 4, 7);
+
+        // Prateleira 2: Livros inclinados + trofeuzinho/estrela
+        ctx.fillStyle = '#FFD54F';
+        ctx.fillRect(278, 151, 8, 17);
+        ctx.fillStyle = '#CE93D8';
+        ctx.fillRect(287, 153, 7, 15);
+        ctx.fillStyle = '#FFF59D';
+        ctx.fillRect(308, 155, 10, 10);
+        ctx.fillRect(311, 152, 4, 15);
+
+        // Prateleira 3: Caixinha organizadora fofa + livros
+        drawRoundedPixelBox(277, 178, 22, 17, '#4E342E', '#F8BBD0', '#FCE4EC', '#F06292');
+        ctx.fillStyle = '#81C784';
+        ctx.fillRect(304, 178, 7, 17);
+        ctx.fillStyle = '#90CAF9';
+        ctx.fillRect(312, 180, 8, 15);
+
+      } else if (item.id === 'movel_pc') {
+        // Sombra
+        ctx.fillStyle = 'rgba(41, 31, 56, 0.24)';
+        ctx.fillRect(256, 200, 78, 6);
+
+        // Cadeira gamer fofa (encosto atrás da mesa)
+        drawRoundedPixelBox(284, 150, 26, 36, '#5D4777', '#F48FB1', '#FCE4EC', '#EC407A');
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fillRect(291, 156, 12, 6); // Almofadinha de pescoço
+
+        // Mesa pastel branca/lilás
+        drawRoundedPixelBox(257, 168, 76, 10, '#5D4777', '#FFF9FB', '#FFFFFF', '#E1BEE7');
+        // Pés da mesa
+        ctx.fillStyle = '#5D4777';
+        ctx.fillRect(262, 177, 7, 25);
+        ctx.fillRect(321, 177, 7, 25);
+        ctx.fillStyle = '#CE93D8';
+        ctx.fillRect(264, 178, 3, 22);
+        ctx.fillRect(323, 178, 3, 22);
+
+        // Monitor com orelhinhas de gatinho (estilo headset/kawaii)
+        drawRoundedPixelBox(274, 134, 42, 29, '#4527A0', '#EDE7F6', '#FFFFFF', '#B39DDB');
+        // Orelhinhas no topo do monitor
+        ctx.fillStyle = '#F48FB1';
+        ctx.fillRect(278, 129, 8, 6);
+        ctx.fillRect(304, 129, 8, 6);
+        // Tela acesa com gatinho/coração
+        ctx.fillStyle = item.c2;
+        ctx.fillRect(278, 138, 34, 21);
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fillRect(292, 145, 2, 2);
+        ctx.fillRect(296, 145, 2, 2);
+        ctx.fillRect(293, 147, 4, 2);
+        ctx.fillRect(294, 149, 2, 1);
+        // Suporte do monitor
+        ctx.fillStyle = '#B39DDB';
+        ctx.fillRect(291, 163, 8, 5);
+
+        // Mini gabinete RGB à direita + teclado à esquerda
+        drawRoundedPixelBox(318, 149, 13, 19, '#4527A0', '#311B92', '#7E57C2', '#1A237E');
+        ctx.fillStyle = '#F48FB1';
+        ctx.fillRect(321, 153, 7, 11);
+        ctx.fillStyle = '#F48FB1';
+        ctx.fillRect(276, 165, 24, 3);
+      }
+    }
+
+    // =========================================================================
+    // 3. POTE DE COMIDA FOFO (COM ORELHINHAS E PATINHA)
+    // =========================================================================
+    function drawFoodBowl() {
+      const bowlX = 55;
+      const bowlY = 211;
+      const isFull = petState.fome > 25;
+
+      // Sombra suave
+      ctx.fillStyle = 'rgba(41, 31, 56, 0.25)';
+      ctx.fillRect(bowlX + 2, bowlY + 17, 38, 5);
+
+      // Orelhinhas fofas na borda do pote
+      ctx.fillStyle = '#7A4968';
+      ctx.fillRect(bowlX + 4, bowlY - 3, 7, 5);
+      ctx.fillRect(bowlX + 31, bowlY - 3, 7, 5);
+      ctx.fillStyle = '#F8BBD0';
+      ctx.fillRect(bowlX + 6, bowlY - 1, 3, 3);
+      ctx.fillRect(bowlX + 33, bowlY - 1, 3, 3);
+
+      // Corpo arredondado do pote
+      drawRoundedPixelBox(bowlX, bowlY, 42, 18, '#7A4968', '#F48FB1', '#FCE4EC', '#EC407A');
+
+      // Interior do pote
+      ctx.fillStyle = '#594052';
+      ctx.fillRect(bowlX + 6, bowlY + 3, 30, 5);
+
+      if (isFull) {
+        // Montinho de ração fofinho
+        ctx.fillStyle = '#8D6E63';
+        ctx.fillRect(bowlX + 8, bowlY + 1, 26, 4);
+        ctx.fillStyle = '#BCAAA4';
+        ctx.fillRect(bowlX + 11, bowlY - 1, 6, 3);
+        ctx.fillRect(bowlX + 19, bowlY - 2, 6, 4);
+        ctx.fillRect(bowlX + 26, bowlY, 5, 3);
+      } else {
+        ctx.fillStyle = '#3E2738';
+        ctx.fillRect(bowlX + 8, bowlY + 4, 26, 3);
+      }
+
+      // Desenho de coraçãozinho/patinha na frente do pote
+      ctx.fillStyle = '#FFF9FB';
+      ctx.fillRect(bowlX + 18, bowlY + 11, 2, 2);
+      ctx.fillRect(bowlX + 22, bowlY + 11, 2, 2);
+      ctx.fillRect(bowlX + 19, bowlY + 13, 4, 2);
+      ctx.fillRect(bowlX + 20, bowlY + 15, 2, 1);
+    }
+
+    // =========================================================================
+    // 4. OBJETOS DECORATIVOS (VASINHO, PELÚCIA, LUMINÁRIA LUA, TROFÉU FOCO)
+    // =========================================================================
+    function drawEquippedObject(item) {
+      if (item.id === 'obj_vasinho') {
+        // Sombra
+        ctx.fillStyle = 'rgba(41, 31, 56, 0.2)';
+        ctx.fillRect(156, 146, 24, 3);
+
+        // Vasinho arredondado terracota/pastel
+        drawRoundedPixelBox(157, 133, 22, 15, '#6D4C41', item.c2, '#FFAB91', '#BF360C');
+        // Borda do vaso
+        drawRoundedPixelBox(155, 130, 26, 5, '#6D4C41', '#FF8A65', '#FFCCBC', '#D84315');
+
+        // Folhinhas gordinhas de suculenta/plantinha
+        drawRoundedPixelBox(163, 116, 10, 15, '#2E7D32', item.c1, '#A5D6A7', '#388E3C');
+        drawRoundedPixelBox(153, 121, 11, 9, '#2E7D32', '#81C784', '#C8E6C9', '#43A047');
+        drawRoundedPixelBox(172, 120, 11, 9, '#2E7D32', '#81C784', '#C8E6C9', '#43A047');
+
+        // Florzinha rosa no topo!
+        ctx.fillStyle = '#F48FB1';
+        ctx.fillRect(166, 113, 4, 4);
+        ctx.fillStyle = '#FFF59D';
+        ctx.fillRect(167, 114, 2, 2);
+
+      } else if (item.id === 'obj_pelucia') {
+        // Sombra
+        ctx.fillStyle = 'rgba(41, 31, 56, 0.2)';
+        ctx.fillRect(155, 146, 26, 3);
+
+        // Orelhinhas
+        ctx.fillStyle = '#5D4777';
+        ctx.fillRect(156, 120, 7, 7);
+        ctx.fillRect(173, 120, 7, 7);
+        ctx.fillStyle = item.c2;
+        ctx.fillRect(158, 122, 3, 4);
+        ctx.fillRect(175, 122, 3, 4);
+
+        // Cabeça e corpinho redondinhos de pelúcia
+        drawRoundedPixelBox(155, 125, 26, 23, '#5D4777', item.c1, '#EDE7F6', '#9575CD');
+
+        // Barriguinha fofa
+        ctx.fillStyle = '#FFF9FB';
+        ctx.fillRect(163, 139, 10, 7);
+
+        // Olhinhos, bochechas rosadas e focinho
+        ctx.fillStyle = '#311B92';
+        ctx.fillRect(160, 131, 2, 3);
+        ctx.fillRect(174, 131, 2, 3);
+        ctx.fillStyle = '#F48FB1';
+        ctx.fillRect(158, 134, 3, 2);
+        ctx.fillRect(175, 134, 3, 2);
+        ctx.fillRect(167, 133, 2, 2);
+
+      } else if (item.id === 'obj_luminaria') {
+        // Halo suave de luz amarelinha
+        ctx.fillStyle = 'rgba(255, 245, 157, 0.22)';
+        ctx.fillRect(152, 111, 32, 30);
+
+        // Base nuvem/pedestal
+        drawRoundedPixelBox(157, 142, 22, 6, '#4527A0', '#B39DDB', '#EDE7F6', '#7E57C2');
+        ctx.fillStyle = '#4527A0';
+        ctx.fillRect(166, 136, 4, 6);
+
+        // Lua crescente dourada fofa
+        ctx.fillStyle = '#E65100';
+        ctx.fillRect(160, 114, 16, 23);
+        ctx.fillStyle = item.c1;
+        ctx.fillRect(161, 115, 14, 21);
+        ctx.fillStyle = '#FFF9C4';
+        ctx.fillRect(162, 116, 6, 19);
+
+        // Recorte interno da lua (cor da parede)
+        const wall = SHOP_CATALOG.find(i => i.id === petState.equipados.parede) || SHOP_CATALOG[0];
+        ctx.fillStyle = wall.c1;
+        ctx.fillRect(168, 118, 9, 15);
+
+        // Estrelinha pendurada na ponta da lua
+        ctx.fillStyle = '#FFF59D';
+        ctx.fillRect(173, 123, 3, 3);
+
+      } else if (item.id === 'obj_trofeu') {
+        // Sombra
+        ctx.fillStyle = 'rgba(41, 31, 56, 0.2)';
+        ctx.fillRect(156, 146, 24, 3);
+
+        // Pedestal de madeira com plaquinha dourada
+        drawRoundedPixelBox(157, 140, 22, 8, '#4E342E', '#8D6E63', '#BCAAA4', '#5D4037');
+        ctx.fillStyle = '#FFD54F';
+        ctx.fillRect(163, 143, 10, 3);
+
+        // Haste dourada
+        ctx.fillStyle = '#B26A00';
+        ctx.fillRect(165, 134, 6, 6);
+        ctx.fillStyle = item.c1;
+        ctx.fillRect(166, 134, 4, 6);
+
+        // Alças laterais fofas
+        ctx.fillStyle = '#B26A00';
+        ctx.fillRect(154, 121, 5, 9);
+        ctx.fillRect(177, 121, 5, 9);
+        ctx.fillStyle = item.c1;
+        ctx.fillRect(155, 122, 3, 7);
+        ctx.fillRect(178, 122, 3, 7);
+
+        // Taça arredondada brilhante
+        drawRoundedPixelBox(158, 117, 20, 18, '#B26A00', item.c1, '#FFF9C4', item.c2);
+
+        // Coraçãozinho/estrela no centro da taça
+        ctx.fillStyle = '#FFF9FB';
+        ctx.fillRect(167, 122, 2, 7);
+        ctx.fillRect(165, 124, 6, 3);
+      }
+    }
+
+    function updateParticles() {
+      for (let i = actor.particles.length - 1; i >= 0; i--) {
+        const p = actor.particles[i];
+        p.y += p.vy;
+        p.life--;
+        ctx.fillStyle = p.color;
+
+        if (p.type === 'heart') {
+          ctx.fillRect(p.x, p.y, 2, 2);
+          ctx.fillRect(p.x + 4, p.y, 2, 2);
+          ctx.fillRect(p.x - 1, p.y + 2, 8, 2);
+          ctx.fillRect(p.x + 1, p.y + 4, 4, 2);
+          ctx.fillRect(p.x + 2, p.y + 6, 2, 2);
+        } else if (p.type === 'zzz') {
+          ctx.font = 'bold 10px monospace';
+          ctx.fillText('Z', p.x, p.y);
+        } else {
+          ctx.fillRect(p.x, p.y, 3, 3);
+        }
+
+        if (p.life <= 0) actor.particles.splice(i, 1);
+      }
+    }
+
+    // Loop de animação principal
+    let lastRender = 0;
+    function loop(now) {
+      if (now - lastRender > 45) {
+        lastRender = now;
+        actor.tick++;
+
+        if (actor.tick % 8 === 0) {
+          actor.animFrame = (actor.animFrame + 1) % 2;
+        }
+
+        // Piscar natural
+        if (actor.blinkTimer > 0) {
+          actor.blinkTimer--;
+        } else if (Math.random() < 0.025) {
+          actor.blinkTimer = 4;
+        }
+
+        // Controle de estados e movimento autônomo
+        if (actor.stateTimer > 0) {
+          actor.stateTimer--;
+          if (actor.stateTimer === 0 && actor.state !== 'sleep') {
+            actor.state = 'idle';
+            actor.y = 138;
+          }
+        } else if (actor.state !== 'sleep') {
+          if (actor.state === 'idle' && Math.random() < 0.035) {
+            // Mantém a movimentação autônoma na área livre do quarto.
+            actor.targetX = 115 + Math.floor(Math.random() * 140);
+            actor.state = 'walk';
+          } else if (actor.state === 'walk') {
+            const diff = actor.targetX - actor.x;
+            const speed = actor.sleepPending ? 4.2 : 1.6;
+            if (Math.abs(diff) <= speed) {
+               if (actor.sleepPending) {
+                // Chegou à cama: posiciona o pet e inicia o sono.
+                actor.x = 32;
+                actor.y = 112;
+                actor.state = 'sleep';
+                actor.sleepPending = false;
+                actor.dir = 1;
+              } else {
+                actor.state = 'idle';
+              }
+            } else {
+              actor.dir = diff > 0 ? 1 : -1;
+              actor.x += actor.dir * speed;
+            }
+          }
+        }
+
+        if (actor.state === 'sleep' && actor.tick % 20 === 0) {
+          spawnParticles('zzz', '#B8A5F2');
+        }
+
+        // Desenha cena
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        drawRoom();
+
+        if (actor.state === 'sleep') {
+          ctx.fillStyle = 'rgba(15, 20, 42, 0.36)';
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+        }
+
+        if (petState.tipo) {
+          drawSheetPet(
+            ctx,
+            petState.tipo,
+            actor.x,
+            actor.y,
+            actor.dir === -1,
+            actor.state,
+            actor.tick
+          );
+        }
+
+
+        updateParticles();
+      }
+      requestAnimationFrame(loop);
+    }
+
+    // =========================================================================
+    // 6. INTERAÇÕES DO USUÁRIO E LOJA
+    // =========================================================================
+    let speechTimer;
+    function showSpeech(msg) {
+      const el = document.getElementById('speechBubble');
+      el.textContent = msg;
+      el.classList.add('visible');
+      clearTimeout(speechTimer);
+      speechTimer = setTimeout(() => el.classList.remove('visible'), 3200);
+    }
+
+    function updateUI() {
+      document.getElementById('coinBalance').textContent = Math.floor(petState.moedas);
+      document.getElementById('petNameDisplay').textContent = petState.nome.toUpperCase();
+
+      const f = Math.round(petState.fome);
+      const c = Math.round(petState.carinho);
+      const e = Math.round(petState.energia);
+
+      document.getElementById('txtFome').textContent = `${f}%`;
+      document.getElementById('barFome').style.width = `${f}%`;
+
+      document.getElementById('txtCarinho').textContent = `${c}%`;
+      document.getElementById('barCarinho').style.width = `${c}%`;
+
+      document.getElementById('txtEnergia').textContent = `${e}%`;
+      document.getElementById('barEnergia').style.width = `${e}%`;
+
+      const isSleeping = actor.state === 'sleep' || petState.dormindo;
+
+      const moodEl = document.getElementById('petMoodBadge');
+      if (isSleeping) moodEl.textContent = 'Dormindo';
+      else if (f < 30) moodEl.textContent = 'Com Fome';
+      else if (e < 25) moodEl.textContent = 'Cansado';
+      else if (c > 75) moodEl.textContent = 'Radiante';
+      else moodEl.textContent = 'Tranquilo';
+
+      document.getElementById('btnFeed').disabled = petState.moedas < 2 || isSleeping;
+      document.getElementById('btnSleepText').textContent =
+        isSleeping ? 'ACORDAR' : 'DORMIR';
+    }
+
+    // Converte coordenadas de tela (mouse ou touch) para coordenadas internas do canvas (360x240)
+    function getCanvasCoords(clientX, clientY) {
+      const rect = canvas.getBoundingClientRect();
+      return {
+        x: ((clientX - rect.left) / rect.width) * canvas.width,
+        y: ((clientY - rect.top) / rect.height) * canvas.height
+      };
+    }
+
+    // Verifica se o ponto (px, py) está estritamente dentro da área do sprite 32x32 (scale 2 = 64x64)
+    function isPointInsidePet(px, py) {
+      if (!petState.tipo) return false;
+      // Margem interna de 6px para ignorar bordas transparentes da matriz 32x32
+      const pad = 6;
+      const left = actor.x + pad;
+      const right = actor.x + 64 - pad;
+      const top = actor.y + pad;
+      const bottom = actor.y + 64 - pad;
+      return px >= left && px <= right && py >= top && py <= bottom;
+    }
+
+    function triggerPetLove() {
+      // Se estiver dormindo, não acorda com carinho; apenas reage com carinho suave na cama
+      petState.carinho = Math.min(100, petState.carinho + 15);
+      spawnParticles('heart', '#F48FB1');
+
+      if (actor.state === 'sleep' || petState.dormindo) {
+        showSpeech('Zzz... purrrr... (sonhando feliz)');
+      } else {
+        actor.state = 'love';
+        actor.stateTimer = 32;
+        showSpeech('Purrrr~ Amo receber carinho!');
+      }
+
+      updateUI();
+      savePetData();
+    }
+
+    // Feedback visual de cursor (pointer somente sobre o pet)
+    canvas.addEventListener('mousemove', (e) => {
+      const pos = getCanvasCoords(e.clientX, e.clientY);
+      canvas.style.cursor = isPointInsidePet(pos.x, pos.y) ? 'pointer' : 'default';
+    });
+
+    canvas.addEventListener('mouseleave', () => {
+      canvas.style.cursor = 'default';
+    });
+
+    // Dispara carinho SOMENTE se o clique ocorrer dentro da hitbox do pet
+    canvas.addEventListener('click', (e) => {
+      const pos = getCanvasCoords(e.clientX, e.clientY);
+      if (isPointInsidePet(pos.x, pos.y)) {
+        triggerPetLove();
+      }
+    });
+
+    document.getElementById('btnFeed').addEventListener('click', () => {
+      if (actor.state === 'sleep' || petState.dormindo) {
+        showSpeech('Zzz... Acorde-me antes de me alimentar!');
+        return;
+      }
+      if (petState.moedas < 2) {
+        showSpeech('Preciso de 2 moedas para petiscos!');
+        return;
+      }
+      if (petState.fome >= 100) {
+        showSpeech('Minha barriguinha já está cheia!');
+        return;
+      }
+      petState.moedas -= 2;
+      petState.fome = Math.min(100, petState.fome + 25);
+      actor.state = 'eat';
+      actor.stateTimer = 36;
+      actor.x = 74;
+      actor.y = 162;
+      actor.dir = -1;
+      spawnParticles('food', '#FFD54F');
+      showSpeech('Nham nham! Petisco delicioso!');
+      updateUI();
+      savePetData();
+    });
+
+    document.getElementById('btnPet').addEventListener('click', triggerPetLove);
+
+    document.getElementById('btnSleep').addEventListener('click', () => {
+      if (actor.state === 'sleep' || petState.dormindo) {
+        // Acorda explicitamente pelo usuário
+        petState.dormindo = false;
+        actor.state = 'idle';
+        actor.y = 138;
+        actor.sleepPending = false;
+        actor.stateTimer = 0;
+        showSpeech('Bom dia! Estou pronto para outra!');
+      } else {
+        // Marca sono persistente imediatamente (mesmo se fechar antes de chegar na cama)
+        petState.dormindo = true;
+        actor.state = 'walk';
+        actor.targetX = 32;
+        actor.dir = actor.x > 32 ? -1 : 1;
+        actor.sleepPending = true;
+        actor.stateTimer = 0;
+        showSpeech('Indo tirar uma sonequinha...');
+      }
+
+      updateUI();
+      savePetData();
+    });
+
+    // Recuperação durante sono (permanece dormindo mesmo com energia 100% até clicar em ACORDAR)
+    setInterval(() => {
+      if (!petState.tipo) return;
+      if (actor.state === 'sleep' || petState.dormindo) {
+        petState.energia = Math.min(100, petState.energia + 4);
+      } else {
+        petState.fome = Math.max(5, petState.fome - 0.4);
+        petState.carinho = Math.max(10, petState.carinho - 0.3);
+        petState.energia = Math.max(10, petState.energia - 0.25);
+      }
+      updateUI();
+      savePetData();
+    }, 5000);
+
+    // =========================================================================
+    // 7. LOJA DE PERSONALIZAÇÃO
+    // =========================================================================
+    let activeShopCat = 'parede';
+
+    function drawShopItemIcon(canvasEl, item) {
+      const c = canvasEl.getContext('2d');
+      c.imageSmoothingEnabled = false;
+      c.clearRect(0, 0, 24, 24);
+
+      const px = (x, y, w, h, color) => {
+        c.fillStyle = color;
+        c.fillRect(x, y, w, h);
+      };
+
+      // --- CATEGORIA: PAREDES (Rolo de papel de parede / amostra decorada) ---
+      if (item.cat === 'parede') {
+        // Sombra e moldura do rolo de papel de parede
+        px(4, 3, 16, 18, '#131720');
+        px(5, 4, 14, 16, item.c1);
+        // Listras verticais
+        px(7, 4, 2, 16, item.c2);
+        px(11, 4, 2, 16, item.c2);
+        px(15, 4, 2, 16, item.c2);
+        // Detalhe temático de cada parede
+        if (item.id === 'parede_noite') {
+          px(8, 7, 2, 2, '#FFF59D');
+          px(14, 11, 2, 2, '#FFF59D');
+          px(9, 14, 1, 1, '#FFFFFF');
+        } else if (item.id === 'parede_pessego') {
+          px(10, 9, 4, 4, '#FF8A65');
+          px(11, 8, 2, 1, '#81C784');
+        } else if (item.id === 'parede_menta') {
+          px(10, 9, 4, 3, '#66BB6A');
+          px(11, 8, 2, 5, '#A5D6A7');
+        } else {
+          // Coraçãozinho lavanda
+          px(9, 9, 2, 2, '#F48FB1');
+          px(13, 9, 2, 2, '#F48FB1');
+          px(10, 11, 4, 2, '#F48FB1');
+          px(11, 13, 2, 1, '#F48FB1');
+        }
+        // Rolo enrolado na base
+        px(3, 17, 18, 4, '#131720');
+        px(4, 18, 16, 2, '#FFF9FB');
+        px(6, 18, 12, 1, item.c2);
+      }
+
+      // --- CATEGORIA: CHÃOS (Piso em perspectiva isométrica/diagonal) ---
+      else if (item.cat === 'chao') {
+        px(3, 4, 18, 16, '#131720');
+        px(4, 5, 16, 14, item.c1);
+
+        if (item.id === 'chao_xadrez') {
+          for (let y = 5; y < 19; y += 4) {
+            for (let x = ((y - 5) / 4) % 2 === 0 ? 4 : 8; x < 20; x += 8) {
+              px(x, y, 4, Math.min(4, 19 - y), item.c2);
+            }
+          }
+        } else if (item.id === 'chao_grama') {
+          px(6, 8, 2, 2, '#C8E6C9');
+          px(14, 7, 2, 2, '#2E7D32');
+          px(9, 13, 2, 2, '#FFF59D'); // Florzinha no gramado
+          px(15, 14, 2, 2, '#F48FB1');
+        } else if (item.id === 'chao_rosa') {
+          // Tapete fofo com franjas
+          px(5, 6, 14, 12, item.c2);
+          px(6, 7, 12, 10, item.c1);
+          px(10, 10, 4, 4, '#FFF9FB');
+        } else {
+          // Tábuas de madeira pinho
+          px(4, 9, 16, 1, item.c2);
+          px(4, 14, 16, 1, item.c2);
+          px(10, 5, 1, 4, item.c2);
+          px(14, 10, 1, 4, item.c2);
+          px(8, 15, 1, 4, item.c2);
+        }
+        // Brilho superior do bloco
+        px(4, 5, 16, 1, 'rgba(255,255,255,0.45)');
+      }
+
+      // --- CATEGORIA: MÓVEIS ---
+      else if (item.id === 'movel_bau_fofo') {
+        px(3, 6, 18, 13, '#3B2854');
+        px(4, 7, 16, 4, item.c2);     // Tampa rosa
+        px(5, 7, 14, 1, '#FFFFFF');   // Brilho tampa
+        px(4, 11, 16, 7, item.c1);    // Corpo lilás
+        px(10, 10, 4, 4, '#FFD54F');  // Fecho dourado
+        px(11, 11, 2, 2, '#F48FB1');  // Coração no fecho
+        px(5, 19, 3, 2, '#3B2854');   // Pé esq
+        px(16, 19, 3, 2, '#3B2854');  // Pé dir
+      }
+
+      else if (item.id === 'movel_arranhador') {
+        // Orelhinhas no topo
+        px(6, 2, 3, 3, '#4E342E');
+        px(15, 2, 3, 3, '#4E342E');
+        px(7, 3, 1, 2, '#F48FB1');
+        px(16, 3, 1, 2, '#F48FB1');
+        // Caminha superior
+        px(5, 4, 14, 5, '#4E342E');
+        px(6, 5, 12, 3, item.c1);
+        // Poste de sisal
+        px(10, 9, 4, 9, '#4E342E');
+        px(11, 9, 2, 9, item.c2);
+        px(11, 11, 2, 1, '#D7CCC8');
+        px(11, 14, 2, 1, '#D7CCC8');
+        // Bolinha pendurada
+        px(7, 9, 1, 3, '#4E342E');
+        px(6, 12, 3, 3, '#F48FB1');
+        // Base
+        px(4, 18, 16, 4, '#4E342E');
+        px(5, 19, 14, 2, item.c1);
+      }
+
+      else if (item.id === 'movel_estante') {
+        px(4, 2, 16, 20, '#3E2723');
+        px(5, 3, 14, 18, item.c1);
+        // Nichos internos
+        px(6, 4, 12, 4, '#4E342E');
+        px(6, 10, 12, 4, '#4E342E');
+        px(6, 16, 12, 4, '#4E342E');
+        // Livros coloridos
+        px(7, 5, 2, 3, '#F48FB1');
+        px(10, 4, 2, 4, item.c2);
+        px(14, 5, 3, 3, '#81C784');
+        px(7, 11, 2, 3, '#FFD54F');
+        px(10, 11, 2, 3, '#80DEEA');
+        px(14, 11, 3, 3, '#CE93D8');
+        px(7, 16, 5, 4, '#F8BBD0'); // Caixinha rosa
+        px(14, 17, 3, 3, '#90CAF9');
+      }
+
+      else if (item.id === 'movel_pc') {
+        // Orelhinhas no monitor
+        px(6, 2, 3, 2, '#F48FB1');
+        px(15, 2, 3, 2, '#F48FB1');
+        // Monitor
+        px(5, 4, 14, 10, '#311B92');
+        px(6, 5, 12, 8, item.c2);
+        // Coração na tela
+        px(10, 7, 1, 1, '#FFFFFF');
+        px(13, 7, 1, 1, '#FFFFFF');
+        px(10, 8, 4, 1, '#FFFFFF');
+        px(11, 9, 2, 1, '#FFFFFF');
+        // Suporte + Mesa
+        px(10, 14, 4, 2, '#B39DDB');
+        px(3, 16, 18, 3, '#311B92');
+        px(4, 17, 16, 1, '#FFF9FB');
+        px(5, 19, 2, 3, '#311B92');
+        px(17, 19, 2, 3, '#311B92');
+      }
+
+      // --- CATEGORIA: OBJETOS ---
+      else if (item.id === 'obj_vasinho') {
+        // Florzinha rosa no topo
+        px(11, 2, 2, 2, '#F48FB1');
+        px(11, 3, 1, 1, '#FFF59D');
+        // Folhas suculentas
+        px(9, 4, 6, 8, '#1B5E20');
+        px(10, 5, 4, 6, item.c1);
+        px(6, 7, 4, 4, '#1B5E20');
+        px(7, 8, 2, 2, '#81C784');
+        px(14, 7, 4, 4, '#1B5E20');
+        px(15, 8, 2, 2, '#81C784');
+        // Vaso terracota
+        px(6, 12, 12, 3, '#4E342E');
+        px(7, 13, 10, 1, '#FF8A65');
+        px(7, 15, 10, 6, '#4E342E');
+        px(8, 15, 8, 5, item.c2);
+      }
+
+      else if (item.id === 'obj_pelucia') {
+        // Orelhas
+        px(5, 3, 4, 4, '#3B2854');
+        px(15, 3, 4, 4, '#3B2854');
+        px(6, 4, 2, 2, item.c2);
+        px(16, 4, 2, 2, item.c2);
+        // Cabeça e corpo
+        px(4, 6, 16, 15, '#3B2854');
+        px(5, 7, 14, 13, item.c1);
+        // Olhos e bochechas
+        px(7, 10, 2, 2, '#1A1A2E');
+        px(15, 10, 2, 2, '#1A1A2E');
+        px(6, 12, 2, 1, '#F48FB1');
+        px(16, 12, 2, 1, '#F48FB1');
+        px(11, 12, 2, 1, '#F48FB1');
+        // Barriguinha
+        px(8, 15, 8, 4, '#FFF9FB');
+      }
+
+      else if (item.id === 'obj_luminaria') {
+        // Halo suave
+        px(6, 3, 12, 13, 'rgba(255, 245, 157, 0.22)');
+        // Lua crescente
+        px(8, 4, 7, 11, '#E65100');
+        px(9, 5, 5, 9, item.c1);
+        px(9, 5, 2, 9, '#FFF9C4');
+        px(12, 7, 3, 5, '#1A202C'); // Recorte fundo escuro
+        // Estrelinha
+        px(15, 8, 2, 2, '#FFF59D');
+        // Haste e base nuvem
+        px(11, 15, 2, 3, '#4527A0');
+        px(7, 18, 10, 3, '#4527A0');
+        px(8, 19, 8, 1, '#B39DDB');
+      }
+
+      else if (item.id === 'obj_trofeu') {
+        // Alças
+        px(4, 5, 3, 5, '#B26A00');
+        px(17, 5, 3, 5, '#B26A00');
+        // Taça
+        px(6, 3, 12, 10, '#B26A00');
+        px(7, 4, 10, 8, item.c1);
+        px(8, 5, 2, 6, '#FFF9C4'); // Brilho
+        // Estrelinha no centro
+        px(11, 6, 2, 4, '#FFF9FB');
+        px(10, 7, 4, 2, '#FFF9FB');
+        // Haste e pedestal
+        px(10, 13, 4, 4, '#B26A00');
+        px(11, 13, 2, 4, item.c1);
+        px(7, 17, 10, 4, '#4E342E');
+        px(8, 18, 8, 2, '#8D6E63');
+        px(10, 18, 4, 1, '#FFD54F');
+      }
+    }
+
+    function renderShop() {
+      const grid = document.getElementById('shopGrid');
+      grid.innerHTML = '';
+
+      const coinSvg = `
+        <svg class="mini-coin-svg" viewBox="0 0 16 16">
+          <path fill="#5D4000" d="M5 1h6v1h2v2h1v8h-1v2h-2v1H5v-1H3v-2H2V4h1V2h2V1z"/>
+          <path fill="#FFD54F" d="M5 2h6v2h2v8h-2v2H5v-2H3V4h2V2z"/>
+          <path fill="#FFF9C4" d="M5 3h4v1H5V3zM4 4h1v6H4V4z"/>
+        </svg>`;
+
+      SHOP_CATALOG.filter(item => item.cat === activeShopCat).forEach(item => {
+        const owned = petState.inventario.includes(item.id);
+        const equipped = petState.equipados[item.cat] === item.id;
+        const canAfford = petState.moedas >= item.preco;
+
+        const card = document.createElement('div');
+        card.className = `shop-card ${equipped ? 'equipped' : ''} ${owned ? 'owned' : ''}`;
+
+        let statusTagHtml = '';
+        if (equipped) {
+          statusTagHtml = '<span class="shop-status-tag">EM USO</span>';
+        } else if (owned) {
+          statusTagHtml = '<span class="shop-status-tag owned-tag">SEU</span>';
+        }
+
+        let btnContent = `${coinSvg}<span>${item.preco}</span>`;
+        let btnClass = 'item-action-btn';
+        if (equipped) {
+          btnContent = '✓ EQUIPADO';
+          btnClass += ' equipped-btn';
+        } else if (owned) {
+          btnContent = 'EQUIPAR';
+          btnClass += ' owned';
+        } else if (!canAfford) {
+          btnClass += ' too-expensive';
+        }
+
+        card.innerHTML = `
+          ${statusTagHtml}
+          <div class="item-icon-slot">
+            <canvas class="item-pixel-canvas" width="24" height="24"></canvas>
+          </div>
+          <div class="item-label">${item.nome}</div>
+          <button class="${btnClass}">${btnContent}</button>
+        `;
+
+        // Desenha o ícone pixel art exclusivo do item
+        const iconCanvas = card.querySelector('.item-pixel-canvas');
+        drawShopItemIcon(iconCanvas, item);
+
+        card.querySelector('button').addEventListener('click', () => {
+          if (equipped) return;
+
+          if (owned) {
+            petState.equipados[item.cat] = item.id;
+            showSpeech(`Equipado: ${item.nome}!`);
+          } else {
+            if (petState.moedas < item.preco) {
+              showSpeech('Moedas insuficientes! Conclua tarefas!');
+              return;
+            }
+            petState.moedas -= item.preco;
+            petState.inventario.push(item.id);
+            petState.equipados[item.cat] = item.id;
+            spawnParticles('heart', '#FFD54F');
+            showSpeech(`Você comprou: ${item.nome}!`);
+          }
+
+          updateUI();
+          renderShop();
+          savePetData();
+        });
+
+        grid.appendChild(card);
+      });
+    }
+
+    document.querySelectorAll('.shop-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.shop-tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        activeShopCat = tab.dataset.cat;
+        renderShop();
+      });
+    });
+
+    // =========================================================================
+    // 8. MODAL DE ADOÇÃO E MODAL DE AJUDA
+    // =========================================================================
+    function initAdoption() {
+      let selectedSpecies = 'gato';
+      const cards = document.querySelectorAll('.species-card');
+      cards.forEach(card => {
+        card.addEventListener('click', () => {
+          cards.forEach(x => x.classList.remove('selected'));
+          card.classList.add('selected');
+          selectedSpecies = card.dataset.species;
+        });
+      });
+
+      document.getElementById('btnConfirmAdopt').addEventListener('click', async () => {
+        const inputVal = document.getElementById('inputPetName').value.trim();
+        const defaults = { gato: 'Mochi', pato: 'Pipoca', corvo: 'Nyx', dinossauro: 'Rexy' };
+        petState.tipo = selectedSpecies;
+        petState.nome = inputVal || defaults[selectedSpecies];
+        petState.fome = 90;
+        petState.carinho = 90;
+        petState.energia = 90;
+
+        await savePetData();
+        document.getElementById('adoptionModal').classList.add('hidden');
+        updateUI();
+        showSpeech(`Oi! Eu sou ${petState.nome}!`);
+      });
+    }
+
+    document.getElementById('coinBadge').addEventListener('click', () => {
+      document.getElementById('coinHelpModal').classList.remove('hidden');
+    });
+    document.getElementById('btnCloseCoinHelp').addEventListener('click', () => {
+      document.getElementById('coinHelpModal').classList.add('hidden');
+    });
+
+    // =========================================================================
+    // 9. INICIALIZAÇÃO
+    // =========================================================================
+    (async function bootstrap() {
+      await loadPetData();
+
+      if (!petState.tipo) {
+        document.getElementById('adoptionModal').classList.remove('hidden');
+        initAdoption();
+      } else {
+        updateUI();
+      }
+
+      renderShop();
+      requestAnimationFrame(loop);
+    })();
+  </script>
+</body>
+</html>

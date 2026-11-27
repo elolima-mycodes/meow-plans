@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Meow Plans - Gerenciador Central</title>
+
+  <!-- CSS Global do Projeto -->
+  <!-- Bootstrap Icons (Necessário para os ícones de status e bandeira do card) -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="style.css">
+
+  <!-- Configuração PWA -->
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#8C82F2" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <link rel="apple-touch-icon" href="icons/icon-192.png" />
+  <!-- Estilos Específicos da Tela de Gerenciamento (Mobile-First) -->
+  <style>
+    /* Estilização da Barra Superior / Header */
+    .top-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.75rem 1rem;
+    }
+
+    .user-profile-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.2rem;
+      background: none;
+      border: none;
+      cursor: pointer;
+    }
+
+    .user-avatar-placeholder {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background-color: #E2E8F0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+      border: 2px solid var(--color-primary);
+    }
+
+    /* Alternador de Abas (Estilo Capsule Escura da Prototipagem) */
+    .segmented-tabs {
+      display: flex;
+      background-color: #2D3748;
+      border-radius: var(--radius-lg);
+      padding: 4px;
+      margin: 0.5rem 1rem 1rem 1rem;
+    }
+
+    .tab-btn {
+      flex: 1;
+      padding: 0.6rem 1rem;
+      border: none;
+      background: transparent;
+      color: #FFFFFF;
+      font-weight: 700;
+      font-size: 0.95rem;
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      transition: var(--transition-fast);
+      text-align: center;
+    }
+
+    .tab-btn.active {
+      background-color: #384252;
+      color: #FFFFFF;
+      box-shadow: inset 0 0 0 2px var(--color-primary);
+    }
+
+    /* Barra de Ações (Filtros e Botão de Adição) */
+    .action-bar {
+      display: flex;
+      flex-direction: column;
+      padding: 0 1rem;
+      margin-bottom: 0.75rem;
+      gap: 0.5rem;
+    }
+
+    .action-bar-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+      width: 100%;
+    }
+
+    .filters-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+      width: 100%;
+    }
+
+    .filter-input,
+    .filter-btn {
+      background-color: #FFFFFF;
+      border: 1px solid var(--color-border);
+      padding: 0.4rem 0.6rem;
+      border-radius: var(--radius-md);
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--color-text-dark);
+      outline: none;
+    }
+
+    .filter-input {
+      flex: 1 1 140px;
+    }
+
+    .filter-btn {
+      flex: 1 1 100px;
+      cursor: pointer;
+    }
+
+    .btn-add-action {
+      background-color: var(--color-mint-medium);
+      color: #125420;
+      font-size: 0.85rem;
+      font-weight: 700;
+      padding: 0.45rem 1rem;
+      border-radius: var(--radius-pill);
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      box-shadow: var(--shadow-sm);
+      white-space: nowrap;
+    }
+
+    /* Painel Lilás Principal (Moldura da Lista) */
+    .main-lilac-card {
+      background-color: #C2BEF6;
+      border-radius: var(--radius-xl);
+      padding: 1.25rem 1rem 3.5rem 1rem;
+      margin: 0 1rem 1rem 1rem;
+      min-height: 420px;
+      position: relative;
+      box-shadow: var(--shadow-md);
+    }
+
+    /* Modificação da Lixeira no Card Principal */
+    .trash-mode-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background-color: #2D3748;
+      color: #FFFFFF;
+      padding: 0.6rem 1rem;
+      border-radius: var(--radius-md);
+      margin-bottom: 1rem;
+    }
+
+    /* Cards de Tarefa na Lixeira */
+    .task-item-card {
+      background: #FFFFFF;
+      border-radius: var(--radius-md);
+      padding: 0.75rem 1rem;
+      margin-bottom: 0.75rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      align-items: center;
+      justify-content: space-between;
+      border-left: 8px solid var(--color-primary);
+      box-shadow: var(--shadow-sm);
+      position: relative;
+    }
+
+    .task-item-info {
+      display: flex;
+      flex-direction: column;
+      gap: 0.15rem;
+      flex: 1;
+    }
+
+    .task-item-title {
+      font-weight: 700;
+      font-size: 1rem;
+      color: var(--color-text-dark);
+    }
+
+    .task-item-dates {
+      font-size: 0.75rem;
+      color: var(--color-text-muted);
+      display: flex;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+
+    .task-item-meta {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    /* Cards de Categoria na Lista (fundo branco: texto sempre escuro, inclusive no Dark Mode) */
+    .category-item-card {
+      background: #FFFFFF;
+      color: var(--color-text-dark);
+      border-radius: var(--radius-md);
+      padding: 0.85rem 1rem;
+      margin-bottom: 0.75rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .category-item-content {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .category-item-name {
+      font-weight: 700;
+      color: var(--color-text-dark);
+    }
+
+    .category-color-badge {
+      width: 20px;
+      height: 20px;
+      border-radius: var(--radius-sm);
+    }
+
+    /* Ações dos itens da Lixeira */
+    .trash-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+    }
+
+    .trash-actions .btn {
+      min-height: 32px;
+      padding: 0.2rem 0.6rem;
+      font-size: 0.75rem;
+    }
+
+    /* Botão Flutuante de Lixeira */
+    .btn-lixeira-bottom {
+      position: absolute;
+      bottom: 1rem;
+      right: 1rem;
+      background-color: #E2E8F0;
+      border: 1px solid #CBD5E0;
+      padding: 0.4rem 1rem;
+      border-radius: var(--radius-md);
+      font-weight: 700;
+      font-size: 0.85rem;
+      cursor: pointer;
+      color: var(--color-text-dark);
+      box-shadow: var(--shadow-sm);
+    }
+
+    @media (min-width: 768px) {
+      .app-container {
+        max-width: 720px;
+      }
+    }
+  </style>
+  <!-- PocketBase SDK -->
+  <script src="https://cdn.jsdelivr.net/npm/pocketbase@0.21.3/dist/pocketbase.umd.js"></script>
+</head>
+
+<body>
+
+  <div class="app-container">
+    <!-- Header Superior -->
+    <header class="top-bar" style="display: flex; justify-content: flex-end; width: 100%; padding: 1rem 1.5rem;">
+      <div class="header-user-actions" style="display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 0.45rem; max-width: 100%;">
+
+
+        <!-- Botão Meu Pet -->
+        <a href="pet.html" class="btn btn-sm btn-primary pet-nav-btn"
+          style="padding: 0.4rem 0.75rem; font-size: 0.8rem; font-weight: 700; border-radius: var(--radius-pill); white-space: nowrap; text-decoration: none; display: inline-flex; align-items: center; gap: 0.3rem;">
+          <i class="bi bi-heart-fill"></i> <span class="pet-btn-label">Meu Pet</span>
+        </a>
+
+        <!-- Botão Calendário (Estilo Mint Accent da Imagem) -->
+        <button class="btn btn-sm btn-accent" style="padding: 0.45rem 0.85rem; font-size: 0.85rem; font-weight: 700; border-radius: var(--radius-pill); white-space: nowrap;"
+          onclick="window.location.href='calendario.html'">
+          Calendário
+        </button>
+
+        <!-- Botão Alternar Tema -->
+        <button id="themeToggleBtn" class="btn btn-outline" title="Alternar Tema"
+          style="width: 38px; height: 38px; padding: 0; display: flex; align-items: center; justify-content: center; font-size: 1rem; border-radius: 12px; border: 2px solid #8C82F2;">
+          <i class="bi bi-moon-fill"></i>
+        </button>
+
+        <!-- Badge Circular com a Inicial / Avatar -->
+        <div class="user-avatar-badge" id="userAvatar" title="Perfil do Usuário"
+          style="width: 38px; height: 38px; border-radius: 50%; border: 2px solid #8C82F2; display: flex; align-items: center; justify-content: center; font-weight: 700; color: var(--text-main); font-size: 0.95rem;">
+          <i class="bi bi-person-fill"></i>
+        </div>
+
+        <!-- Botão Sair Vermelho -->
+        <button class="btn-link" id="logout-btn"
+          style="color: var(--color-danger, #EF4444); font-weight: 700; font-size: 0.85rem; text-decoration: none; border: none; background: none; padding: 0 0.25rem; cursor: pointer;">
+          Sair
+        </button>
+      </div>
+    </header>
+
+    <!-- Alternador de Abas (Minhas Tarefas / Categorias) -->
+    <nav class="segmented-tabs" id="tab-navigation">
+      <button class="tab-btn active" data-tab="tasks" id="tab-tasks-btn">Tarefas</button>
+      <button class="tab-btn" data-tab="categories" id="tab-categories-btn">Categorias</button>
+    </nav>
+
+    <!-- Barra de Ações Superior (Filtros Avançados e Botão Adicionar) -->
+    <div class="action-bar">
+      <div class="action-bar-top">
+        <span id="tab-section-title" style="font-weight: 700; font-size: 0.95rem;">Minhas Tarefas</span>
+        <button class="btn-add-action btn-accent" id="btn-open-add-modal">
+          <i class="bi bi-plus-lg" id="add-btn-icon"></i> <span id="add-btn-label">Adicionar Tarefa</span>
+        </button>
+      </div>
+
+      <!-- Área de Filtros Combinados (Aba Tarefas, inclusive na Lixeira) -->
+      <div class="filters-container" id="tasks-filters-wrapper">
+        <input type="text" class="filter-input" id="search-text-filter" placeholder="Buscar tarefa...">
+
+        <select class="filter-btn" id="category-filter-select">
+          <option value="">Categoria: Todas</option>
+        </select>
+
+        <select class="filter-btn" id="urgency-filter-select">
+          <option value="">Urgência: Todas</option>
+          <option value="baixa">Baixa</option>
+          <option value="normal">Normal</option>
+          <option value="alta">Alta</option>
+          <option value="urgente">Urgente</option>
+        </select>
+
+        <select class="filter-btn" id="status-filter-select">
+          <option value="">Status: Todos</option>
+          <option value="a_fazer">A Fazer</option>
+          <option value="em_progresso">Em Progresso</option>
+          <option value="concluida">Concluída</option>
+
+          <option value="atrasada">Atrasada</option>
+          <option value="cancelada">Cancelada</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Moldura Lilás Principal -->
+    <main class="main-lilac-card" id="main-content-card">
+      <!-- Cabeçalho Especial de Lixeira -->
+      <div id="trash-header" class="trash-mode-header hidden">
+        <button class="meow-modal-close" id="btn-close-trash" style="color: #FFF;" aria-label="Fechar lixeira"><i class="bi bi-x-lg"></i></button>
+        <span style="font-weight: 700;" id="trash-title-label">Lixeira de Tarefas</span>
+        <div style="width: 20px;"></div>
+      </div>
+
+      <!-- Container da Lista de Tarefas -->
+      <div id="tasks-list-container"></div>
+
+      <!-- Container da Lista de Categorias -->
+      <div id="categories-list-container" class="hidden"></div>
+
+      <!-- Container de Itens Excluídos (Lixeira) -->
+      <div id="trash-list-container" class="hidden"></div>
+
+      <!-- Botão para Acessar a Lixeira -->
+      <button class="btn-lixeira-bottom" id="btn-open-trash"><i class="bi bi-trash3"></i> Lixeira</button>
+    </main>
+  </div>
+
+  <!-- MODAL 1 (Criar / Editar Tarefa): injetado por ui.js, o mesmo do Calendário -->
+
+  <!-- MODAL 2: CRIAR / EDITAR CATEGORIA (mesma estrutura do modal de tarefa) -->
+  <div class="modal-overlay" id="category-modal-overlay">
+    <div class="modal-card modal-cute-container meow-modal">
+      <div class="meow-modal-header">
+        <h3 id="category-modal-title">Nova Categoria</h3>
+        <button type="button" class="meow-modal-close" id="btn-close-category-modal" aria-label="Fechar"><i class="bi bi-x-lg"></i></button>
+      </div>
+
+      <form id="category-form">
+        <input type="hidden" id="category-id" value="">
+
+        <div class="form-group">
+          <input type="text" class="input-control meow-title-input" id="category-name-input"
+            placeholder="Título da Categoria" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="category-color-select"><i class="bi bi-tag"></i> Cor da Categoria:</label>
+          <div style="display: flex; align-items: center; gap: 0.6rem;">
+            <!-- Indicador Circular de Cor -->
+            <span id="category-color-preview" class="meow-color-dot" style="background-color: #C2BEF6;"></span>
+
+            <!-- Select de Cores -->
+            <select class="select-control" id="category-color-select" required style="flex: 1;">
+              <option value="#C2BEF6">Lilás Pastel</option>
+              <option value="#F4C1F2">Rosa Pastel</option>
+              <option value="#BEF7F3">Verde Mint</option>
+              <option value="#FFC878">Amarelo Pastel</option>
+              <option value="#FF8A8A">Coral Soft</option>
+              <option value="#A0A0A0">Cinza Neutro</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="meow-modal-actions">
+          <button type="submit" class="btn btn-secondary" id="btn-save-category">
+            Adicionar Categoria
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="ui.js"></script>
+  <script src="gerenciar.js"></script>
+</body>
+
+</html>
