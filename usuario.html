@@ -21,7 +21,7 @@
     
     <!-- CABEÇALHO DE NAVEGAÇÃO -->
     <header class="flex-between mb-1" style="align-items: center;">
-      <button class="btn btn-outline" onclick="history.back()" style="padding: 0.35rem 0.75rem;">
+      <button type="button" class="btn btn-outline" onclick="voltarTela()" style="padding: 0.35rem 0.75rem;">
         &larr; Voltar
       </button>
       <h2 style="font-size: 1.2rem; font-weight: 700; margin: 0;">Meu Perfil 🐾</h2>
@@ -82,6 +82,49 @@
 
       </form>
     </main>
+  </div>
+
+  <!-- MODAL DE FEEDBACK (SUCESSO / ERRO) -->
+  <div id="feedbackModal" class="modal-overlay">
+    <div class="modal-card modal-cute-container text-center" style="max-width: 380px;">
+      <div id="feedbackModalIcon" style="font-size: 2rem; margin-bottom: 0.5rem;">✅</div>
+      <h3 id="feedbackModalTitle" class="mb-1">Sucesso!</h3>
+      <p id="feedbackModalMessage" class="mb-1">Alterações feitas com sucesso!</p>
+      <button type="button" id="btnCloseFeedbackModal" class="btn btn-secondary btn-block">
+        Fechar
+      </button>
+    </div>
+  </div>
+
+  <!-- MODAL DE EXCLUSÃO DE CONTA -->
+  <div id="deleteAccountModal" class="modal-overlay">
+    <div class="modal-card modal-cute-container text-center" style="max-width: 400px;">
+      <div style="font-size: 2rem; margin-bottom: 0.5rem;">⚠️</div>
+      <h3 class="mb-1">Excluir Minha Conta</h3>
+      <p class="mb-1">
+        Esta ação apagará sua conta permanentemente! Digite <strong>EXCLUIR</strong> para confirmar:
+      </p>
+      <div class="form-group">
+        <input
+          type="text"
+          id="deleteConfirmInput"
+          class="input-control text-center font-bold"
+          placeholder='Digite "EXCLUIR"'
+          autocomplete="off"
+        />
+        <span id="deleteConfirmError" class="hidden" style="color: var(--color-danger); font-size: 0.85rem;">
+          Digite exatamente EXCLUIR para confirmar.
+        </span>
+      </div>
+      <div class="flex-row">
+        <button type="button" id="btnCancelDeleteModal" class="btn btn-outline btn-block">
+          Cancelar
+        </button>
+        <button type="button" id="btnConfirmDeleteModal" class="btn btn-danger btn-block">
+          Excluir Conta
+        </button>
+      </div>
+    </div>
   </div>
 
   <script src="usuario.js"></script>
